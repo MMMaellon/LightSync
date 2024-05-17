@@ -1,0 +1,25 @@
+{
+    "name": "com.mmmaellon.lightsync",
+    "displayName": "LightSync",
+    "version": "0.0.0",
+    "unity": "2022.3",
+    "description": "",
+    "url": "https://github.com/MMMaellon/lightsync.git",
+    "dependencies": {},
+    "gitDependencies": {},
+    "author": {
+        "name": "MMMaellon",
+        "email": "mmmaellon@gmail.com",
+        "url": "https://twitter.com/MMMaellon"
+    },
+    "vpmDependencies": {
+        "com.vrchat.worlds": "^3.5.2"
+    },
+    "samples": [
+        {
+            "displayName": "LightSync Example Scene",
+            "description": "An example scene showing off the capabilities of LightSync.",
+            "path": "Samples~/Example"
+        }
+    ]
+}

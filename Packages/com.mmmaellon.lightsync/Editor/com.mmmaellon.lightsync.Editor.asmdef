@@ -1,0 +1,23 @@
+{
+    "name": "com.mmmaellon.lightsync.editor",
+    "references": [
+        "VRC.SDK3",
+        "VRC.SDK3.Editor",
+        "VRC.SDKBase",
+        "VRC.SDKBase.Editor",
+        "UdonSharp.Editor",
+        "UdonSharp.Runtime",
+        "com.mmmaellon.lightsync",
+        "UnityEditor.UI",
+        "VRC.Udon.Editor"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

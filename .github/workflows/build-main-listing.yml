@@ -1,0 +1,27 @@
+name: Build Main Listing
+
+on: 
+  workflow_dispatch:
+  workflow_run:
+    workflows: [Build Repo Listing]
+    types:
+      - completed
+  release:
+     types: [published, created, edited, unpublished, deleted, released]
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.ACTIONTOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: 'MMMaellon',
+              repo: 'MMMaellonVCCListing',
+              workflow_id: 'build-listing.yml',
+              ref: 'main',
+            })
+
+# thanks to bd_ for this action: https://github.com/bdunderscore/modular-avatar/blob/main/.github/workflows/trigger-repo-rebuild.yml
