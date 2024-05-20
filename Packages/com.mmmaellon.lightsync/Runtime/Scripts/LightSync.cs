@@ -589,10 +589,6 @@ namespace MMMaellon.LightSync
                 {
                     SetupSelectedLightSyncs();
                 }
-                if (GUILayout.Button(new GUIContent("Debug")))
-                {
-                    ((LightSync)target).DebugThing();
-                }
                 ShowAdvancedOptions();
                 serializedObject.ApplyModifiedProperties();
             }
@@ -610,30 +606,26 @@ namespace MMMaellon.LightSync
         SerializedProperty m_takeOwnershipOfOtherObjectsOnCollision;
         SerializedProperty m_allowOthersToTakeOwnershipOnCollision;
         string[] serializedPropertyNames = {
-
+        "debugLogs",
+        "showInternalObjects",
+        "kinematicWhileAttachedToPlayer",
+        "attachToAvatarBonesWhenPickedUp",
+        "syncParticleCollisions",
+        "takeOwnershipOnPickup",
+        "takeOwnershipOfOtherObjectsOnCollision",
+        "allowOthersToTakeOwnershipOnCollision",
         };
-        SerializedProperty[] serializedProperties;
+        System.Collections.Generic.IEnumerable<UnityEditor.SerializedProperty> serializedProperties;
         void OnEnable()
         {
-            serializedProperties = serializedPropertyNames.Where(propName => serializedObject.FindProperty(propName));
-            m_debugLogs = serializedObject.FindProperty("debugLogs");
-            m_showInternalObjects = serializedObject.FindProperty("showInternalObjects");
-            m_kinematicWhileAttachedToPlayer = serializedObject.FindProperty("kinematicWhileAttachedToPlayer");
-            m_attachToAvatarBonesWhenPickedUp = serializedObject.FindProperty("attachToAvatarBonesWhenPickedUp");
-            m_syncParticleCollisions = serializedObject.FindProperty("syncParticleCollisions");
-            m_takeOwnershipOnPickup = serializedObject.FindProperty("takeOwnershipOnPickup");
-            m_takeOwnershipOfOtherObjectsOnCollision = serializedObject.FindProperty("takeOwnershipOfOtherObjectsOnCollision");
-            m_allowOthersToTakeOwnershipOnCollision = serializedObject.FindProperty("allowOthersToTakeOwnershipOnCollision");
+            serializedProperties = serializedPropertyNames.Select(propName => serializedObject.FindProperty(propName));
         }
         void ShowAdvancedOptions()
         {
-            EditorGUILayout.PropertyField(m_debugLogs);
-            EditorGUILayout.PropertyField(m_showInternalObjects);
-            EditorGUILayout.PropertyField(m_attachToAvatarBonesWhenPickedUp);
-            EditorGUILayout.PropertyField(m_syncParticleCollisions);
-            EditorGUILayout.PropertyField(m_takeOwnershipOnPickup);
-            EditorGUILayout.PropertyField(m_takeOwnershipOfOtherObjectsOnCollision);
-            EditorGUILayout.PropertyField(m_allowOthersToTakeOwnershipOnCollision);
+            foreach (var property in serializedProperties)
+            {
+                EditorGUILayout.PropertyField(property);
+            }
         }
 
 
