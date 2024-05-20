@@ -1,17 +1,11 @@
-# VCC Template Package
+# LightSync (WIP)
 
-My personal template for VCC Packages
-Includes:
- - Additional github action for updating my main listing
- - proper packages setup with .asmdef files and everything
- - Example Scene exporter that copies the example scene into the samples folder
+# Ask questions on my [Discord Server](https://discord.gg/S5sDC4PnFp)
 
-Setup:
- - Replace all instances of "lower-case-name" with the lower-case name written without spaces
- - Replace all instances of "STARDENBURDENHARDENBART" with the Upper Case Package Name
- - Add "ACTIONTOKEN" secret
- - Open in Unity, right-click Packages/com.mmmaellon.lower-case-name/com.mmmaellon.lower-case-name.asmdef and select Create > U# Assembly Definition
+A set of scripts for syncing an object in VRChat with an emphasis on network efficiency and ease of use.
 
-[![Use This Template](https://user-images.githubusercontent.com/737888/185467681-e5fdb099-d99f-454b-8d9e-0760e5a6e588.png)](https://github.com/MMMaellon/template-package/generate)
+To use it, just add the `LightSync` component onto an object. Out of the box it'll handle the most common use cases of syncing physics and pickup events, but you can add additional scripts to handle things like attaching an object to a player.
 
-Read up on the original template for more info: [https://github.com/vrchat-community/template-package/](https://github.com/vrchat-community/template-package/)
+Install thru VCC: <https://mmmaellon.github.io/LightSync/>
+
+Download all my VCC packages here: <https://mmmaellon.github.io/MMMaellonVCCListing/>
