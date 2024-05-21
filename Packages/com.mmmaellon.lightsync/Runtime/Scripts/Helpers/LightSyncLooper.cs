@@ -1,8 +1,6 @@
 ﻿
 using UdonSharp;
 using UnityEngine;
-using VRC.SDKBase;
-using VRC.Udon;
 
 namespace MMMaellon.LightSync
 {
@@ -12,9 +10,18 @@ namespace MMMaellon.LightSync
         public LightSync sync;
         public LightSyncData data;
 
-        void Update()
+        public void Update()
         {
+            sync.OnLerp();
+        }
 
+        public void StartLoop()
+        {
+            enabled = true;
+        }
+        public void StopLoop()
+        {
+            enabled = false;
         }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP

@@ -18,6 +18,10 @@ namespace MMMaellon.LightSync
         {
             enabled = true;
         }
+        public void CancelDispatch()
+        {
+            enabled = false;
+        }
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         public void OnValidate()
         {

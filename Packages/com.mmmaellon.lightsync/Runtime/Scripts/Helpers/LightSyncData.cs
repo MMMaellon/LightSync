@@ -11,7 +11,7 @@ namespace MMMaellon.LightSync
     {
         public LightSync sync;
         [System.NonSerialized, UdonSynced(UdonSyncMode.None), FieldChangeCallback(nameof(state))]
-        sbyte _state = STATE_SPAWN;
+        sbyte _state = STATE_PHYSICS;
         public sbyte state
         {
             get => _state;
@@ -53,7 +53,7 @@ namespace MMMaellon.LightSync
         byte localTeleportCount = 0;
         byte teleportCount
         {
-            get => (byte)(otherCounters & 0x00FF);
+            get => (byte)(otherCounters & 0b00001111);
             set
             {
                 if (value == 0)
@@ -61,7 +61,7 @@ namespace MMMaellon.LightSync
                     //make sure players always start the game with a teleport
                     value = 1;
                 }
-                otherCounters = (byte)((otherCounters & 0xFF00) | (value & 0x00FF));
+                otherCounters = (byte)((otherCounters & 0b11110000) | (value & 0b00001111));
             }
         }
         byte repeatStateCount
@@ -69,11 +69,11 @@ namespace MMMaellon.LightSync
             get => (byte)(otherCounters >> 4);
             set
             {
-                otherCounters = (byte)((otherCounters & 0x00FF) | (value << 4));
+                otherCounters = (byte)((otherCounters & 0b00001111) | ((value << 4) & 0xFF));
             }
         }
         byte localRepeatStateCount;
-        public bool teleportDirty
+        public bool teleportFlag
         {
             get => localTeleportCount != teleportCount;
             set
@@ -97,10 +97,106 @@ namespace MMMaellon.LightSync
         }
         public bool newEvent
         {
-            get => localTeleportCount != teleportCount;
+            get => localRepeatStateCount != repeatStateCount;
         }
         [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
         public byte flags;
+
+        public bool localTransformFlag
+        {
+            get => (flags & 0b10000000) != 0;
+            set
+            {
+                if (value)
+                {
+                    flags |= 0b10000000;
+                }
+                else
+                {
+                    flags &= 0b01111111;
+                }
+            }
+        }
+
+        public bool leftHandFlag
+        {
+            get => (flags & 0b01000000) != 0;
+            set
+            {
+                if (value)
+                {
+                    flags |= 0b01000000;
+                }
+                else
+                {
+                    flags &= 0b10111111;
+                }
+            }
+        }
+
+        public bool kinematicFlag
+        {
+            get => (flags & 0b00100000) != 0;
+            set
+            {
+                if (value)
+                {
+                    flags |= 0b00100000;
+                }
+                else
+                {
+                    flags &= 0b11011111;
+                }
+            }
+        }
+
+        public bool pickupableFlag
+        {
+            get => (flags & 0b00010000) != 0;
+            set
+            {
+                if (value)
+                {
+                    flags |= 0b00010000;
+                }
+                else
+                {
+                    flags &= 0b11101111;
+                }
+            }
+        }
+
+        public bool bounceFlag
+        {
+            get => (flags & 0b00001000) != 0;
+            set
+            {
+                if (value)
+                {
+                    flags |= 0b00001000;
+                }
+                else
+                {
+                    flags &= 0b11110111;
+                }
+            }
+        }
+
+        public bool sleepFlag
+        {
+            get => (flags & 0b00000100) != 0;
+            set
+            {
+                if (value)
+                {
+                    flags |= 0b00000100;
+                }
+                else
+                {
+                    flags &= 0b11111011;
+                }
+            }
+        }
 
         /*
             STATES
@@ -109,14 +205,42 @@ namespace MMMaellon.LightSync
             Positive or 0 state IDs are custom states
             Default state is -1, Teleport.
         */
-        public const sbyte STATE_SPAWN = -1;//we instantly place objects and force them to be kinematic. Good for spawning things in.
-        public const sbyte STATE_PHYSICS = -2;//we lerp objects into place and then let physics take over on the next physics frame
-        public const sbyte STATE_SLEEP = -3;//we lerp objects into place and then force the object to sleep
-        public const sbyte STATE_LEFT_HAND = -4;//we continually try to place an object in a player's left hand
-        public const sbyte STATE_RIGHT_HAND = -5;//we continually try to place an object in a player's right hand
-        public const sbyte STATE_NO_HAND = -6;//we teleport to a player's local position. used when avatar has no hands
-        public const sbyte STATE_LOCAL_TO_OWNER = -6;//we continually try to place an object local to a player's position and rotation
-        public const sbyte STATE_BONE = -7;//everything after this means the object is attached to an avatar's bones.
+        public const sbyte STATE_PHYSICS = -1;//we lerp objects into place and then let physics take over on the next physics frame
+        public const sbyte STATE_HELD = -2;//we continually try to place an object in a player's left hand
+        public const sbyte STATE_LOCAL_TO_OWNER = -3;//we continually try to place an object local to a player's position and rotation
+        public const sbyte STATE_BONE = -4;//everything after this means the object is attached to an avatar's bones.
+        public static string StateToStr(sbyte s)
+        {
+            switch (s)
+            {
+                case STATE_PHYSICS:
+                    {
+                        return "STATE_PHYSICS";
+                    }
+                case STATE_HELD:
+                    {
+                        return "STATE_HELD";
+                    }
+                case STATE_LOCAL_TO_OWNER:
+                    {
+                        return "STATE_LOCAL_TO_OWNER";
+                    }
+                default:
+                    {
+                        if (s < 0)
+                        {
+                            HumanBodyBones bone = (HumanBodyBones)(STATE_BONE - s);
+                            return "STATE_BONE: " + bone.ToString();
+                        }
+                        return "CUSTOM STATE: " + s.ToString();
+                    }
+            }
+        }
+        public string prettyPrint()
+        {
+            return StateToStr(state) + " local:" + localTransformFlag + " left:" + leftHandFlag + " k:" + kinematicFlag + " p:" + pickupableFlag + " b:" + bounceFlag + " s:" + sleepFlag;
+        }
+
         /*
             SYNCED DATA
 
@@ -219,7 +343,7 @@ namespace MMMaellon.LightSync
         short prev_spin_z;
         public override void OnDeserialization(VRC.Udon.Common.DeserializationResult result)
         {
-            if (localSyncCounter > syncCounter && localSyncCounter - syncCounter > 8)//means we got updates out of order
+            if (localSyncCounter > syncCounter && localSyncCounter - syncCounter < 8)//means we got updates out of order
             {
                 //revert all synced values
                 sync._print("Out of order network packet recieved");
@@ -240,6 +364,7 @@ namespace MMMaellon.LightSync
             _rot = Short3ToQuaternion(_rot_x, _rot_y, _rot_z);
             _spin = Short3ToVector3(_spin_x, _spin_y, _spin_z);
 
+            sync._print("NEW DATA: " + prettyPrint());
             sync.OnLerpStart();
 
             localSyncCounter = syncCounter;
@@ -255,16 +380,46 @@ namespace MMMaellon.LightSync
             prev_spin_z = _spin_z;
         }
 
-        public VRCPlayerApi Owner;
+
+        [System.NonSerialized, FieldChangeCallback(nameof(Owner))]
+        public VRCPlayerApi _Owner;
+        public VRCPlayerApi Owner
+        {
+            get => _Owner;
+            set
+            {
+                if (_Owner != value)
+                {
+                    prevOwner = _Owner;
+                    foreach (LightSyncListener listener in sync.eventListeners)
+                    {
+                        if (Utilities.IsValid(listener))
+                        {
+                            listener.OnChangeOwner(sync, _Owner, value);
+                        }
+                    }
+                    _Owner = value;
+                    if (IsOwner())
+                    {
+                        if (state <= STATE_HELD && (sync.pickup == null || !sync.pickup.IsHeld))
+                        {
+                            state = STATE_PHYSICS;
+                        }
+                    }
+                    else
+                    {
+                        if (sync.pickup)
+                        {
+                            sync.pickup.Drop();
+                        }
+                    }
+                }
+            }
+        }
         VRCPlayerApi prevOwner;
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
-            prevOwner = Owner;
             Owner = player;
-            foreach (LightSyncListener listener in sync.eventListeners)
-            {
-                listener.OnChangeOwner(sync, prevOwner, Owner);
-            }
         }
         //These are all the same, I'm just indecisive
         public bool IsOwner()
