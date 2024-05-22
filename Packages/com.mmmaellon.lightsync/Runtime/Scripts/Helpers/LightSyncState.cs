@@ -50,33 +50,21 @@ namespace MMMaellon.LightSync
             return sync.data.state == stateID;
         }
 
-
-        public abstract void OnEnterState();
-
+        /*
+             STATE LIFECYCLE
+             Whenever anything happens to a lightsync object it does these things in order:
+                1) Exits current state. If state forced any temporary changes to the object, they'd be undone here
+                2) Enter new state. If there are any temporary changes, they get performed here.
+                3) The looper is dispatched and begins calling OnLerp every physics frame until stopped
+                4) On the very first OnLerp call, data.RequestSerialization is called
+        */
         public abstract void OnExitState();
 
-        // Summary:
-        //     The owner executes this command when they are about to send data to the other players
-        //     You should override this function to set all the synced variables that other players need
-        public abstract void OnSendingData();
-
-        // Summary:
-        //     Non-owners execute this command when they receive data from the owner and begin interpolating towards the synced data
-        public abstract void OnLerpStart();
+        public abstract void OnEnterState();
 
         // Summary:
         //     All players execute this command during the interpolation period. The interpolation period for owners is one frame
         //     the 'interpolation' parameter is a value between 0.0 and 1.0 representing how far along the interpolation period we are
-        public abstract void OnLerp(float elapsedSeconds, float interpolation);
-
-        // Summary:
-        //     All players execute once this at the end of the interpolation period
-        //     Return true to extend the interpolation period by another frame
-        //     Return false to end the interpolation period and call the physics dispatch
-        public abstract bool OnLerpEnd();
-
-        // Summary:
-        //     All players execute once this after OnLerpEnd on a physics frame if OnLerpEnd returned false
-        public abstract bool OnPhysicsDispatch();
+        public abstract bool OnLerp(float elapsedTime, float autoSmoothedLerp);
     }
 }

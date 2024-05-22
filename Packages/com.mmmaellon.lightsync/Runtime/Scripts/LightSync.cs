@@ -27,8 +27,6 @@ namespace MMMaellon.LightSync
         [HideInInspector]
         public LightSyncLooper looper;
         [HideInInspector]
-        public LightSyncPhysicsDispatcher dispatcher;
-        [HideInInspector]
         public Rigidbody rigid;
         [HideInInspector]
         public VRC_Pickup pickup;
@@ -133,13 +131,13 @@ namespace MMMaellon.LightSync
             {
                 Networking.SetOwner(Networking.LocalPlayer, data.gameObject);
             }
-            data.RequestSerialization();
+            looper.StartLoop();
         }
         public void SyncIfOwner()
         {
             if (IsOwner())
             {
-                data.RequestSerialization();
+                looper.StartLoop();
             }
         }
         [System.NonSerialized]
@@ -211,8 +209,7 @@ namespace MMMaellon.LightSync
             {
                 //was truly dropped. We didn't like switch hands or something.
                 data.state = LightSyncData.STATE_PHYSICS;
-                //VRChat takes 1 frame to set the velocities of a dropped pickup. We don't want to sync until that has been done
-                data.SendCustomEventDelayedFrames(nameof(SyncIfOwner), 1);
+                Sync();
 #if UNITY_EDITOR
                 // Calculate throw velocity
                 //Taken from Client Sim. Only here to fix client sim throwing
@@ -273,15 +270,6 @@ namespace MMMaellon.LightSync
             Sync();
         }
 
-        public float autoSmoothingTime
-        {
-#if !UNITY_EDITOR
-            get => smoothingTime > 0 ? smoothingTime : Time.realtimeSinceStartup - Networking.SimulationTime(gameObject);
-#else
-            get => 0.25f;
-#endif
-        }
-        float lerpStartTime;
         public void OnEnterState()
         {
             if (data.state >= 0 && data.state < customStates.Length)
@@ -398,219 +386,229 @@ namespace MMMaellon.LightSync
             }
         }
 
-        public void OnSendingData()
-        {
-            OnLerpStart();
-            if (data.state >= 0 && data.state < customStates.Length)
-            {
-                customStates[data.state].OnSendingData();
-                return;
-            }
-            data.pos = recordedPos;
-            data.rot = recordedRot;
-            data.vel = recordedVel;
-            data.spin = recordedSpin;
-        }
-
-        public float GetElapsedLerpTime()
-        {
-            return Time.timeSinceLevelLoad - lerpStartTime;
-        }
-
-        public float GetInterpolation()
-        {
-            return autoSmoothingTime <= 0 ? 1 : GetElapsedLerpTime() / autoSmoothingTime;
-        }
-
-        public void OnLerpStart()
+        bool tempContinueBool;
+        public bool OnLerp(float elapsedTime, float autoSmoothedLerp)
         {
             if (!Utilities.IsValid(data.Owner))
             {
-                SendCustomEventDelayedFrames(nameof(OnLerpStart), 1);
-                return;
+                return true;
             }
-            lerpStartTime = Time.timeSinceLevelLoad;
-            looper.StartLoop();
             if (data.state >= 0 && data.state < customStates.Length)
             {
-                customStates[data.state].OnLerpStart();
-                return;
+                tempContinueBool = customStates[data.state].OnLerp(elapsedTime, autoSmoothedLerp);
+                if (elapsedTime == 0 && IsOwner())
+                {
+                    data.RequestSerialization();
+                }
+                return tempContinueBool;
             }
-            RecordTransforms();
-        }
-
-        public void OnLerp()
-        {
-            if (!Utilities.IsValid(data.Owner))
+            if (elapsedTime == 0)
             {
-                return;
+                if (IsOwner())
+                {
+                    data.pos = recordedPos;
+                    data.rot = recordedRot;
+                    data.vel = recordedVel;
+                    data.spin = recordedSpin;
+                }
             }
-            var interpolation = GetInterpolation();
-            if (data.state >= 0 && data.state < customStates.Length)
-            {
-                customStates[data.state].OnLerp(GetElapsedLerpTime(), interpolation);
-                return;
-            }
-
             switch (data.state)
             {
                 case LightSyncData.STATE_PHYSICS:
                     {
-                        if (IsOwner())
-                        {
-                            if (runEveryFrameOnOwner)
-                            {
-                                if (TransformDrifted())
-                                {
-                                    Sync();
-                                }
-                            }
-                            else if (rigid.isKinematic)
-                            {
-                                looper.StopLoop();
-                                if (!data.kinematicFlag)
-                                {
-                                    data.kinematicFlag = true;
-                                    Sync();
-                                }
-                            }
-                            else if (rigid.IsSleeping())
-                            {
-                                looper.StopLoop();
-                                if (!data.sleepFlag)
-                                {
-                                    data.sleepFlag = true;
-                                    Sync();
-                                }
-                            }
-                        }
-                        else
-                        {
-                            var targetPos = HermiteInterpolatePosition(recordedPos, recordedVel, data.pos, data.vel, interpolation, autoSmoothingTime);
-                            ApplyTransforms(targetPos, Quaternion.Slerp(recordedRot, data.rot, interpolation));
-                            var remainingTime = autoSmoothingTime - GetElapsedLerpTime();
-                            if (Mathf.Abs(remainingTime - Time.fixedDeltaTime) < Mathf.Abs(remainingTime - (2 * Time.fixedDeltaTime)))//the next physics frame is the closest to the end
-                            {
-                                OnLerpEnd();
-                            }
-                        }
+                        tempContinueBool = PhysicsLerp(elapsedTime, autoSmoothedLerp);
                         break;
                     }
                 case LightSyncData.STATE_HELD:
                     {
-                        Vector3 parentPos;
-                        Quaternion parentRot;
-                        if (data.localTransformFlag)
-                        {
-                            if (data.leftHandFlag)
-                            {
-                                parentPos = data.Owner.GetBonePosition(HumanBodyBones.LeftHand);
-                                parentRot = data.Owner.GetBoneRotation(HumanBodyBones.LeftHand);
-                            }
-                            else
-                            {
-                                parentPos = data.Owner.GetBonePosition(HumanBodyBones.RightHand);
-                                parentRot = data.Owner.GetBoneRotation(HumanBodyBones.RightHand);
-                            }
-                        }
-                        else
-                        {
-                            parentPos = data.Owner.GetPosition();
-                            parentRot = data.Owner.GetRotation();
-                        }
-                        if (IsOwner())
-                        {
-                            if (RelativeTransformDrifted(parentPos, parentRot))
-                            {
-                                Sync();
-                            }
-                        }
-                        else
-                        {
-                            ApplyRelativeTransforms(parentPos, parentRot, Vector3.Lerp(recordedPos, data.pos, interpolation), Quaternion.Slerp(recordedRot, data.rot, interpolation));
-                        }
+                        tempContinueBool = HeldLerp(elapsedTime, autoSmoothedLerp);
                         break;
                     }
                 case LightSyncData.STATE_LOCAL_TO_OWNER:
                     {
-                        Vector3 parentPos = data.Owner.GetPosition();
-                        Quaternion parentRot = data.Owner.GetRotation();
-                        if (IsOwner())
-                        {
-                            if (runEveryFrameOnOwner && RelativeTransformDrifted(parentPos, parentRot))
-                            {
-                                Sync();
-                            }
-                            ApplyRelativeTransforms(parentPos, parentRot, data.pos, data.rot);
-                        }
-                        else
-                        {
-                            var targetPos = HermiteInterpolatePosition(recordedPos, recordedVel, data.pos, data.vel, interpolation, autoSmoothingTime);
-                            ApplyRelativeTransforms(parentPos, parentRot, targetPos, Quaternion.Slerp(recordedRot, data.rot, interpolation));
-                        }
+                        tempContinueBool = LocalLerp(elapsedTime, autoSmoothedLerp);
                         break;
                     }
                 default:
                     {
-                        Vector3 parentPos;
-                        Quaternion parentRot;
-                        if (data.localTransformFlag && data.state <= LightSyncData.STATE_BONE && data.state > LightSyncData.STATE_BONE - ((sbyte)HumanBodyBones.LastBone))
-                        {
-                            HumanBodyBones parentBone = (HumanBodyBones)(LightSyncData.STATE_BONE - data.state);
-                            parentPos = data.Owner.GetBonePosition(parentBone);
-                            parentRot = data.Owner.GetBoneRotation(parentBone);
-                        }
-                        else
-                        {
-                            parentPos = data.Owner.GetPosition();
-                            parentRot = data.Owner.GetRotation();
-                        }
-                        if (IsOwner())
-                        {
-                            if (runEveryFrameOnOwner && RelativeTransformDrifted(parentPos, parentRot))
-                            {
-                                Sync();
-                            }
-                            ApplyRelativeTransforms(parentPos, parentRot, data.pos, data.rot);
-                        }
-                        else
-                        {
-                            var targetPos = HermiteInterpolatePosition(recordedPos, recordedVel, data.pos, data.vel, interpolation, autoSmoothingTime);
-                            ApplyRelativeTransforms(parentPos, parentRot, targetPos, Quaternion.Slerp(recordedRot, data.rot, interpolation));
-                        }
+                        tempContinueBool = BoneLerp(elapsedTime, autoSmoothedLerp);
                         break;
                     }
             }
+            if (elapsedTime == 0 && IsOwner())
+            {
+                data.pos = recordedPos;
+                data.rot = recordedRot;
+                data.vel = recordedVel;
+                data.spin = recordedSpin;
+                data.RequestSerialization();
+            }
+            return tempContinueBool;
         }
 
-        public void OnLerpEnd()
+        Vector3 tempPos;
+        Quaternion tempRot;
+        bool PhysicsLerp(float elapsedTime, float autoSmoothedLerp)
         {
-            looper.StopLoop();
 
-            if (data.state >= 0 && data.state < customStates.Length)
+            if (elapsedTime == 0)
             {
-                if (customStates[data.state].OnLerpEnd())
+                if (useWorldSpaceTransforms)
                 {
-                    dispatcher.Dispatch();
+                    RecordWorldTransforms();
                 }
-                return;
+                else
+                {
+                    RecordLocalTransforms();
+                }
             }
-
-            if (data.state == LightSyncData.STATE_PHYSICS && !data.kinematicFlag)
+            if (IsOwner())
             {
-                dispatcher.Dispatch();
+                if (runEveryFrameOnOwner)
+                {
+                    if (TransformDrifted())
+                    {
+                        Sync();
+                    }
+                }
+                else if (rigid.isKinematic)
+                {
+                    if (!data.kinematicFlag)
+                    {
+                        data.kinematicFlag = true;
+                        Sync();
+                    }
+                    return false;
+                }
+                else if (rigid.IsSleeping())
+                {
+                    if (!data.sleepFlag)
+                    {
+                        data.sleepFlag = true;
+                        Sync();
+                    }
+                    return false;
+                }
+                return true;
+            }
+            else
+            {
+                tempPos = HermiteInterpolatePosition(recordedPos, recordedVel, data.pos, data.vel, autoSmoothedLerp, data.autoSmoothingTime);
+                tempRot = Quaternion.Slerp(recordedRot, data.rot, autoSmoothedLerp);
+                ApplyTransforms(tempPos, tempRot);
+                var remainingTime = data.autoSmoothingTime - elapsedTime;
+                if (Mathf.Abs(remainingTime - Time.fixedDeltaTime) < Mathf.Abs(remainingTime - (2 * Time.fixedDeltaTime)))//the next physics frame is the closest to the end
+                {
+                    ApplyVelocities();
+                    return false;
+                }
+                return true;
             }
         }
 
-        public void OnPhysicsDispatch()
+        bool HeldLerp(float elapsedTime, float autoSmoothedLerp)
         {
-            if (data.state >= 0 && data.state < customStates.Length)
+            Vector3 parentPos;
+            Quaternion parentRot;
+            if (data.localTransformFlag)
             {
-                customStates[data.state].OnPhysicsDispatch();
-                return;
+                if (data.leftHandFlag)
+                {
+                    parentPos = data.Owner.GetBonePosition(HumanBodyBones.LeftHand);
+                    parentRot = data.Owner.GetBoneRotation(HumanBodyBones.LeftHand);
+                }
+                else
+                {
+                    parentPos = data.Owner.GetBonePosition(HumanBodyBones.RightHand);
+                    parentRot = data.Owner.GetBoneRotation(HumanBodyBones.RightHand);
+                }
             }
-            ApplyTransforms(data.pos, data.rot);
-            ApplyVelocities();
+            else
+            {
+                parentPos = data.Owner.GetPosition();
+                parentRot = data.Owner.GetRotation();
+            }
+
+            if (elapsedTime == 0)
+            {
+                RecordRelativeTransforms(parentPos, parentRot);
+            }
+
+            if (IsOwner())
+            {
+                if (RelativeTransformDrifted(parentPos, parentRot))
+                {
+                    Sync();
+                }
+            }
+            else
+            {
+                tempPos = HermiteInterpolatePosition(recordedPos, recordedVel, data.pos, data.vel, autoSmoothedLerp, data.autoSmoothingTime);
+                tempRot = Quaternion.Slerp(recordedRot, data.rot, autoSmoothedLerp);
+                ApplyRelativeTransforms(parentPos, parentRot, tempPos, tempRot);
+            }
+            return true;
+        }
+
+        bool LocalLerp(float elapsedTime, float autoSmoothedLerp)
+        {
+            Vector3 parentPos = data.Owner.GetPosition();
+            Quaternion parentRot = data.Owner.GetRotation();
+            if (elapsedTime == 0)
+            {
+                RecordRelativeTransforms(parentPos, parentRot);
+            }
+            if (IsOwner())
+            {
+                if (runEveryFrameOnOwner && RelativeTransformDrifted(parentPos, parentRot))
+                {
+                    Sync();
+                }
+                ApplyRelativeTransforms(parentPos, parentRot, data.pos, data.rot);
+            }
+            else
+            {
+                tempPos = HermiteInterpolatePosition(recordedPos, recordedVel, data.pos, data.vel, autoSmoothedLerp, data.autoSmoothingTime);
+                tempRot = Quaternion.Slerp(recordedRot, data.rot, autoSmoothedLerp);
+                ApplyRelativeTransforms(parentPos, parentRot, tempPos, tempRot);
+            }
+            return true;
+        }
+
+        bool BoneLerp(float elapsedTime, float autoSmoothedLerp)
+        {
+            Vector3 parentPos;
+            Quaternion parentRot;
+            if (data.localTransformFlag && data.state <= LightSyncData.STATE_BONE && data.state > LightSyncData.STATE_BONE - ((sbyte)HumanBodyBones.LastBone))
+            {
+                HumanBodyBones parentBone = (HumanBodyBones)(LightSyncData.STATE_BONE - data.state);
+                parentPos = data.Owner.GetBonePosition(parentBone);
+                parentRot = data.Owner.GetBoneRotation(parentBone);
+            }
+            else
+            {
+                parentPos = data.Owner.GetPosition();
+                parentRot = data.Owner.GetRotation();
+            }
+            if (elapsedTime == 0)
+            {
+                RecordRelativeTransforms(parentPos, parentRot);
+            }
+            if (IsOwner())
+            {
+                if (runEveryFrameOnOwner && RelativeTransformDrifted(parentPos, parentRot))
+                {
+                    Sync();
+                }
+                ApplyRelativeTransforms(parentPos, parentRot, data.pos, data.rot);
+            }
+            else
+            {
+                tempPos = HermiteInterpolatePosition(recordedPos, recordedVel, data.pos, data.vel, autoSmoothedLerp, data.autoSmoothingTime);
+                tempRot = Quaternion.Slerp(recordedRot, data.rot, autoSmoothedLerp);
+                ApplyRelativeTransforms(parentPos, parentRot, tempPos, tempRot);
+            }
+            return true;
         }
 
         //Helper functions
@@ -826,7 +824,7 @@ namespace MMMaellon.LightSync
         float lastDriftCheck = -1001f;
         public bool TransformDrifted()
         {
-            if (Time.timeSinceLevelLoad - Mathf.Max(lerpStartTime, lastDriftCheck) > autoSmoothingTime)
+            if (Time.timeSinceLevelLoad - Mathf.Max(looper.startTime, lastDriftCheck) > data.autoSmoothingTime)
             {
                 return false;
             }
@@ -853,7 +851,7 @@ namespace MMMaellon.LightSync
             var invParentRot = Quaternion.Inverse(parentRot);
             var targetPos = invParentRot * (rigid.position - parentPos);
             var targetRot = invParentRot * rigid.rotation;
-            return Vector3.Distance(targetPos, data.pos) > positionDesyncThreshold || Quaternion.Angle(targetRot, data.rot) < rotationDesyncThreshold;
+            return Vector3.Distance(targetPos, data.pos) > positionDesyncThreshold || Quaternion.Angle(targetRot, data.rot) > rotationDesyncThreshold;
         }
         Vector3 posControl1;
         Vector3 posControl2;
@@ -869,7 +867,9 @@ namespace MMMaellon.LightSync
         }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
+
         bool _showInternalObjects = false;
+
         [HideInInspector]
         public bool showInternalObjects = false;
 
@@ -896,7 +896,6 @@ namespace MMMaellon.LightSync
                 _showInternalObjects = showInternalObjects;
                 data.RefreshHideFlags();
                 looper.RefreshHideFlags();
-                dispatcher.RefreshHideFlags();
             }
         }
 
@@ -908,7 +907,6 @@ namespace MMMaellon.LightSync
             pickup = GetComponent<VRC_Pickup>();
             CreateDataObject();
             CreateLooperObject();
-            CreateDispatcherObject();
             RefreshHideFlags();
             SetupStates();
             SetupListeners();
@@ -985,31 +983,6 @@ namespace MMMaellon.LightSync
             looper.StopLoop();
         }
 
-        public void CreateDispatcherObject()
-        {
-            if (dispatcher != null)
-            {
-                if (dispatcher.transform.parent != transform)
-                {
-                    dispatcher.transform.SetParent(transform, false);
-                }
-
-                if (dispatcher.sync != this)
-                {
-                    dispatcher.sync = this;
-                }
-                dispatcher.CancelDispatch();
-
-                return;
-            }
-            GameObject dispatcherObject = new(name + "_dispatcher");
-            dispatcherObject.transform.SetParent(transform, false);
-            dispatcher = dispatcherObject.AddComponent<LightSyncPhysicsDispatcher>();
-            dispatcher.sync = this;
-            dispatcher.RefreshHideFlags();
-            dispatcher.CancelDispatch();
-        }
-
         public void OnDestroy()
         {
             if (data)
@@ -1021,7 +994,6 @@ namespace MMMaellon.LightSync
                 Destroy(looper.gameObject);
             }
         }
-
 #endif
     }
 }
@@ -1161,8 +1133,6 @@ namespace MMMaellon.LightSync
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
         }
-
-
 
         readonly string[] serializedPropertyNames = {
         "debugLogs",

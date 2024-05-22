@@ -10,7 +10,7 @@ namespace MMMaellon.LightSync
     public class LightSyncData : UdonSharpBehaviour
     {
         public LightSync sync;
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None), FieldChangeCallback(nameof(state))]
+        [System.NonSerialized, UdonSynced(), FieldChangeCallback(nameof(state))]
         sbyte _state = STATE_PHYSICS;
         public sbyte state
         {
@@ -198,6 +198,15 @@ namespace MMMaellon.LightSync
             }
         }
 
+        public float autoSmoothingTime
+        {
+#if !UNITY_EDITOR
+            get => sync.smoothingTime > 0 ? sync.smoothingTime : Time.realtimeSinceStartup - Networking.SimulationTime(gameObject);
+#else
+            get => 0.25f;
+#endif
+        }
+
         /*
             STATES
             Tells us what is going on with our object. Typically triggered by collider or pickup events.
@@ -266,6 +275,12 @@ namespace MMMaellon.LightSync
         public short _spin_y;//rotation represented as an axis where where the magnitude is the amount of rotation
         [UdonSynced(UdonSyncMode.None)]
         public short _spin_z;//rotation represented as an axis where where the magnitude is the amount of rotation
+        // [UdonSynced(UdonSyncMode.None)]
+        // public short _vel_x;//rotation represented as an axis where where the magnitude is the amount of rotation
+        // [UdonSynced(UdonSyncMode.None)]
+        // public short _vel_y;//rotation represented as an axis where where the magnitude is the amount of rotation
+        // [UdonSynced(UdonSyncMode.None)]
+        // public short _vel_z;//rotation represented as an axis where where the magnitude is the amount of rotation
 
         const float shortMul = 90f;
         public static Vector3 Short3ToVector3(short x, short y, short z)
@@ -327,7 +342,6 @@ namespace MMMaellon.LightSync
                 syncCounter++;
             }
             localSyncCounter = syncCounter;
-            sync.OnSendingData();
         }
 
         public sbyte prevState;
@@ -346,7 +360,7 @@ namespace MMMaellon.LightSync
             if (localSyncCounter > syncCounter && localSyncCounter - syncCounter < 8)//means we got updates out of order
             {
                 //revert all synced values
-                sync._print("Out of order network packet recieved");
+                sync._print("Out of order network packet received");
                 state = prevState;
                 teleportCount = prevTeleportCount;
                 flags = prevFlags;
@@ -365,7 +379,7 @@ namespace MMMaellon.LightSync
             _spin = Short3ToVector3(_spin_x, _spin_y, _spin_z);
 
             sync._print("NEW DATA: " + prettyPrint());
-            sync.OnLerpStart();
+            sync.looper.StartLoop();
 
             localSyncCounter = syncCounter;
             prevTeleportCount = teleportCount;

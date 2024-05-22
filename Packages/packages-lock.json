@@ -1,7 +1,19 @@
 {
   "dependencies": {
+    "centauricore.networkdebugger": {
+      "version": "file:centauricore.networkdebugger",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.mmmaellon.lightsync": {
       "version": "file:com.mmmaellon.lightsync",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
+    "com.mmmaellon.smartobjectsync": {
+      "version": "file:com.mmmaellon.smartobjectsync",
       "depth": 0,
       "source": "embedded",
       "dependencies": {}
