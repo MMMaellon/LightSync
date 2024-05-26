@@ -1,4 +1,5 @@
 ﻿
+using System.Collections.Generic;
 using UdonSharp;
 using UnityEngine;
 
@@ -13,7 +14,7 @@ namespace MMMaellon.LightSync
         public float startTime = 0;
         [System.NonSerialized]
         public float elapsedTime = 0;
-        public void FixedUpdate()
+        public void Update()
         {
             if (firstLerp)
             {
@@ -71,10 +72,17 @@ namespace MMMaellon.LightSync
                 else
                 {
                     sync = null;
+                    StartCoroutine(Destroy());
                 }
             }
 
             gameObject.hideFlags = HideFlags.None;
+        }
+
+        public IEnumerator<WaitForSeconds> Destroy()
+        {
+            yield return new WaitForSeconds(0);
+            DestroyImmediate(gameObject);
         }
 #endif
     }

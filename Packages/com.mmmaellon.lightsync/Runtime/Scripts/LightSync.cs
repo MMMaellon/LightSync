@@ -5,9 +5,6 @@ using VRC.Udon;
 using VRC.SDK3.Components;
 using VRC.Udon.Common;
 
-
-
-
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
 using VRC.SDKBase.Editor.BuildPipeline;
 using UnityEditor;
@@ -21,6 +18,20 @@ namespace MMMaellon.LightSync
     [UdonBehaviourSyncMode(BehaviourSyncMode.None), RequireComponent(typeof(Rigidbody))]
     public class LightSync : UdonSharpBehaviour
     {
+
+#if !COMPILER_UDONSHARP && UNITY_EDITOR
+        enum NetworkDataOptimization
+        {
+            Ultra,
+            High,
+            Low,
+            Unoptimized,
+            DisableNetworking,
+        }
+
+        [SerializeField]
+        NetworkDataOptimization networkDataOptimization = NetworkDataOptimization.Ultra;
+#endif
         //Gets created in the editor, as an invisible child of this object. Because it's a separate object we can sync it's data separately from the others on this object
         [HideInInspector]
         public LightSyncData data;
@@ -81,7 +92,6 @@ namespace MMMaellon.LightSync
             {
                 return;
             }
-            data.Owner = Networking.GetOwner(gameObject);
             if (useWorldSpaceTransforms)
             {
                 spawnPos = rigid.position;
@@ -92,19 +102,26 @@ namespace MMMaellon.LightSync
                 spawnPos = transform.localPosition;
                 spawnRot = transform.localRotation;
             }
-            if (sleepOnSpawn)
-            {
-                rigid.Sleep();
-            }
+            data.Owner = Networking.GetOwner(gameObject);
             if (IsOwner())
             {
+                data.kinematicFlag = rigid.isKinematic;
+                data.bounceFlag = false;
+                data.pickupableFlag = pickup && pickup.pickupable;
+                if (sleepOnSpawn)
+                {
+                    rigid.Sleep();
+                }
+                data.sleepFlag = sleepOnSpawn;
                 if (enterFirstCustomStateOnStart && customStates.Length > 0)
                 {
                     customStates[0].EnterState();
                 }
                 else
                 {
+                    data.state = LightSyncData.STATE_PHYSICS;
                     RecordTransforms();
+                    Sync();
                 }
             }
             spawnSet = true;
@@ -117,7 +134,25 @@ namespace MMMaellon.LightSync
 
         public void _print(string message)
         {
+            if (!debugLogs)
+            {
+                return;
+            }
             Debug.LogFormat(this, "[LightSync] {0}: {1}", name, message);
+        }
+
+        public int state
+        {
+            get => data.state;
+            set
+            {
+                if (value < sbyte.MinValue || value > sbyte.MaxValue)
+                {
+                    _print("ERROR: Tried to set invalid STATE ID: " + value);
+                    return;
+                }
+                data.state = (sbyte)value;
+            }
         }
 
         public bool IsOwner()
@@ -127,6 +162,7 @@ namespace MMMaellon.LightSync
 
         public void Sync()
         {
+            Debug.LogWarning("SYNC CALLED");
             if (!IsOwner())
             {
                 Networking.SetOwner(Networking.LocalPlayer, data.gameObject);
@@ -153,7 +189,7 @@ namespace MMMaellon.LightSync
             if (IsOwner() && takeOwnershipOfOtherObjectsOnCollision && Utilities.IsValid(other) && Utilities.IsValid(other.collider))
             {
                 LightSync otherSync = other.collider.GetComponent<LightSync>();
-                if (otherSync && otherSync.data.state == LightSyncData.STATE_PHYSICS && !otherSync.IsOwner() && otherSync.allowOthersToTakeOwnershipOnCollision && (!otherSync.takeOwnershipOfOtherObjectsOnCollision || otherSync.rigid.velocity.sqrMagnitude < rigid.velocity.sqrMagnitude))
+                if (otherSync && otherSync.state == LightSyncData.STATE_PHYSICS && !otherSync.IsOwner() && otherSync.allowOthersToTakeOwnershipOnCollision && (!otherSync.takeOwnershipOfOtherObjectsOnCollision || otherSync.rigid.velocity.sqrMagnitude < rigid.velocity.sqrMagnitude))
                 {
                     Networking.SetOwner(Networking.LocalPlayer, otherSync.gameObject);
                 }
@@ -186,7 +222,7 @@ namespace MMMaellon.LightSync
         {
             if (data.IsOwner())
             {
-                if (data.state == LightSyncData.STATE_PHYSICS)
+                if (state == LightSyncData.STATE_PHYSICS)
                 {
                     Sync();
                 }
@@ -199,7 +235,7 @@ namespace MMMaellon.LightSync
             {
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
             }
-            data.state = LightSyncData.STATE_HELD;
+            state = LightSyncData.STATE_HELD;
             Sync();
         }
 
@@ -208,7 +244,7 @@ namespace MMMaellon.LightSync
             if (IsOwner() && IsHeld && !pickup.IsHeld)
             {
                 //was truly dropped. We didn't like switch hands or something.
-                data.state = LightSyncData.STATE_PHYSICS;
+                state = LightSyncData.STATE_PHYSICS;
                 Sync();
 #if UNITY_EDITOR
                 // Calculate throw velocity
@@ -241,11 +277,11 @@ namespace MMMaellon.LightSync
 
         public bool IsHeld
         {
-            get => data.state == LightSyncData.STATE_HELD;
+            get => state == LightSyncData.STATE_HELD;
         }
         public bool IsAttachedToPlayer
         {
-            get => data.state <= LightSyncData.STATE_LOCAL_TO_OWNER;
+            get => state <= LightSyncData.STATE_LOCAL_TO_OWNER;
         }
 
         public void OnEnable()
@@ -266,15 +302,15 @@ namespace MMMaellon.LightSync
         public void ChangeState(sbyte newStateID)
         {
             Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            data.state = newStateID;
+            state = newStateID;
             Sync();
         }
 
         public void OnEnterState()
         {
-            if (data.state >= 0 && data.state < customStates.Length)
+            if (state >= 0 && state < customStates.Length)
             {
-                customStates[data.state].OnEnterState();
+                customStates[state].OnEnterState();
                 return;
             }
             if (IsOwner())
@@ -282,7 +318,7 @@ namespace MMMaellon.LightSync
                 data.kinematicFlag = rigid.isKinematic;
                 if (pickup)
                 {
-                    if (data.state == LightSyncData.STATE_HELD)
+                    if (state == LightSyncData.STATE_HELD)
                     {
                         data.leftHandFlag = pickup.currentHand == VRC_Pickup.PickupHand.Left;
                     }
@@ -293,7 +329,7 @@ namespace MMMaellon.LightSync
                 }
                 data.sleepFlag = rigid.IsSleeping();
             }
-            switch (data.state)
+            switch (state)
             {
                 case LightSyncData.STATE_PHYSICS:
                     {
@@ -371,9 +407,9 @@ namespace MMMaellon.LightSync
 
         public void OnExitState()
         {
-            if (data.state >= 0 && data.state < customStates.Length)
+            if (state >= 0 && state < customStates.Length)
             {
-                customStates[data.state].OnExitState();
+                customStates[state].OnExitState();
                 return;
             }
             if (syncIsKinematic)
@@ -393,9 +429,9 @@ namespace MMMaellon.LightSync
             {
                 return true;
             }
-            if (data.state >= 0 && data.state < customStates.Length)
+            if (state >= 0 && state < customStates.Length)
             {
-                tempContinueBool = customStates[data.state].OnLerp(elapsedTime, autoSmoothedLerp);
+                tempContinueBool = customStates[state].OnLerp(elapsedTime, autoSmoothedLerp);
                 if (elapsedTime == 0 && IsOwner())
                 {
                     data.RequestSerialization();
@@ -412,7 +448,7 @@ namespace MMMaellon.LightSync
                     data.spin = recordedSpin;
                 }
             }
-            switch (data.state)
+            switch (state)
             {
                 case LightSyncData.STATE_PHYSICS:
                     {
@@ -450,7 +486,7 @@ namespace MMMaellon.LightSync
         Quaternion tempRot;
         bool PhysicsLerp(float elapsedTime, float autoSmoothedLerp)
         {
-
+            _print("PhysicsLerp");
             if (elapsedTime == 0)
             {
                 if (useWorldSpaceTransforms)
@@ -508,6 +544,7 @@ namespace MMMaellon.LightSync
 
         bool HeldLerp(float elapsedTime, float autoSmoothedLerp)
         {
+            _print("HeldLerp");
             Vector3 parentPos;
             Quaternion parentRot;
             if (data.localTransformFlag)
@@ -552,6 +589,7 @@ namespace MMMaellon.LightSync
 
         bool LocalLerp(float elapsedTime, float autoSmoothedLerp)
         {
+            _print("LocalLerp");
             Vector3 parentPos = data.Owner.GetPosition();
             Quaternion parentRot = data.Owner.GetRotation();
             if (elapsedTime == 0)
@@ -577,11 +615,12 @@ namespace MMMaellon.LightSync
 
         bool BoneLerp(float elapsedTime, float autoSmoothedLerp)
         {
+            _print("BoneLerp");
             Vector3 parentPos;
             Quaternion parentRot;
-            if (data.localTransformFlag && data.state <= LightSyncData.STATE_BONE && data.state > LightSyncData.STATE_BONE - ((sbyte)HumanBodyBones.LastBone))
+            if (data.localTransformFlag && state <= LightSyncData.STATE_BONE && state > LightSyncData.STATE_BONE - ((sbyte)HumanBodyBones.LastBone))
             {
-                HumanBodyBones parentBone = (HumanBodyBones)(LightSyncData.STATE_BONE - data.state);
+                HumanBodyBones parentBone = (HumanBodyBones)(LightSyncData.STATE_BONE - state);
                 parentPos = data.Owner.GetBonePosition(parentBone);
                 parentRot = data.Owner.GetBoneRotation(parentBone);
             }
@@ -618,7 +657,7 @@ namespace MMMaellon.LightSync
         Vector3 recordedSpin;
         public void RecordTransforms()
         {
-            switch (data.state)
+            switch (state)
             {
                 case LightSyncData.STATE_PHYSICS:
                     {
@@ -686,9 +725,9 @@ namespace MMMaellon.LightSync
                         {
                             data.localTransformFlag = true;
                         }
-                        if (data.localTransformFlag && data.state <= LightSyncData.STATE_BONE && data.state > LightSyncData.STATE_BONE - ((sbyte)HumanBodyBones.LastBone))
+                        if (data.localTransformFlag && state <= LightSyncData.STATE_BONE && state > LightSyncData.STATE_BONE - ((sbyte)HumanBodyBones.LastBone))
                         {
-                            HumanBodyBones parentBone = (HumanBodyBones)(LightSyncData.STATE_BONE - data.state);
+                            HumanBodyBones parentBone = (HumanBodyBones)(LightSyncData.STATE_BONE - state);
                             parentPos = data.Owner.GetBonePosition(parentBone);
                             parentRot = data.Owner.GetBoneRotation(parentBone);
                         }
@@ -710,16 +749,32 @@ namespace MMMaellon.LightSync
         {
             recordedPos = rigid.position;
             recordedRot = rigid.rotation;
-            recordedVel = rigid.velocity;
-            recordedSpin = rigid.angularVelocity;
+            if (rigid.isKinematic)
+            {
+                recordedVel = Vector3.zero;
+                recordedSpin = Vector3.zero;
+            }
+            else
+            {
+                recordedVel = rigid.velocity;
+                recordedSpin = rigid.angularVelocity;
+            }
         }
 
         public void RecordLocalTransforms()
         {
             recordedPos = transform.localPosition;
             recordedRot = transform.localRotation;
-            recordedVel = Quaternion.Inverse(rigid.rotation) * rigid.velocity;
-            recordedSpin = Quaternion.Inverse(rigid.rotation) * rigid.angularVelocity;
+            if (rigid.isKinematic)
+            {
+                recordedVel = Vector3.zero;
+                recordedSpin = Vector3.zero;
+            }
+            else
+            {
+                recordedVel = Quaternion.Inverse(rigid.rotation) * rigid.velocity;
+                recordedSpin = Quaternion.Inverse(rigid.rotation) * rigid.angularVelocity;
+            }
         }
 
         public void RecordRelativeTransforms(Vector3 parentPos, Quaternion parentRot)
@@ -727,8 +782,16 @@ namespace MMMaellon.LightSync
             var invParentRot = Quaternion.Inverse(parentRot);
             recordedPos = invParentRot * (rigid.position - parentPos);
             recordedRot = invParentRot * rigid.rotation;
-            recordedVel = Quaternion.Inverse(rigid.rotation) * rigid.velocity;
-            recordedSpin = Quaternion.Inverse(rigid.rotation) * rigid.angularVelocity;
+            if (rigid.isKinematic)
+            {
+                recordedVel = Vector3.zero;
+                recordedSpin = Vector3.zero;
+            }
+            else
+            {
+                recordedVel = Quaternion.Inverse(rigid.rotation) * rigid.velocity;
+                recordedSpin = Quaternion.Inverse(rigid.rotation) * rigid.angularVelocity;
+            }
         }
 
         public void SendTransforms()
@@ -778,15 +841,19 @@ namespace MMMaellon.LightSync
             }
             else
             {
-                rigid.position = targetPos;
-                rigid.rotation = targetRot;
+                transform.position = targetPos;
+                transform.rotation = targetRot;
             }
+            rigid.position = transform.position;
+            rigid.rotation = transform.rotation;
         }
 
         public void ApplyRelativeTransforms(Vector3 parentPos, Quaternion parentRot, Vector3 targetPos, Quaternion targetRot)
         {
-            rigid.position = parentPos + (parentRot * targetPos);
-            rigid.rotation = parentRot * targetRot;
+            transform.position = parentPos + (parentRot * targetPos);
+            transform.rotation = parentRot * targetRot;
+            rigid.position = transform.position;
+            rigid.rotation = transform.rotation;
         }
 
         public void ApplyVelocities()
@@ -879,14 +946,14 @@ namespace MMMaellon.LightSync
 
             respawnHeight = VRC_SceneDescriptor.Instance.RespawnHeightY;
 
+            rigid = GetComponent<Rigidbody>();
+            pickup = GetComponent<VRC_Pickup>();
             rigid.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-            rigid.interpolation = RigidbodyInterpolation.Interpolate;
-
         }
 
         public void OnValidate()
         {
-            AutoSetup();
+            StartCoroutine(AutoSetup());
         }
 
         public void RefreshHideFlags()
@@ -899,10 +966,10 @@ namespace MMMaellon.LightSync
             }
         }
 
-        public void AutoSetup()
+        public IEnumerator<WaitForSeconds> AutoSetup()
         {
+            yield return new WaitForSeconds(0);
             _print("Auto setup");
-
             rigid = GetComponent<Rigidbody>();
             pickup = GetComponent<VRC_Pickup>();
             CreateDataObject();
@@ -943,11 +1010,64 @@ namespace MMMaellon.LightSync
                     data.sync = this;
                 }
 
-                return;
+                if (networkDataOptimization == NetworkDataOptimization.Ultra && data is LightSyncDataUltra)
+                {
+                    return;
+                }
+                else if (networkDataOptimization == NetworkDataOptimization.High && data is LightSyncDataHigh)
+                {
+                    return;
+                }
+                else if (networkDataOptimization == NetworkDataOptimization.Low && data is LightSyncDataLow)
+                {
+                    return;
+                }
+                else if (networkDataOptimization == NetworkDataOptimization.Unoptimized && data is LightSyncDataUnoptimized)
+                {
+                    return;
+                }
+
+                DestroyImmediate(data.gameObject);
             }
-            GameObject dataObject = new(name + "_data");
+            GameObject dataObject;
+            switch (networkDataOptimization)
+            {
+                case NetworkDataOptimization.Ultra:
+                    {
+                        dataObject = new(name + "_dataUltra");
+                        dataObject.transform.SetParent(transform, false);
+                        data = dataObject.AddComponent<LightSyncDataUltra>();
+                        break;
+                    }
+                case NetworkDataOptimization.High:
+                    {
+                        dataObject = new(name + "_dataHigh");
+                        dataObject.transform.SetParent(transform, false);
+                        data = dataObject.AddComponent<LightSyncDataHigh>();
+                        break;
+                    }
+                case NetworkDataOptimization.Low:
+                    {
+                        dataObject = new(name + "_dataLow");
+                        dataObject.transform.SetParent(transform, false);
+                        data = dataObject.AddComponent<LightSyncDataLow>();
+                        break;
+                    }
+                case NetworkDataOptimization.Unoptimized:
+                    {
+                        dataObject = new(name + "_dataUnoptimized");
+                        dataObject.transform.SetParent(transform, false);
+                        data = dataObject.AddComponent<LightSyncDataUnoptimized>();
+                        break;
+                    }
+                default:
+                    {
+                        dataObject = new(name + "_dataDisabled ");
+                        data = dataObject.AddComponent<LightSyncDataDisabled>();
+                        break;
+                    }
+            }
             dataObject.transform.SetParent(transform, false);
-            data = dataObject.AddComponent<LightSyncData>();
             data.sync = this;
             data.RefreshHideFlags();
         }
@@ -985,13 +1105,14 @@ namespace MMMaellon.LightSync
 
         public void OnDestroy()
         {
+            Debug.LogWarning("OnDestroy");
             if (data)
             {
-                Destroy(data.gameObject);
+                data.StartCoroutine(data.Destroy());
             }
             if (looper)
             {
-                Destroy(looper.gameObject);
+                looper.StartCoroutine(looper.Destroy());
             }
         }
 #endif
@@ -1160,8 +1281,6 @@ namespace MMMaellon.LightSync
             }
         }
 
-
-
         public static void SetupSelectedLightSyncs()
         {
             bool syncFound = false;
@@ -1188,6 +1307,31 @@ namespace MMMaellon.LightSync
             if (!syncFound)
             {
                 Debug.LogWarningFormat("[LightSync] Auto Setup failed: No LightSync selected");
+            }
+        }
+        public void OnDestroy()
+        {
+            if (target == null)
+            {
+                CleanHelperObjects();
+            }
+        }
+
+        public void CleanHelperObjects()
+        {
+            foreach (var data in FindObjectsOfType<LightSyncData>())
+            {
+                if (data.sync == null || data.sync.data != data)
+                {
+                    data.StartCoroutine(data.Destroy());
+                }
+            }
+            foreach (var looper in FindObjectsOfType<LightSyncLooper>())
+            {
+                if (looper.sync == null || looper.sync.looper != looper)
+                {
+                    looper.StartCoroutine(looper.Destroy());
+                }
             }
         }
     }

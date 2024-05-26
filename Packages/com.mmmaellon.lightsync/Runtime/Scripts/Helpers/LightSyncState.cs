@@ -47,7 +47,7 @@ namespace MMMaellon.LightSync
 
         public bool IsActiveState()
         {
-            return sync.data.state == stateID;
+            return sync.state == stateID;
         }
 
         /*
