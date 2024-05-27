@@ -11,7 +11,7 @@ namespace MMMaellon.LightSync
     {
         public LightSync sync;
         public sbyte prevState;
-        protected sbyte _state;
+        sbyte _state = STATE_PHYSICS;
         public sbyte state
         {
             get => _state;
@@ -36,8 +36,13 @@ namespace MMMaellon.LightSync
 
         protected byte syncCount;
         protected byte localSyncCount; //counts up every time we receive new data
-        protected byte teleportCount;
+        protected byte teleportCount = 1;
         protected byte localTeleportCount; //counts up every time we receive new data
+        public int loopTimingFlag = LOOP_POSTLATEUPDATE;
+
+        public const int LOOP_UPDATE = 0;
+        public const int LOOP_FIXEDUPDATE = 1;
+        public const int LOOP_POSTLATEUPDATE = 2;
 
         public virtual bool teleportFlag
         {
@@ -69,12 +74,12 @@ namespace MMMaellon.LightSync
             }
         }
 
-        public bool localTransformFlag;
+        public bool localTransformFlag = true;
         public bool leftHandFlag;
         public bool kinematicFlag;
-        public bool pickupableFlag;
+        public bool pickupableFlag = true;
         public bool bounceFlag;
-        public bool sleepFlag;
+        public bool sleepFlag = true;
 
         public float autoSmoothingTime
         {
@@ -125,7 +130,7 @@ namespace MMMaellon.LightSync
         }
         public virtual string prettyPrint()
         {
-            return StateToStr(state) + " local:" + localTransformFlag + " left:" + leftHandFlag + " k:" + kinematicFlag + " p:" + pickupableFlag + " b:" + bounceFlag + " s:" + sleepFlag;
+            return StateToStr(state) + " local:" + localTransformFlag + " left:" + leftHandFlag + " k:" + kinematicFlag + " p:" + pickupableFlag + " b:" + bounceFlag + " s:" + sleepFlag + " loop:" + loopTimingFlag + " pos:" + pos + " rot:" + rot;
         }
 
 
@@ -142,9 +147,14 @@ namespace MMMaellon.LightSync
             localSyncCount = syncCount;
         }
 
+        public override void OnPreSerialization()
+        {
+            SyncNewData();
+            sync._print("SENDING DATA: " + prettyPrint());
+        }
+
         public override void OnDeserialization(VRC.Udon.Common.DeserializationResult result)
         {
-            sync.Start();//set spawn and stuff if it's not already set
             if (localSyncCount > syncCount && localSyncCount - syncCount < 8)//means we got updates out of order
             {
                 //revert all synced values
@@ -156,12 +166,14 @@ namespace MMMaellon.LightSync
             AcceptNewSyncData();
             localSyncCount = syncCount;
 
-            sync.looper.StartLoop();
+            sync.StartLoop();
         }
 
         public abstract void RejectNewSyncData();
 
         public abstract void AcceptNewSyncData();
+
+        public abstract void SyncNewData();
 
         [System.NonSerialized, FieldChangeCallback(nameof(Owner))]
         public VRCPlayerApi _Owner;

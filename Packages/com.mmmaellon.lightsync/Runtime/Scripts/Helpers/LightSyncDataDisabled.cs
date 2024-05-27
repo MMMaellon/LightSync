@@ -14,5 +14,9 @@ namespace MMMaellon.LightSync
 
         }
 
+        public override void SyncNewData()
+        {
+
+        }
     }
 }

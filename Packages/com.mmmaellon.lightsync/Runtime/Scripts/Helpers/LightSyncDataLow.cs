@@ -40,7 +40,7 @@ namespace MMMaellon.LightSync
             rot = _rot;
             vel = _vel;
             spin = _spin;
-            _state = (sbyte)(_data_state_flags >> 24);
+            state = (sbyte)(_data_state_flags >> 24);
             syncCount = (byte)((_data_state_flags >> 16) & 0xF);
             teleportCount = (byte)((_data_state_flags >> 8) & 0xF);
             localTransformFlag = (_data_state_flags & 0b10000000) != 0;
@@ -49,6 +49,7 @@ namespace MMMaellon.LightSync
             leftHandFlag = (_data_state_flags & 0b00010000) != 0;
             bounceFlag = (_data_state_flags & 0b00001000) != 0;
             sleepFlag = (_data_state_flags & 0b00000100) != 0;
+            loopTimingFlag = _data_state_flags & 0b00000011;
 
             prevPos = _pos;
             prevRot = _rot;
@@ -58,10 +59,10 @@ namespace MMMaellon.LightSync
         }
 
 
-        public override void OnPreSerialization()
+        public override void SyncNewData()
         {
             IncrementSyncCounter();
-            _data_state_flags = (_state << 24) | (syncCount << 16) | (teleportCount << 8);
+            _data_state_flags = (state << 24) | (syncCount << 16) | (teleportCount << 8) | loopTimingFlag;
             _data_state_flags |= localTransformFlag ? 0b10000000 : 0b0;
             _data_state_flags |= kinematicFlag ? 0b01000000 : 0b0;
             _data_state_flags |= pickupableFlag ? 0b00100000 : 0b0;

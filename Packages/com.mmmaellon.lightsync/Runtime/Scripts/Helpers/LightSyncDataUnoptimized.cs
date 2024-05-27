@@ -32,6 +32,8 @@ namespace MMMaellon.LightSync
         Vector3 _vel = Vector3.zero;
         [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
         Vector3 _spin = Vector3.zero;
+        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        int _loopTiming;
 
         sbyte prevStateData = STATE_PHYSICS;
         byte prevSyncCount = 0;
@@ -46,6 +48,7 @@ namespace MMMaellon.LightSync
         Quaternion prevRot = Quaternion.identity;
         Vector3 prevVel = Vector3.zero;
         Vector3 prevSpin = Vector3.zero;
+        int prevLoopTiming;
         public override void RejectNewSyncData()
         {
             _stateData = prevStateData;
@@ -61,6 +64,7 @@ namespace MMMaellon.LightSync
             _rot = prevRot;
             _vel = prevVel;
             _spin = prevSpin;
+            _loopTiming = prevLoopTiming;
         }
 
         public override void AcceptNewSyncData()
@@ -78,6 +82,7 @@ namespace MMMaellon.LightSync
             rot = _rot;
             vel = _vel;
             spin = _spin;
+            loopTimingFlag = _loopTiming;
 
             prevStateData = _stateData;
             prevSyncCount = _syncCount;
@@ -92,9 +97,10 @@ namespace MMMaellon.LightSync
             prevRot = _rot;
             prevVel = _vel;
             prevSpin = _spin;
+            prevLoopTiming = _loopTiming;
         }
 
-        public override void OnPreSerialization()
+        public override void SyncNewData()
         {
             IncrementSyncCounter();
             _stateData = state;
@@ -110,6 +116,7 @@ namespace MMMaellon.LightSync
             _rot = rot;
             _vel = vel;
             _spin = spin;
+            _loopTiming = loopTimingFlag;
         }
     }
 }

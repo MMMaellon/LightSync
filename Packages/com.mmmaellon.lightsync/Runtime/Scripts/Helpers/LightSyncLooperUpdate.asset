@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
-  m_Name: LightSyncLooper
+  m_Name: LightSyncLooperUpdate
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: e570a330e58ea544ca3e816cff50eb4e,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: af1e9c0120eb44f4190a77205b26a954,
     type: 2}
   udonAssembly: 
   assemblyError: 
-  sourceCsScript: {fileID: 11500000, guid: e02991b220fb86847b9f1606fd031356, type: 3}
+  sourceCsScript: {fileID: 11500000, guid: bea5fa186e4e67342a4be5316722cfb4, type: 3}
   scriptVersion: 2
   compiledVersion: 2
   behaviourSyncMode: 1
   hasInteractEvent: 0
-  scriptID: 3426396473876992125
+  scriptID: 3285009010804605289
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 

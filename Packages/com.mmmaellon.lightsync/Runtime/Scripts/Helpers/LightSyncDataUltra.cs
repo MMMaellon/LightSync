@@ -45,7 +45,7 @@ namespace MMMaellon.LightSync
             vel.y = _data_vel_flags.y;
             vel.z = ExtractHalf(false, _data_vel_flags.x);
             flag_bytes = BitConverter.SingleToInt32Bits(_data_vel_flags.z);
-            _state = (sbyte)(flag_bytes >> 24);
+            state = (sbyte)(flag_bytes >> 24);
             syncCount = (byte)((flag_bytes >> 16) & 0xF);
             teleportCount = (byte)((flag_bytes >> 8) & 0xF);
             localTransformFlag = (flag_bytes & 0b10000000) != 0;
@@ -54,22 +54,26 @@ namespace MMMaellon.LightSync
             leftHandFlag = (flag_bytes & 0b00010000) != 0;
             bounceFlag = (flag_bytes & 0b00001000) != 0;
             sleepFlag = (flag_bytes & 0b00000100) != 0;
+            loopTimingFlag = flag_bytes & 0b00000011;
 
             prev_data_pos = _data_pos;
             prev_data_rot_spin = _data_rot_spin;
             prev_data_flags_vel = _data_vel_flags;
         }
 
-        public override void OnPreSerialization()
+        float magnitude;
+        public override void SyncNewData()
         {
             IncrementSyncCounter();
             _data_pos = pos;
-            _data_rot_spin.x = CombineFloats(rot.x, spin.x);
-            _data_rot_spin.y = CombineFloats(rot.y, spin.y);
-            _data_rot_spin.z = CombineFloats(rot.z, spin.z);
+            rot.ToAngleAxis(out magnitude, out _rot_axis);
+            _rot_axis *= magnitude;
+            _data_rot_spin.x = CombineFloats(_rot_axis.x, spin.x);
+            _data_rot_spin.y = CombineFloats(_rot_axis.y, spin.y);
+            _data_rot_spin.z = CombineFloats(_rot_axis.z, spin.z);
             _data_vel_flags.x = CombineFloats(vel.x, vel.z);
             _data_vel_flags.y = vel.y;
-            flag_bytes = (_state << 24) | (syncCount << 16) | (teleportCount << 8);
+            flag_bytes = (state << 24) | (syncCount << 16) | (teleportCount << 8) | loopTimingFlag;
             flag_bytes |= localTransformFlag ? 0b10000000 : 0b0;
             flag_bytes |= kinematicFlag ? 0b01000000 : 0b0;
             flag_bytes |= pickupableFlag ? 0b00100000 : 0b0;

@@ -1,8 +1,6 @@
 ﻿using System;
 using UdonSharp;
 using UnityEngine;
-using VRC.SDKBase;
-using VRC.Udon;
 
 namespace MMMaellon.LightSync
 {
@@ -41,7 +39,7 @@ namespace MMMaellon.LightSync
             spin.x = ExtractHalf(false, _data_rot_spin.x);
             spin.y = ExtractHalf(false, _data_rot_spin.y);
             spin.z = ExtractHalf(false, _data_rot_spin.z);
-            _state = (sbyte)(_data_state_flags >> 24);
+            state = (sbyte)(_data_state_flags >> 24);
             syncCount = (byte)((_data_state_flags >> 16) & 0xF);
             teleportCount = (byte)((_data_state_flags >> 8) & 0xF);
             localTransformFlag = (_data_state_flags & 0b10000000) != 0;
@@ -50,6 +48,7 @@ namespace MMMaellon.LightSync
             leftHandFlag = (_data_state_flags & 0b00010000) != 0;
             bounceFlag = (_data_state_flags & 0b00001000) != 0;
             sleepFlag = (_data_state_flags & 0b00000100) != 0;
+            loopTimingFlag = _data_state_flags & 0b00000011;
 
             prevPos = _pos;
             prevVel = _vel;
@@ -57,10 +56,11 @@ namespace MMMaellon.LightSync
             prev_data_rot_spin = _data_rot_spin;
         }
 
-        public override void OnPreSerialization()
+        float magnitude;
+        public override void SyncNewData()
         {
             IncrementSyncCounter();
-            _data_state_flags = (_state << 24) | (syncCount << 16) | (teleportCount << 8);
+            _data_state_flags = (state << 24) | (syncCount << 16) | (teleportCount << 8) | loopTimingFlag;
             _data_state_flags |= localTransformFlag ? 0b10000000 : 0b0;
             _data_state_flags |= kinematicFlag ? 0b01000000 : 0b0;
             _data_state_flags |= pickupableFlag ? 0b00100000 : 0b0;
@@ -69,9 +69,11 @@ namespace MMMaellon.LightSync
             _data_state_flags |= sleepFlag ? 0b00000100 : 0b0;
             _pos = pos;
             _vel = vel;
-            _data_rot_spin.x = CombineFloats(rot.x, spin.x);
-            _data_rot_spin.y = CombineFloats(rot.y, spin.y);
-            _data_rot_spin.z = CombineFloats(rot.z, spin.z);
+            rot.ToAngleAxis(out magnitude, out _rot_axis);
+            _rot_axis *= magnitude;
+            _data_rot_spin.x = CombineFloats(_rot_axis.x, spin.x);
+            _data_rot_spin.y = CombineFloats(_rot_axis.y, spin.y);
+            _data_rot_spin.z = CombineFloats(_rot_axis.z, spin.z);
 
             prevPos = _pos;
             prevVel = _vel;
