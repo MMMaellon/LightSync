@@ -6,33 +6,33 @@ namespace MMMaellon.LightSync
 {
     public class LightSyncDataUnoptimized : LightSyncData
     {
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         sbyte _stateData = STATE_PHYSICS;
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         byte _syncCount = 0;
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         byte _teleportCount = 1;//start with a teleport
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         bool _localTransformFlag = true;
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         bool _leftHandFlag = false;
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         bool _kinematicFlag = false;
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         bool _pickupableFlag = true;
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         bool _bounceFlag = false;
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         bool _sleepFlag = true;
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         Vector3 _pos = Vector3.zero;
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         Quaternion _rot = Quaternion.identity;
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         Vector3 _vel = Vector3.zero;
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         Vector3 _spin = Vector3.zero;
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         int _loopTiming;
 
         sbyte prevStateData = STATE_PHYSICS;

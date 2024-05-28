@@ -6,13 +6,13 @@ namespace MMMaellon.LightSync
 {
     public class LightSyncDataHigh : LightSyncData
     {
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         int _data_state_flags;
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         Vector3 _pos = Vector3.zero;
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         Vector3 _data_rot_spin = Vector3.zero;
-        [System.NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         Vector3 _vel = Vector3.zero;
 
         int prevData;

@@ -9,15 +9,15 @@ namespace MMMaellon.LightSync
 {
     public class LightSyncDataLow : LightSyncData
     {
-        [NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         int _data_state_flags;
-        [NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         Vector3 _pos = Vector3.zero;
-        [NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         Quaternion _rot = Quaternion.identity;
-        [NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         Vector3 _vel = Vector3.zero;
-        [NonSerialized, UdonSynced(UdonSyncMode.None)]
+        [UdonSynced(UdonSyncMode.None)]
         Vector3 _spin = Vector3.zero;
 
         int prevData;

@@ -1,11 +1,7 @@
 ﻿
 using System;
-using System.Collections;
 using UdonSharp;
 using UnityEngine;
-using UnityEngine.Rendering.VirtualTexturing;
-using VRC.SDKBase;
-using VRC.Udon;
 
 namespace MMMaellon.LightSync
 {
@@ -117,19 +113,6 @@ namespace MMMaellon.LightSync
                       Mathf.RoundToInt(Mathf.Clamp(secondHalf * halfMultiplier, short.MinValue, short.MaxValue)) & 0xFFFF
                     )
                 );
-        }
-
-        public void Start()
-        {
-            Debug.LogWarning(BytesToStr((-1) & 0xFFFF));
-            float f1 = -3f;
-            float f2 = -360.2f;
-            float data = CombineFloats(f1, f2);
-            Debug.LogWarning(BytesToStr(BitConverter.SingleToInt32Bits(data)));
-            f1 = ExtractHalf(true, data);
-            f2 = ExtractHalf(false, data);
-            Debug.LogWarning(f1);
-            Debug.LogWarning(f2);
         }
 
         public string BytesToStr(int bytes)

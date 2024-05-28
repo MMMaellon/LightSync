@@ -17,27 +17,43 @@ namespace MMMaellon.LightSync
             get => _state;
             set
             {
-                prevState = _state;
-                sync.OnExitState();
-                _state = value;
-                sync.OnEnterState();
-                foreach (LightSyncListener listener in sync.eventListeners)
+                if (IsOwner())
                 {
-                    listener.OnChangeState(sync, prevState, _state);
+                    prevState = _state;
+                    sync.OnExitState();
+                }
+                _state = value;
+                if (IsOwner())
+                {
+                    sync.OnEnterState();
+                    foreach (LightSyncListener listener in sync.eventListeners)
+                    {
+                        listener.OnChangeState(sync, prevState, _state);
+                    }
                 }
 
             }
         }
 
-        public Vector3 pos;
+        Vector3 _temp_pos;
+        public Vector3 pos
+        {
+            get => _temp_pos;
+            set
+            {
+                _temp_pos = value;
+            }
+        }
         public Quaternion rot;
         public Vector3 vel;
         public Vector3 spin;
 
-        protected byte syncCount;
-        protected byte localSyncCount; //counts up every time we receive new data
+        [System.NonSerialized]
+        public byte syncCount;
+        [System.NonSerialized]
+        public byte localSyncCount; //counts up every time we receive new data
         protected byte teleportCount = 1;
-        protected byte localTeleportCount; //counts up every time we receive new data
+        protected byte localTeleportCount; //counts up every time we receive new data;
         public int loopTimingFlag = LOOP_POSTLATEUPDATE;
 
         public const int LOOP_UPDATE = 0;
@@ -81,14 +97,7 @@ namespace MMMaellon.LightSync
         public bool bounceFlag;
         public bool sleepFlag = true;
 
-        public float autoSmoothingTime
-        {
-#if !UNITY_EDITOR
-            get => sync.smoothingTime > 0 ? sync.smoothingTime : Time.realtimeSinceStartup - Networking.SimulationTime(gameObject);
-#else
-            get => 0.25f;
-#endif
-        }
+        public float autoSmoothingTime;
 
         /*
             STATES
@@ -130,7 +139,7 @@ namespace MMMaellon.LightSync
         }
         public virtual string prettyPrint()
         {
-            return StateToStr(state) + " local:" + localTransformFlag + " left:" + leftHandFlag + " k:" + kinematicFlag + " p:" + pickupableFlag + " b:" + bounceFlag + " s:" + sleepFlag + " loop:" + loopTimingFlag + " pos:" + pos + " rot:" + rot;
+            return StateToStr(state) + " local:" + localTransformFlag + " left:" + leftHandFlag + " k:" + kinematicFlag + " p:" + pickupableFlag + " b:" + bounceFlag + " s:" + sleepFlag + " loop:" + loopTimingFlag + " pos:" + pos + " rot:" + rot + " vel:" + vel + " spin:" + spin;
         }
 
 
@@ -138,7 +147,7 @@ namespace MMMaellon.LightSync
         {
             if (syncCount == byte.MaxValue)
             {
-                syncCount = 0;
+                syncCount = 1;//can't ever be 0 again. So if it is 0 then we know no network syncs have gone through yet.
             }
             else
             {
@@ -153,8 +162,35 @@ namespace MMMaellon.LightSync
             sync._print("SENDING DATA: " + prettyPrint());
         }
 
+        float remainingSmoothingTime;
+        float lastSmoothingCalcTime;
+        public void CalcSmoothingTime(float sendTime)
+        {
+            if (sync.smoothingTime > 0)
+            {
+                autoSmoothingTime = sync.smoothingTime;
+            }
+            else if (sync.smoothingTime == 0)
+            {
+                autoSmoothingTime = Time.realtimeSinceStartup - Networking.SimulationTime(gameObject);
+            }
+            else
+            {
+                remainingSmoothingTime = -sync.smoothingTime - (Time.realtimeSinceStartup - sendTime);
+                if (autoSmoothingTime == 0)
+                {
+                    autoSmoothingTime = Mathf.Clamp(remainingSmoothingTime, 0, Time.realtimeSinceStartup - lastSmoothingCalcTime);
+                }
+                else
+                {
+                    autoSmoothingTime = Mathf.Lerp(autoSmoothingTime, Mathf.Clamp(remainingSmoothingTime, 0, Time.realtimeSinceStartup - lastSmoothingCalcTime), Mathf.Abs((remainingSmoothingTime - autoSmoothingTime) / sync.smoothingTime));
+                }
+            }
+            lastSmoothingCalcTime = Time.realtimeSinceStartup;
+        }
         public override void OnDeserialization(VRC.Udon.Common.DeserializationResult result)
         {
+            CalcSmoothingTime(result.sendTime);
             if (localSyncCount > syncCount && localSyncCount - syncCount < 8)//means we got updates out of order
             {
                 //revert all synced values
@@ -162,10 +198,18 @@ namespace MMMaellon.LightSync
                 RejectNewSyncData();
                 return;
             }
-            sync._print("NEW DATA: " + prettyPrint());
+            sync.StopLoop();
+            prevState = _state;
+            sync.OnExitState();
             AcceptNewSyncData();
             localSyncCount = syncCount;
+            sync.OnEnterState();
+            foreach (LightSyncListener listener in sync.eventListeners)
+            {
+                listener.OnChangeState(sync, prevState, _state);
+            }
 
+            sync._print("NEW DATA: " + prettyPrint());
             sync.StartLoop();
         }
 

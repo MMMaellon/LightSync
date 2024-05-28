@@ -14,13 +14,20 @@ namespace MMMaellon.LightSync
         public float startTime = 0;
         [System.NonSerialized]
         public float elapsedTime = 0;
+        [System.NonSerialized]
+        public float firstLoopTime = 0;
 
         public void Loop()
         {
+            if (!enabled)
+            {
+                //prevents a race condition
+                return;
+            }
             if (firstLerp)
             {
                 firstLerp = false;
-                startTime = Time.timeSinceLevelLoad;
+                firstLoopTime = Time.timeSinceLevelLoad;
                 elapsedTime = 0;
                 if (data.IsOwner())
                 {
@@ -29,7 +36,7 @@ namespace MMMaellon.LightSync
             }
             else
             {
-                elapsedTime = Time.timeSinceLevelLoad - startTime;
+                elapsedTime = Time.timeSinceLevelLoad - firstLoopTime;
             }
             if (!sync.OnLerp(elapsedTime, GetAutoSmoothedInterpolation(elapsedTime)))
             {
@@ -37,16 +44,19 @@ namespace MMMaellon.LightSync
             }
         }
 
-        public float GetAutoSmoothedInterpolation(float elapsedTime)
+        public virtual float GetAutoSmoothedInterpolation(float elapsedTime)
         {
-            return data.autoSmoothingTime <= 0 ? 1 : elapsedTime / data.autoSmoothingTime;
+            return lerpPeriod <= 0 ? 1 : (Time.realtimeSinceStartup - startTime) / lerpPeriod;
         }
 
         bool firstLerp;
+        float lerpPeriod;
         public void StartLoop()
         {
             firstLerp = true;
             enabled = true;
+            startTime = Time.realtimeSinceStartup;
+            lerpPeriod = data.autoSmoothingTime;
         }
 
         public void StopLoop()

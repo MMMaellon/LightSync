@@ -7,5 +7,9 @@ namespace MMMaellon.LightSync
         {
             Loop();
         }
+        public override float GetAutoSmoothedInterpolation(float elapsedTime)
+        {
+            return data.autoSmoothingTime <= 0 ? 1 : (elapsedTime + Time.fixedTime) / data.autoSmoothingTime;
+        }
     }
 }
