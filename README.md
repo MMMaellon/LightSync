@@ -18,7 +18,7 @@ Download all my VCC packages here: <https://mmmaellon.github.io/MMMaellonVCCList
 
 # What is the difference between this and SmartObjectSync
 
-[Smart Object Sync](https://github.com/MMMaellon/SmartObjectSync) was my first attempt at making my own custom syncing scripts. It works well, but I learned a lot over the time I spent developing SmartObjectSync and realized I could do better. So I took everything I learned from making SmartObjectSync and started over with LightSync.
+[Smart Object Sync](https://github.com/MMMaellon/SmartObjectSync) was my first attempt at making my own custom syncing scripts. It works well, but I learned a lot since and realized I could do better. So I started over with LightSync.
 
 Some highlights of how it's better:
 1. It uses almost half as much network bandwidth.
