@@ -7,7 +7,7 @@ using VRC.Udon.Common;
 
 namespace MMMaellon.LightSync
 {
-    [UdonBehaviourSyncMode(BehaviourSyncMode.None), RequireComponent(typeof(Rigidbody))]
+    [RequireComponent(typeof(Rigidbody))]
     public class LightSync : UdonSharpBehaviour
     {
 
