@@ -6,6 +6,7 @@ using VRC.SDKBase;
 
 namespace MMMaellon.LightSync
 {
+    [AddComponentMenu("")]//prevents it from showing up in the add component menu
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public abstract class LightSyncData : UdonSharpBehaviour
     {
@@ -26,10 +27,6 @@ namespace MMMaellon.LightSync
                 if (IsOwner())
                 {
                     sync.OnEnterState();
-                    foreach (LightSyncListener listener in sync.eventListeners)
-                    {
-                        listener.OnChangeState(sync, prevState, _state);
-                    }
                 }
 
             }
@@ -204,10 +201,6 @@ namespace MMMaellon.LightSync
             AcceptNewSyncData();
             localSyncCount = syncCount;
             sync.OnEnterState();
-            foreach (LightSyncListener listener in sync.eventListeners)
-            {
-                listener.OnChangeState(sync, prevState, _state);
-            }
 
             sync._print("NEW DATA: " + prettyPrint());
             sync.StartLoop();
@@ -229,14 +222,8 @@ namespace MMMaellon.LightSync
                 if (_Owner != value)
                 {
                     prevOwner = _Owner;
-                    foreach (LightSyncListener listener in sync.eventListeners)
-                    {
-                        if (Utilities.IsValid(listener))
-                        {
-                            listener.OnChangeOwner(sync, _Owner, value);
-                        }
-                    }
                     _Owner = value;
+                    sync.OnChangeOwner();
                     if (IsOwner())
                     {
                         if (state <= STATE_HELD && (sync.pickup == null || !sync.pickup.IsHeld))
@@ -254,7 +241,8 @@ namespace MMMaellon.LightSync
                 }
             }
         }
-        VRCPlayerApi prevOwner;
+        [System.NonSerialized]
+        public VRCPlayerApi prevOwner;
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
             Owner = player;
@@ -289,13 +277,19 @@ namespace MMMaellon.LightSync
                 else
                 {
                     sync = null;
-                    StartCoroutine(Destroy());
+                    DestroyAsync();
                 }
             }
 
             gameObject.hideFlags = HideFlags.None;
         }
-
+        public void DestroyAsync()
+        {
+            if (gameObject.activeInHierarchy && enabled)//prevents log spam in play mode
+            {
+                StartCoroutine(Destroy());
+            }
+        }
         public IEnumerator<WaitForSeconds> Destroy()
         {
             yield return new WaitForSeconds(0);

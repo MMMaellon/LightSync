@@ -258,6 +258,14 @@ namespace MMMaellon.LightSync
             else
             {
                 sync.AutoSetup();
+                foreach (LightSyncState state in sync.customStates)
+                {
+                    if (state is LightSyncStateWithData stateWithData)
+                    {
+                        stateWithData.AutoSetup();
+                    }
+
+                }
             }
         }
         public static bool IsEditable(Component component)

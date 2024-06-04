@@ -7,6 +7,8 @@ using VRC.Udon;
 
 namespace MMMaellon.LightSync
 {
+    [AddComponentMenu("")]//prevents it from showing up in the add component menu
+    [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class LightSyncDataLow : LightSyncData
     {
         [UdonSynced(UdonSyncMode.None)]

@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace MMMaellon.LightSync
 {
+    [AddComponentMenu("")]//prevents it from showing up in the add component menu
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class LightSyncDataUltra : LightSyncData
     {

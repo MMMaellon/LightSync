@@ -5,14 +5,17 @@ using VRC.SDKBase;
 
 namespace MMMaellon.LightSync
 {
-    [UdonBehaviourSyncMode(BehaviourSyncMode.None), RequireComponent(typeof(LightSync))]
+    [RequireComponent(typeof(LightSync))]
     public abstract class LightSyncState : UdonSharpBehaviour
     {
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
         public virtual void Reset()
         {
-            sync = GetComponent<LightSync>();
-            sync.SetupStates();
+            if (!sync || stateID < 0 || stateID >= sync.customStates.Length || sync.customStates[stateID] != this)
+            {
+                sync = GetComponent<LightSync>();
+                sync.SetupStates();
+            }
         }
 #endif
         [HideInInspector]
@@ -24,25 +27,19 @@ namespace MMMaellon.LightSync
 
         public virtual void EnterState()
         {
-            if (Utilities.IsValid(sync))
+            if (!sync.IsOwner())
             {
-                if (!sync.IsOwner())
-                {
-                    Networking.SetOwner(Networking.LocalPlayer, sync.gameObject);
-                }
-                // sync.state = (stateID + LightSync.STATE_CUSTOM);
+                Networking.SetOwner(Networking.LocalPlayer, sync.gameObject);
             }
+            sync.state = stateID;
         }
         public virtual void ExitState()
         {
-            if (sync)
+            if (!sync.IsOwner())
             {
-                if (!sync.IsOwner())
-                {
-                    Networking.SetOwner(Networking.LocalPlayer, sync.gameObject);
-                }
-                // sync.state = LightSync.STATE_FALLING;
+                Networking.SetOwner(Networking.LocalPlayer, sync.gameObject);
             }
+            sync.state = LightSyncData.STATE_PHYSICS;
         }
 
         public bool IsActiveState()

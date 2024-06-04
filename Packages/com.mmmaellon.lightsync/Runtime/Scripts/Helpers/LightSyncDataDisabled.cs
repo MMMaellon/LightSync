@@ -1,7 +1,10 @@
-﻿using UnityEngine;
+﻿using UdonSharp;
+using UnityEngine;
 
 namespace MMMaellon.LightSync
 {
+    [AddComponentMenu("")]//prevents it from showing up in the add component menu
+    [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class LightSyncDataDisabled : LightSyncData
     {
         sbyte _stateData = STATE_PHYSICS;

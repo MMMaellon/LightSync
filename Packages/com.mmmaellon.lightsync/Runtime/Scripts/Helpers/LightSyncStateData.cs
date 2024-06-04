@@ -1,31 +1,32 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
-
+using UdonSharp;
 namespace MMMaellon.LightSync
 {
-    [AddComponentMenu("")]//prevents it from showing up in the add component menu
-    public class LightSyncLooperUpdate : LightSyncLooper
+    public abstract class LightSyncStateData : UdonSharpBehaviour
     {
-        public void Update()
-        {
-            Loop();
-        }
-
+        public LightSyncStateWithData state;
+        //IGNORE
+        //These are just here to prevent Unity log spam in the Editor
+        bool _showInternalObjects;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        //ONLY Update need this part because all the loopers are on the same object
-
-        public void OnValidate()
+        public virtual void OnValidate()
         {
             RefreshHideFlags();
         }
 
-        public void RefreshHideFlags()
+        public virtual void RefreshHideFlags()
         {
-            if (sync != null)
+            if (state != null && state.sync != null)
             {
-                if (sync.looper == this)
+                if (state.stateData == this)
                 {
-                    if (sync.showInternalObjects)
+                    if (state.sync.showInternalObjects == _showInternalObjects)
+                    {
+                        return;
+                    }
+                    _showInternalObjects = state.sync.showInternalObjects;
+                    if (state.sync.showInternalObjects)
                     {
                         gameObject.hideFlags = HideFlags.None;
                     }
@@ -37,7 +38,7 @@ namespace MMMaellon.LightSync
                 }
                 else
                 {
-                    sync = null;
+                    state = null;
                     DestroyAsync();
                 }
             }
@@ -45,9 +46,9 @@ namespace MMMaellon.LightSync
             gameObject.hideFlags = HideFlags.None;
         }
 
-        public void DestroyAsync()
+        public void DestroyAsync()//prevents log spam in play mode
         {
-            if (gameObject.activeInHierarchy && enabled)//prevents log spam in play mode
+            if (gameObject.activeInHierarchy && enabled)
             {
                 StartCoroutine(Destroy());
             }

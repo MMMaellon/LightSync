@@ -1,12 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
+using VRC.Udon;
 using VRC.Udon.Common;
 
 namespace MMMaellon.LightSync
 {
+    [AddComponentMenu("LightSync/LightSync")]
     [RequireComponent(typeof(Rigidbody))]
     public class LightSync : UdonSharpBehaviour
     {
@@ -23,6 +26,10 @@ namespace MMMaellon.LightSync
 
         [SerializeField]
         NetworkDataOptimization networkDataOptimization = NetworkDataOptimization.Ultra;
+#else
+        //to get rid of some errors
+        [System.NonSerialized]
+        int networkDataOptimization;
 #endif
         //Gets created in the editor, as an invisible child of this object. Because it's a separate object we can sync it's data separately from the others on this object
         [HideInInspector]
@@ -53,7 +60,12 @@ namespace MMMaellon.LightSync
 
         //Extensions
         [HideInInspector]
-        public LightSyncListener[] eventListeners = new LightSyncListener[0];
+        public Component[] eventListeners = new Component[0];
+        [SerializeField]
+        private UdonBehaviour[] behaviourEventListeners = new UdonBehaviour[0];
+        [SerializeField]
+        private LightSyncListener[] classEventListeners = new LightSyncListener[0];
+
         [HideInInspector]
         public LightSyncState[] customStates = new LightSyncState[0];
         [HideInInspector]
@@ -178,14 +190,13 @@ namespace MMMaellon.LightSync
         {
             if (!IsOwner())
             {
-                Networking.SetOwner(Networking.LocalPlayer, data.gameObject);
+                Networking.SetOwner(Networking.LocalPlayer, gameObject);
             }
             StartLoop();
         }
 
         public void StartLoop()
         {
-            _print("StartLoop");
             switch (data.loopTimingFlag)
             {
                 case 0://Update
@@ -338,10 +349,7 @@ namespace MMMaellon.LightSync
 
         public void OnEnable()
         {
-            if (data)
-            {
-                Networking.SetOwner(Networking.GetOwner(gameObject), data.gameObject);
-            }
+            Networking.SetOwner(Networking.GetOwner(gameObject), data.gameObject);
         }
 
         public override void OnOwnershipTransferred(VRCPlayerApi player)
@@ -349,6 +357,23 @@ namespace MMMaellon.LightSync
             if (Utilities.IsValid(player) && player.isLocal)
             {
                 Networking.SetOwner(player, data.gameObject);
+            }
+        }
+
+        public void OnChangeOwner()
+        {
+            //Gets called by data object
+            foreach (LightSyncListener listener in classEventListeners)
+            {
+                listener.OnChangeOwner(this, data.prevOwner, data.Owner);
+            }
+
+            foreach (UdonBehaviour behaviour in behaviourEventListeners)
+            {
+                behaviour.SetProgramVariable<LightSync>(LightSyncListener.syncVariableName, this);
+                behaviour.SetProgramVariable<VRCPlayerApi>(LightSyncListener.prevOwnerVariableName, data.prevOwner);
+                behaviour.SetProgramVariable<VRCPlayerApi>(LightSyncListener.currentOwnerVariableName, data.Owner);
+                behaviour.SendCustomEvent(LightSyncListener.changeOwnerEventName);
             }
         }
 
@@ -534,6 +559,18 @@ namespace MMMaellon.LightSync
                             }
                             break;
                         }
+                }
+
+                foreach (LightSyncListener listener in classEventListeners)
+                {
+                    listener.OnChangeState(this, data.prevState, data.state);
+                }
+                foreach (UdonBehaviour behaviour in behaviourEventListeners)
+                {
+                    behaviour.SetProgramVariable<LightSync>(LightSyncListener.syncVariableName, this);
+                    behaviour.SetProgramVariable<int>(LightSyncListener.prevStateVariableName, data.prevState);
+                    behaviour.SetProgramVariable<int>(LightSyncListener.prevStateVariableName, data.state);
+                    behaviour.SendCustomEvent(LightSyncListener.changeStateEventName);
                 }
             }
         }
@@ -1045,12 +1082,21 @@ namespace MMMaellon.LightSync
             return Vector3.Lerp(Vector3.Lerp(posControl1, endPos, interpolation), Vector3.Lerp(startPos, posControl2, interpolation), interpolation);
         }
 
-#if UNITY_EDITOR && !COMPILER_UDONSHARP
-
+        //IGNORE
+        //These are here to prevent some weird unity editor errors from clogging the logs
+        [SerializeField]
         bool _showInternalObjects = false;
 
         [HideInInspector]
         public bool showInternalObjects = false;
+
+        [SerializeField]
+        bool _detachInternalObjects = false;
+
+        [HideInInspector]
+        public bool unparentInternalObjects = false;
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+
 
         public void Reset()
         {
@@ -1064,7 +1110,7 @@ namespace MMMaellon.LightSync
 
         public void OnValidate()
         {
-            StartCoroutine(AutoSetup());
+            AutoSetupAsync();
         }
 
         public void RefreshHideFlags()
@@ -1074,6 +1120,14 @@ namespace MMMaellon.LightSync
                 _showInternalObjects = showInternalObjects;
                 data.RefreshHideFlags();
                 looper.RefreshHideFlags();
+            }
+        }
+
+        public void AutoSetupAsync()
+        {
+            if (gameObject.activeInHierarchy && enabled)//prevents log spam in play mode
+            {
+                StartCoroutine(AutoSetup());
             }
         }
 
@@ -1132,15 +1186,44 @@ namespace MMMaellon.LightSync
         public void SetupListeners()
         {
             eventListeners = eventListeners.Where(obj => Utilities.IsValid(obj)).ToArray();
+            List<LightSyncListener> classListeners = new();
+            List<UdonBehaviour> behaviourListeners = new();
+            LightSyncListener classListener;
+            UdonBehaviour behaviourListener;
+            foreach (Component listener in eventListeners)
+            {
+                classListener = (LightSyncListener)listener;
+                behaviourListener = (UdonBehaviour)listener;
+                if (classListener)
+                {
+                    classListeners.Add(classListener);
+                }
+                else if (behaviourListener)
+                {
+                    behaviourListeners.Add(behaviourListener);
+                }
+            }
+            classEventListeners = classListeners.ToArray();
+            behaviourEventListeners = behaviourListeners.ToArray();
         }
 
         public void CreateDataObject()
         {
             if (data != null)
             {
-                if (data.transform.parent != transform)
+                if (unparentInternalObjects && data.transform.parent != null)
+                {
+                    data.transform.SetParent(null, false);
+                    data.transform.localPosition = Vector3.zero;
+                    data.transform.localRotation = Quaternion.identity;
+                    data.transform.localScale = Vector3.one;
+                }
+                else if (data.transform.parent != gameObject)
                 {
                     data.transform.SetParent(transform, false);
+                    data.transform.localPosition = Vector3.zero;
+                    data.transform.localRotation = Quaternion.identity;
+                    data.transform.localScale = Vector3.one;
                 }
 
                 if (data.sync != this)
@@ -1205,7 +1288,14 @@ namespace MMMaellon.LightSync
                         break;
                     }
             }
-            dataObject.transform.SetParent(transform, false);
+            if (unparentInternalObjects)
+            {
+                dataObject.transform.SetParent(null, false);
+            }
+            else
+            {
+                dataObject.transform.SetParent(transform, false);
+            }
             data.sync = this;
             data.RefreshHideFlags();
         }
@@ -1216,9 +1306,19 @@ namespace MMMaellon.LightSync
             if (looper != null)
             {
                 looperObject = looper.gameObject;
-                if (looper.transform.parent != transform)
+                if (unparentInternalObjects && looper.transform.parent != null)
+                {
+                    looper.transform.SetParent(null, false);
+                    looper.transform.localPosition = Vector3.zero;
+                    looper.transform.localRotation = Quaternion.identity;
+                    looper.transform.localScale = Vector3.one;
+                }
+                else if (looper.transform.parent != gameObject)
                 {
                     looper.transform.SetParent(transform, false);
+                    looper.transform.localPosition = Vector3.zero;
+                    looper.transform.localRotation = Quaternion.identity;
+                    looper.transform.localScale = Vector3.one;
                 }
 
                 if (looper.sync != this)
@@ -1231,7 +1331,6 @@ namespace MMMaellon.LightSync
                     looper.data = data;
                 }
                 looper.StopLoop();
-
             }
             else
             {
@@ -1299,11 +1398,11 @@ namespace MMMaellon.LightSync
         {
             if (data)
             {
-                data.StartCoroutine(data.Destroy());
+                data.DestroyAsync();
             }
             if (looper)
             {
-                looper.StartCoroutine(looper.Destroy());
+                looper.DestroyAsync();
             }
         }
 #endif

@@ -63,6 +63,5 @@ namespace MMMaellon.LightSync
         {
             enabled = false;
         }
-
     }
 }

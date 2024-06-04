@@ -1,31 +1,32 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using UdonSharp;
 using UnityEngine;
-
 namespace MMMaellon.LightSync
 {
-    [AddComponentMenu("")]//prevents it from showing up in the add component menu
-    public class LightSyncLooperUpdate : LightSyncLooper
+    public abstract class LightSyncEnhancementData : UdonSharpBehaviour
     {
-        public void Update()
-        {
-            Loop();
-        }
-
+        public LightSyncEnhancementWithData state;
+        //IGNORE
+        //These are just here to prevent Unity log spam in the Editor
+        bool _showInternalObjects;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        //ONLY Update need this part because all the loopers are on the same object
-
-        public void OnValidate()
+        public virtual void OnValidate()
         {
             RefreshHideFlags();
         }
 
-        public void RefreshHideFlags()
+        public virtual void RefreshHideFlags()
         {
-            if (sync != null)
+            if (state != null && state.sync != null)
             {
-                if (sync.looper == this)
+                if (state._data == this)
                 {
-                    if (sync.showInternalObjects)
+                    if (state.sync.showInternalObjects == _showInternalObjects)
+                    {
+                        return;
+                    }
+                    _showInternalObjects = state.sync.showInternalObjects;
+                    if (state.sync.showInternalObjects)
                     {
                         gameObject.hideFlags = HideFlags.None;
                     }
@@ -37,14 +38,13 @@ namespace MMMaellon.LightSync
                 }
                 else
                 {
-                    sync = null;
+                    state = null;
                     DestroyAsync();
                 }
             }
 
             gameObject.hideFlags = HideFlags.None;
         }
-
         public void DestroyAsync()
         {
             if (gameObject.activeInHierarchy && enabled)//prevents log spam in play mode
