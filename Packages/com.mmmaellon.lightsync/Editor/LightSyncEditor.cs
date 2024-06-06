@@ -239,11 +239,11 @@ namespace MMMaellon.LightSync
         public static void OnPlayModeStateChanged(PlayModeStateChange change)
         {
             if (change != PlayModeStateChange.ExitingEditMode) return;
-            Setup();
+            AutoSetup();
         }
         public bool OnBuildRequested(VRCSDKRequestedBuildType requestedBuildType)
         {
-            return Setup();
+            return AutoSetup();
         }
         public static void SetupLightSync(LightSync sync)
         {
@@ -257,14 +257,16 @@ namespace MMMaellon.LightSync
             }
             else
             {
+                Debug.Log("AUTO Setup");
                 sync.AutoSetup();
                 foreach (LightSyncState state in sync.customStates)
                 {
-                    if (state is LightSyncStateWithData stateWithData)
-                    {
-                        stateWithData.AutoSetup();
-                    }
-
+                    state.AutoSetup();
+                }
+                foreach (LightSyncEnhancement enhancement in sync.GetComponents<LightSyncEnhancement>())
+                {
+                    Debug.Log("Auto setup enhancements call: " + enhancement.name);
+                    enhancement.AutoSetup();
                 }
             }
         }
@@ -273,10 +275,10 @@ namespace MMMaellon.LightSync
             return !EditorUtility.IsPersistent(component.transform.root.gameObject) && !(component.gameObject.hideFlags == HideFlags.NotEditable || component.gameObject.hideFlags == HideFlags.HideAndDontSave);
         }
 
-
-        public static bool Setup()
+        [MenuItem("MMMaellon/LightSync/AutoSetup")]
+        public static bool AutoSetup()
         {
-            foreach (LightSync sync in GameObject.FindObjectsOfType<LightSync>())
+            foreach (LightSync sync in GameObject.FindObjectsOfType<LightSync>(true))
             {
                 SetupLightSync(sync);
             }

@@ -9,35 +9,22 @@ namespace MMMaellon.LightSync
     public abstract class LightSyncStateWithData : LightSyncState
     {
         public LightSyncStateData stateData;
-#if !COMPILER_UDONSHARP && UNITY_EDITOR
-        public override void Reset()
-        {
-            base.Reset();
-            AutoSetup();
-        }
 
-        public void OnValidate()
-        {
-            if (gameObject.activeInHierarchy && enabled)//check is here to prevent Unity Editor error spam
-            {
-                StartCoroutine(AutoSetup());
-            }
-        }
+        public abstract LightSyncStateData CreateDataObject(GameObject dataObject);
+
+#if !COMPILER_UDONSHARP && UNITY_EDITOR
+
         public void OnDestroy()
         {
             if (stateData)
             {
-                stateData.StartCoroutine(stateData.Destroy());
+                stateData.DestroyAsync();
             }
         }
 
-        public IEnumerator<WaitForSeconds> AutoSetup()
+        public override void AutoSetup()
         {
-            yield return new WaitForSeconds(0);
-            if (!sync)
-            {
-                yield break;
-            }
+            base.AutoSetup();
             CreateDataObject();
         }
 
@@ -47,12 +34,15 @@ namespace MMMaellon.LightSync
             {
                 GameObject dataObject = new(name + "_statedata" + stateID);
                 dataObject.transform.SetParent(transform, false);
-                stateData = dataObject.AddComponent<LightSyncStateData>();
-                stateData.state = this;
+                stateData = CreateDataObject(dataObject);
+                if (stateData)
+                {
+                    stateData.state = this;
+                }
             }
             if (stateData)
             {
-                stateData.gameObject.name = new(name + "_statedata" + stateID);
+                stateData.gameObject.name = name + "_statedata" + stateID;
                 stateData.RefreshHideFlags();
             }
         }
@@ -65,9 +55,9 @@ namespace MMMaellon.LightSync
             }
         }
 
-        public virtual void OnEnable()
-        {
-            Networking.SetOwner(Networking.GetOwner(gameObject), stateData.gameObject);
-        }
+        // public virtual void OnEnable()
+        // {
+        //     Networking.SetOwner(Networking.GetOwner(gameObject), stateData.gameObject);
+        // }
     }
 }

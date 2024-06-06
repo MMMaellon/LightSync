@@ -1,4 +1,5 @@
 
+using System.Collections.Generic;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
@@ -11,7 +12,12 @@ namespace MMMaellon.LightSync
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
         public virtual void Reset()
         {
-            if (!sync || stateID < 0 || stateID >= sync.customStates.Length || sync.customStates[stateID] != this)
+            AutoSetup();
+        }
+
+        public virtual void AutoSetup()
+        {
+            if (!sync)
             {
                 sync = GetComponent<LightSync>();
                 sync.SetupStates();

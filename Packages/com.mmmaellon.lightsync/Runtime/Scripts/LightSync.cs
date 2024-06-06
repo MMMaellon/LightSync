@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
@@ -347,10 +346,10 @@ namespace MMMaellon.LightSync
             get => state <= LightSyncData.STATE_LOCAL_TO_OWNER;
         }
 
-        public void OnEnable()
-        {
-            Networking.SetOwner(Networking.GetOwner(gameObject), data.gameObject);
-        }
+        // public void OnEnable()
+        // {
+        //     Networking.SetOwner(Networking.GetOwner(gameObject), data.gameObject);
+        // }
 
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
@@ -1143,6 +1142,7 @@ namespace MMMaellon.LightSync
             CreateLooperObject();
             RefreshHideFlags();
             SetupStates();
+            SetupEnhancements();
             SetupListeners();
 
             //save all the parameters for the first frame
@@ -1180,6 +1180,16 @@ namespace MMMaellon.LightSync
                 customStates[i].stateID = i;
                 customStates[i].sync = this;
                 customStates[i].data = data;
+                customStates[i].AutoSetup();
+            }
+        }
+
+        public void SetupEnhancements()
+        {
+            foreach (var enhancement in GetComponents<LightSyncEnhancement>())
+            {
+                enhancement.sync = this;
+                enhancement.AutoSetup();
             }
         }
 

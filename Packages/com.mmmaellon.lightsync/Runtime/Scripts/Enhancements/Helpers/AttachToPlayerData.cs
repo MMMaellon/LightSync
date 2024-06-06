@@ -24,9 +24,5 @@ namespace MMMaellon.LightSync
 
         public AttachToPlayer attach;
 
-        public override void OnDeserialization()
-        {
-            attach.OnAttachDeserialized();
-        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using VRC.SDKBase;
 
+
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
 using UnityEditor;
 using UdonSharpEditor;
@@ -349,12 +350,7 @@ namespace MMMaellon.LightSync
             localPlayer = Networking.LocalPlayer;
         }
 
-        public override void OnDataObjectCreated(LightSyncEnhancementData dataObject)
-        {
-            data = (AttachToPlayerData)dataObject;
-        }
-
-        public void OnAttachDeserialized()
+        public override void OnDataDeserialization()
         {
             if (data.playerId == localPlayer.playerId)
             {
@@ -373,5 +369,16 @@ namespace MMMaellon.LightSync
                 sync.data.RequestSerialization();
             }
         }
+
+        public override string GetDataTypeName()
+        {
+            return "MMMaellon.LightSync.AttachToPlayerData";
+        }
+
+        public override void OnDataObjectCreation(LightSyncEnhancementData enhancementData)
+        {
+            data = (AttachToPlayerData)enhancementData;
+        }
+
     }
 }

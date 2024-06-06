@@ -2,68 +2,66 @@
 using System.Collections.Generic;
 using UnityEngine;
 using VRC.SDKBase;
+using UnityEditor;
+using UnityEngine.Rendering.VirtualTexturing;
 
 namespace MMMaellon.LightSync
 {
     [RequireComponent(typeof(LightSync))]
     public abstract class LightSyncEnhancementWithData : LightSyncEnhancement
     {
-        public LightSyncEnhancementData _data;
+        [HideInInspector]
+        public LightSyncEnhancementData enhancementData;
 
-        public abstract void OnDataObjectCreated(LightSyncEnhancementData dataObject);
+        // public abstract LightSyncEnhancementData CreateDataObject(GameObject dataObject);
+        public abstract void OnDataObjectCreation(LightSyncEnhancementData enhancementData);
+        public abstract void OnDataDeserialization();
+        public abstract string GetDataTypeName();
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
 
-        public override void Reset()
-        {
-            base.Reset();
-            AutoSetup();
-        }
-
-        public void OnValidate()
-        {
-            AutoSetupAsync();
-        }
-
         public void OnDestroy()
         {
-            if (_data)
+            if (enhancementData)
             {
-                _data.DestroyAsync();
-            }
-        }
-        public void AutoSetupAsync()
-        {
-            if (gameObject.activeInHierarchy && enabled)//prevents log spam in play mode
-            {
-                StartCoroutine(AutoSetup());
+                enhancementData.DestroyAsync();
             }
         }
 
-        public IEnumerator<WaitForSeconds> AutoSetup()
+        public override void AutoSetup()
         {
-            yield return new WaitForSeconds(0);
-            if (!sync)
-            {
-                yield break;
-            }
+            base.AutoSetup();
             CreateDataObject();
         }
 
         public virtual void CreateDataObject()
         {
-            if (!_data || _data.state != this)
+            if (!enhancementData || enhancementData.enhancement != this)
             {
+                System.Type dataType = System.Type.GetType(GetDataTypeName());
+                if (dataType == null || dataType.ToString() == "")
+                {
+                    Debug.LogWarning($"ERROR: Invalid type name from GetDataTypeName() of {GetType().FullName}. Make sure to include the full namespace");
+                    return;
+                }
+                if (!dataType.IsSubclassOf(typeof(LightSyncEnhancementData)))
+                {
+                    Debug.LogWarning($"ERROR: {GetType().FullName} cannot be setup because {dataType.FullName} does not inherit from {typeof(LightSyncEnhancementData).FullName}");
+                    return;
+                }
                 GameObject dataObject = new(name + "_enhancementData");
                 dataObject.transform.SetParent(transform, false);
-                _data = dataObject.AddComponent<LightSyncEnhancementData>();
-                _data.state = this;
+                enhancementData = dataObject.AddComponent(dataType).GetComponent<LightSyncEnhancementData>();
+                if (enhancementData)
+                {
+                    enhancementData.enhancement = this;
+                }
             }
-            if (_data)
+            if (enhancementData)
             {
-                _data.gameObject.name = new(name + "_enhancementData");
-                _data.RefreshHideFlags();
-                OnDataObjectCreated(_data);
+                enhancementData.gameObject.name = name + "_enhancementData";
+                enhancementData.RefreshHideFlags();
+                OnDataObjectCreation(enhancementData);
             }
         }
 #endif
@@ -71,13 +69,16 @@ namespace MMMaellon.LightSync
         {
             if (Utilities.IsValid(player) && player.isLocal)
             {
-                Networking.SetOwner(player, _data.gameObject);
+                Networking.SetOwner(player, enhancementData.gameObject);
             }
         }
 
-        public virtual void OnEnable()
-        {
-            Networking.SetOwner(Networking.GetOwner(gameObject), _data.gameObject);
-        }
+        // public virtual void OnEnable()
+        // {
+        //     if (Networking.LocalPlayer.IsOwner(gameObject))
+        //     {
+        //         Networking.SetOwner(Networking.LocalPlayer, _data.gameObject);
+        //     }
+        // }
     }
 }
