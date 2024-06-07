@@ -89,10 +89,6 @@ namespace MMMaellon.LightSync
         //For displaying in the editor only
         [HideInInspector]
         public HumanBodyBones[] _allowedBones = { 0 };
-#else
-        //For displaying in the editor only
-        [HideInInspector]
-        public int[] _allowedBones = { 0 };
 #endif
 
         AttachToPlayerData data;

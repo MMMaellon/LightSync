@@ -1089,9 +1089,6 @@ namespace MMMaellon.LightSync
         [HideInInspector]
         public bool showInternalObjects = false;
 
-        [SerializeField]
-        bool _detachInternalObjects = false;
-
         [HideInInspector]
         public bool unparentInternalObjects = false;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
@@ -1266,28 +1263,24 @@ namespace MMMaellon.LightSync
                 case NetworkDataOptimization.Ultra:
                     {
                         dataObject = new(name + "_dataUltra");
-                        dataObject.transform.SetParent(transform, false);
                         data = dataObject.AddComponent<LightSyncDataUltra>();
                         break;
                     }
                 case NetworkDataOptimization.High:
                     {
                         dataObject = new(name + "_dataHigh");
-                        dataObject.transform.SetParent(transform, false);
                         data = dataObject.AddComponent<LightSyncDataHigh>();
                         break;
                     }
                 case NetworkDataOptimization.Low:
                     {
                         dataObject = new(name + "_dataLow");
-                        dataObject.transform.SetParent(transform, false);
                         data = dataObject.AddComponent<LightSyncDataLow>();
                         break;
                     }
                 case NetworkDataOptimization.Unoptimized:
                     {
                         dataObject = new(name + "_dataUnoptimized");
-                        dataObject.transform.SetParent(transform, false);
                         data = dataObject.AddComponent<LightSyncDataUnoptimized>();
                         break;
                     }
@@ -1345,7 +1338,14 @@ namespace MMMaellon.LightSync
             else
             {
                 looperObject = new(name + "_looper");
-                looperObject.transform.SetParent(transform, false);
+                if (unparentInternalObjects)
+                {
+                    looperObject.transform.SetParent(null, false);
+                }
+                else
+                {
+                    looperObject.transform.SetParent(transform, false);
+                }
                 looper = looperObject.AddComponent<LightSyncLooperUpdate>();
                 looper.sync = this;
                 looper.data = data;

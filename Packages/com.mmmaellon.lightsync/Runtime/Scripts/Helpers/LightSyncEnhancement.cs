@@ -19,13 +19,10 @@ namespace MMMaellon.LightSync
 
         public virtual void AutoSetup()
         {
-            Debug.LogWarning("past wait");
             if (!sync)
             {
-                Debug.LogWarning("no sync");
                 sync = GetComponent<LightSync>();
             }
-            Debug.LogWarning("end");
         }
 #endif
     }

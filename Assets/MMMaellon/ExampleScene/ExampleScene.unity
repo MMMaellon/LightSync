@@ -1010,8 +1010,8 @@ MonoBehaviour:
   attachToSelf: 1
   attachToOthers: 1
   attachToAvatarBones: 1
-  allowedBones: 00000000
-  _allowedBones: 00000000
+  allowedBones: 25000000
+  _allowedBones: 25000000
 --- !u!114 &657008252
 MonoBehaviour:
   m_ObjectHideFlags: 2
@@ -1660,7 +1660,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1301493001
 MonoBehaviour:
-  m_ObjectHideFlags: 2
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -21662,6 +21662,7 @@ MonoBehaviour:
     - VRC.Udon.UdonBehaviour
   portraitCameraPositionOffset: {x: 0, y: 0, z: 0}
   portraitCameraRotationOffset: {x: 0, y: 1, z: 0, w: -0.00000004371139}
+  NavigationAreas: []
 --- !u!64 &7606902903243430482
 MeshCollider:
   m_ObjectHideFlags: 0

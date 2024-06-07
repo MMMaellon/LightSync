@@ -3,29 +3,22 @@
     "com.vrchat.core.vpm-resolver": {
       "version": "0.1.29"
     },
-    "com.vrchat.worlds": {
-      "version": "3.6.0"
-    },
     "com.mmmaellon.smartobjectsync": {
       "version": "3.10.12"
     },
     "centauricore.networkdebugger": {
       "version": "1.1.1"
+    },
+    "com.vrchat.base": {
+      "version": "3.6.1"
+    },
+    "com.vrchat.worlds": {
+      "version": "3.6.1"
     }
   },
   "locked": {
     "com.vrchat.core.vpm-resolver": {
       "version": "0.1.29",
-      "dependencies": {}
-    },
-    "com.vrchat.worlds": {
-      "version": "3.6.0",
-      "dependencies": {
-        "com.vrchat.base": "3.6.0"
-      }
-    },
-    "com.vrchat.base": {
-      "version": "3.6.0",
       "dependencies": {}
     },
     "com.mmmaellon.smartobjectsync": {
@@ -38,6 +31,16 @@
       "version": "1.1.1",
       "dependencies": {
         "com.vrchat.worlds": "^3.4"
+      }
+    },
+    "com.vrchat.base": {
+      "version": "3.6.1",
+      "dependencies": {}
+    },
+    "com.vrchat.worlds": {
+      "version": "3.6.1",
+      "dependencies": {
+        "com.vrchat.base": "3.6.1"
       }
     }
   }

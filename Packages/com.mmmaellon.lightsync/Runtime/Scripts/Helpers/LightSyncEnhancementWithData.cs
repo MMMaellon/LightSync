@@ -1,9 +1,6 @@
 
-using System.Collections.Generic;
 using UnityEngine;
 using VRC.SDKBase;
-using UnityEditor;
-using UnityEngine.Rendering.VirtualTexturing;
 
 namespace MMMaellon.LightSync
 {
@@ -13,7 +10,6 @@ namespace MMMaellon.LightSync
         [HideInInspector]
         public LightSyncEnhancementData enhancementData;
 
-        // public abstract LightSyncEnhancementData CreateDataObject(GameObject dataObject);
         public abstract void OnDataObjectCreation(LightSyncEnhancementData enhancementData);
         public abstract void OnDataDeserialization();
         public abstract string GetDataTypeName();
@@ -50,16 +46,21 @@ namespace MMMaellon.LightSync
                     return;
                 }
                 GameObject dataObject = new(name + "_enhancementData");
-                dataObject.transform.SetParent(transform, false);
                 enhancementData = dataObject.AddComponent(dataType).GetComponent<LightSyncEnhancementData>();
-                if (enhancementData)
-                {
-                    enhancementData.enhancement = this;
-                }
             }
             if (enhancementData)
             {
-                enhancementData.gameObject.name = name + "_enhancementData";
+                GameObject dataObject = enhancementData.gameObject;
+                if (sync.unparentInternalObjects && dataObject.transform.parent != null)
+                {
+                    dataObject.transform.SetParent(null, false);
+                }
+                else if (!sync.unparentInternalObjects && dataObject.transform.parent != transform)
+                {
+                    dataObject.transform.SetParent(transform, false);
+                }
+                dataObject.name = name + "_enhancementData";
+                enhancementData.enhancement = this;
                 enhancementData.RefreshHideFlags();
                 OnDataObjectCreation(enhancementData);
             }

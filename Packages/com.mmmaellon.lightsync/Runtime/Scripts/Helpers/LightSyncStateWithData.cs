@@ -1,5 +1,4 @@
 
-using System.Collections.Generic;
 using UnityEngine;
 using VRC.SDKBase;
 
@@ -8,9 +7,12 @@ namespace MMMaellon.LightSync
     [RequireComponent(typeof(LightSync))]
     public abstract class LightSyncStateWithData : LightSyncState
     {
+        [HideInInspector]
         public LightSyncStateData stateData;
 
-        public abstract LightSyncStateData CreateDataObject(GameObject dataObject);
+        public abstract void OnDataObjectCreation(LightSyncStateData enhancementData);
+        public abstract void OnDataDeserialization();
+        public abstract string GetDataTypeName();
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
 
@@ -32,18 +34,36 @@ namespace MMMaellon.LightSync
         {
             if (!stateData || stateData.state != this)
             {
+                System.Type dataType = System.Type.GetType(GetDataTypeName());
+                if (dataType == null || dataType.ToString() == "")
+                {
+                    Debug.LogWarning($"ERROR: Invalid type name from GetDataTypeName() of {GetType().FullName}. Make sure to include the full namespace");
+                    return;
+                }
+                if (!dataType.IsSubclassOf(typeof(LightSyncStateData)))
+                {
+                    Debug.LogWarning($"ERROR: {GetType().FullName} cannot be setup because {dataType.FullName} does not inherit from {typeof(LightSyncStateData).FullName}");
+                    return;
+                }
                 GameObject dataObject = new(name + "_statedata" + stateID);
                 dataObject.transform.SetParent(transform, false);
-                stateData = CreateDataObject(dataObject);
-                if (stateData)
-                {
-                    stateData.state = this;
-                }
+                stateData = dataObject.AddComponent(dataType).GetComponent<LightSyncStateData>();
             }
             if (stateData)
             {
-                stateData.gameObject.name = name + "_statedata" + stateID;
+                GameObject dataObject = stateData.gameObject;
+                if (sync.unparentInternalObjects && dataObject.transform.parent != null)
+                {
+                    dataObject.transform.SetParent(null, false);
+                }
+                else if (!sync.unparentInternalObjects && dataObject.transform.parent != transform)
+                {
+                    dataObject.transform.SetParent(transform, false);
+                }
+                dataObject.name = name + "_statedata" + stateID;
+                stateData.state = this;
                 stateData.RefreshHideFlags();
+                OnDataObjectCreation(stateData);
             }
         }
 #endif
