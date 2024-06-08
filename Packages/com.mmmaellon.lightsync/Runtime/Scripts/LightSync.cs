@@ -353,6 +353,8 @@ namespace MMMaellon.LightSync
                 sleepFlag = true;
                 rigid.Sleep();
             }
+            teleportFlag = true;
+            Sync();
         }
 
         public void TeleportToWorldSpace(Vector3 position, Quaternion rotation, bool shouldSleep)
@@ -369,6 +371,8 @@ namespace MMMaellon.LightSync
                 sleepFlag = true;
                 rigid.Sleep();
             }
+            teleportFlag = true;
+            Sync();
         }
 
         public void Sleep()
