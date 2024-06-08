@@ -781,17 +781,17 @@ namespace MMMaellon.LightSync
                         }
                 }
 
-                foreach (LightSyncListener listener in classEventListeners)
-                {
-                    listener.OnChangeState(this, prevState, state);
-                }
-                foreach (UdonBehaviour behaviour in behaviourEventListeners)
-                {
-                    behaviour.SetProgramVariable<LightSync>(LightSyncListener.syncVariableName, this);
-                    behaviour.SetProgramVariable<int>(LightSyncListener.prevStateVariableName, prevState);
-                    behaviour.SetProgramVariable<int>(LightSyncListener.prevStateVariableName, state);
-                    behaviour.SendCustomEvent(LightSyncListener.changeStateEventName);
-                }
+            }
+            foreach (LightSyncListener listener in classEventListeners)
+            {
+                listener.OnChangeState(this, prevState, state);
+            }
+            foreach (UdonBehaviour behaviour in behaviourEventListeners)
+            {
+                behaviour.SetProgramVariable<LightSync>(LightSyncListener.syncVariableName, this);
+                behaviour.SetProgramVariable<int>(LightSyncListener.prevStateVariableName, prevState);
+                behaviour.SetProgramVariable<int>(LightSyncListener.prevStateVariableName, state);
+                behaviour.SendCustomEvent(LightSyncListener.changeStateEventName);
             }
         }
 
