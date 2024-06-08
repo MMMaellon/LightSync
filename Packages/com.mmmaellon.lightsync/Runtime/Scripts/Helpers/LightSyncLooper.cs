@@ -1,5 +1,4 @@
 ﻿
-using System.Collections.Generic;
 using UdonSharp;
 using UnityEngine;
 
@@ -29,7 +28,7 @@ namespace MMMaellon.LightSync
                 firstLerp = false;
                 firstLoopTime = Time.timeSinceLevelLoad;
                 elapsedTime = 0;
-                if (data.IsOwner())
+                if (sync.IsOwner())
                 {
                     data.RequestSerialization();
                 }
@@ -56,7 +55,7 @@ namespace MMMaellon.LightSync
             firstLerp = true;
             enabled = true;
             startTime = Time.realtimeSinceStartup;
-            lerpPeriod = data.autoSmoothingTime;
+            lerpPeriod = sync.autoSmoothingTime;
         }
 
         public void StopLoop()

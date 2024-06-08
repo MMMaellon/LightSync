@@ -12,20 +12,16 @@ namespace MMMaellon.LightSync
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
         public virtual void Reset()
         {
+            sync.SetupStates();
             AutoSetup();
         }
 
         public virtual void AutoSetup()
         {
-            if (!sync)
-            {
-                sync = GetComponent<LightSync>();
-                sync.SetupStates();
-            }
         }
 #endif
         [HideInInspector]
-        public int stateID;
+        public sbyte stateID;
         [HideInInspector]
         public LightSync sync;
         [HideInInspector]
@@ -45,7 +41,7 @@ namespace MMMaellon.LightSync
             {
                 Networking.SetOwner(Networking.LocalPlayer, sync.gameObject);
             }
-            sync.state = LightSyncData.STATE_PHYSICS;
+            sync.state = LightSync.STATE_PHYSICS;
         }
 
         public bool IsActiveState()

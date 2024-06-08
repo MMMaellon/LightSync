@@ -32,25 +32,25 @@ namespace MMMaellon.LightSync
 
         public override void AcceptNewSyncData()
         {
-            pos = _pos;
-            vel = _vel;
+            sync.pos = _pos;
+            sync.vel = _vel;
             _rot_axis.x = ExtractHalf(true, _data_rot_spin.x);
             _rot_axis.y = ExtractHalf(true, _data_rot_spin.y);
             _rot_axis.z = ExtractHalf(true, _data_rot_spin.z);
-            rot = Quaternion.AngleAxis(_rot_axis.magnitude, _rot_axis.normalized).normalized;
-            spin.x = ExtractHalf(false, _data_rot_spin.x);
-            spin.y = ExtractHalf(false, _data_rot_spin.y);
-            spin.z = ExtractHalf(false, _data_rot_spin.z);
-            state = (sbyte)(_data_state_flags >> 24);
-            syncCount = (byte)((_data_state_flags >> 16) & 0xF);
-            teleportCount = (byte)((_data_state_flags >> 8) & 0xF);
-            localTransformFlag = (_data_state_flags & 0b10000000) != 0;
-            kinematicFlag = (_data_state_flags & 0b01000000) != 0;
-            pickupableFlag = (_data_state_flags & 0b00100000) != 0;
-            leftHandFlag = (_data_state_flags & 0b00010000) != 0;
-            bounceFlag = (_data_state_flags & 0b00001000) != 0;
-            sleepFlag = (_data_state_flags & 0b00000100) != 0;
-            loopTimingFlag = _data_state_flags & 0b00000011;
+            sync.rot = Quaternion.AngleAxis(_rot_axis.magnitude, _rot_axis.normalized).normalized;
+            sync.spin.x = ExtractHalf(false, _data_rot_spin.x);
+            sync.spin.y = ExtractHalf(false, _data_rot_spin.y);
+            sync.spin.z = ExtractHalf(false, _data_rot_spin.z);
+            sync.state = (sbyte)(_data_state_flags >> 24);
+            sync.syncCount = (byte)((_data_state_flags >> 16) & 0xF);
+            sync.teleportCount = (byte)((_data_state_flags >> 8) & 0xF);
+            sync.localTransformFlag = (_data_state_flags & 0b10000000) != 0;
+            sync.kinematicFlag = (_data_state_flags & 0b01000000) != 0;
+            sync.pickupableFlag = (_data_state_flags & 0b00100000) != 0;
+            sync.leftHandFlag = (_data_state_flags & 0b00010000) != 0;
+            sync.bounceFlag = (_data_state_flags & 0b00001000) != 0;
+            sync.sleepFlag = (_data_state_flags & 0b00000100) != 0;
+            sync.loopTimingFlag = _data_state_flags & 0b00000011;
 
             prevPos = _pos;
             prevVel = _vel;
@@ -61,21 +61,21 @@ namespace MMMaellon.LightSync
         float magnitude;
         public override void SyncNewData()
         {
-            IncrementSyncCounter();
-            _data_state_flags = (state << 24) | (syncCount << 16) | (teleportCount << 8) | loopTimingFlag;
-            _data_state_flags |= localTransformFlag ? 0b10000000 : 0b0;
-            _data_state_flags |= kinematicFlag ? 0b01000000 : 0b0;
-            _data_state_flags |= pickupableFlag ? 0b00100000 : 0b0;
-            _data_state_flags |= leftHandFlag ? 0b00010000 : 0b0;
-            _data_state_flags |= bounceFlag ? 0b00001000 : 0b0;
-            _data_state_flags |= sleepFlag ? 0b00000100 : 0b0;
-            _pos = pos;
-            _vel = vel;
-            rot.ToAngleAxis(out magnitude, out _rot_axis);
+            sync.IncrementSyncCounter();
+            _data_state_flags = (sync.state << 24) | (sync.syncCount << 16) | (sync.teleportCount << 8) | sync.loopTimingFlag;
+            _data_state_flags |= sync.localTransformFlag ? 0b10000000 : 0b0;
+            _data_state_flags |= sync.kinematicFlag ? 0b01000000 : 0b0;
+            _data_state_flags |= sync.pickupableFlag ? 0b00100000 : 0b0;
+            _data_state_flags |= sync.leftHandFlag ? 0b00010000 : 0b0;
+            _data_state_flags |= sync.bounceFlag ? 0b00001000 : 0b0;
+            _data_state_flags |= sync.sleepFlag ? 0b00000100 : 0b0;
+            _pos = sync.pos;
+            _vel = sync.vel;
+            sync.rot.ToAngleAxis(out magnitude, out _rot_axis);
             _rot_axis *= magnitude;
-            _data_rot_spin.x = CombineFloats(_rot_axis.x, spin.x);
-            _data_rot_spin.y = CombineFloats(_rot_axis.y, spin.y);
-            _data_rot_spin.z = CombineFloats(_rot_axis.z, spin.z);
+            _data_rot_spin.x = CombineFloats(_rot_axis.x, sync.spin.x);
+            _data_rot_spin.y = CombineFloats(_rot_axis.y, sync.spin.y);
+            _data_rot_spin.z = CombineFloats(_rot_axis.z, sync.spin.z);
 
             prevPos = _pos;
             prevVel = _vel;

@@ -7,7 +7,7 @@ namespace MMMaellon.LightSync
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class LightSyncDataDisabled : LightSyncData
     {
-        sbyte _stateData = STATE_PHYSICS;
+        sbyte _stateData = LightSync.STATE_PHYSICS;
         byte _syncCount = 0;
         byte _teleportCount = 1;//start with a teleport
         bool _localTransformFlag = true;
@@ -28,20 +28,20 @@ namespace MMMaellon.LightSync
 
         public override void AcceptNewSyncData()
         {
-            state = _stateData;
-            syncCount = _syncCount;
-            teleportCount = _teleportCount;
-            localTransformFlag = _localTransformFlag;
-            leftHandFlag = _leftHandFlag;
-            kinematicFlag = _kinematicFlag;
-            pickupableFlag = _pickupableFlag;
-            bounceFlag = _bounceFlag;
-            sleepFlag = _sleepFlag;
-            pos = _pos;
-            rot = _rot;
-            vel = _vel;
-            spin = _spin;
-            loopTimingFlag = _loopTiming;
+            sync.state = _stateData;
+            sync.syncCount = _syncCount;
+            sync.teleportCount = _teleportCount;
+            sync.localTransformFlag = _localTransformFlag;
+            sync.leftHandFlag = _leftHandFlag;
+            sync.kinematicFlag = _kinematicFlag;
+            sync.pickupableFlag = _pickupableFlag;
+            sync.bounceFlag = _bounceFlag;
+            sync.sleepFlag = _sleepFlag;
+            sync.pos = _pos;
+            sync.rot = _rot;
+            sync.vel = _vel;
+            sync.spin = _spin;
+            sync.loopTimingFlag = _loopTiming;
         }
 
         public override void SyncNewData()

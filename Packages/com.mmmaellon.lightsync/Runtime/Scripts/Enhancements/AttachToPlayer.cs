@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 using VRC.SDKBase;
+using VRC.Udon.Common;
+
+
 
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
@@ -91,21 +94,23 @@ namespace MMMaellon.LightSync
         public HumanBodyBones[] _allowedBones = { 0 };
 #endif
 
-        AttachToPlayerData data;
+        public AttachToPlayerData data;
 
-        VRCPlayerApi[] attachTargets;
+        VRCPlayerApi[] attachTargets = new VRCPlayerApi[4];
         VRCPlayerApi attachTarget;
         public void Attach()
         {
+            Debug.LogWarning("ATTACH");
             if (!sync.IsOwner())
             {
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
             }
             FindNearestPlayers(ref attachTargets);
-            if (attachTargets == null || attachTargets.Length <= 0 || !Utilities.IsValid(attachTargets[0]) || !attachTargets[0].IsValid())
+            if (attachTargets == null || attachTargets.Length <= 0 || !Utilities.IsValid(attachTargets[0]))
             {
                 return;
             }
+            Debug.LogWarning("AttachTargets: " + attachTargets.Length);
             if (attachToAvatarBones)
             {
                 FindNearestBone(attachTargets, out attachTarget, out data.bone);
@@ -117,7 +122,14 @@ namespace MMMaellon.LightSync
                 data.playerId = attachTargets[0].playerId;
             }
             RecordPositions();
-            data.RequestSerialization();
+            if (data.playerId == localPlayer.playerId)
+            {
+                PerformAttachment();
+            }
+            else
+            {
+                data.RequestSerialization();
+            }
         }
 
         VRCPlayerApi[] _allPlayers = new VRCPlayerApi[82];
@@ -143,7 +155,7 @@ namespace MMMaellon.LightSync
             }
 
             float[] distances = new float[players.Length];
-            VRCPlayerApi.GetPlayers(_allPlayers);
+            _allPlayers = VRCPlayerApi.GetPlayers(_allPlayers);
             foreach (VRCPlayerApi player in _allPlayers)
             {
                 if (!Utilities.IsValid(player) || (player.isLocal && !attachToSelf))
@@ -202,22 +214,22 @@ namespace MMMaellon.LightSync
                     {
                         if (attachCenterOverride)
                         {
-                            currentDistance = Vector3.Distance(attachCenterOverride.position, FindNearestPoint(player.GetBonePosition((HumanBodyBones)b), FindBoneEnd((HumanBodyBones)b, p), attachCenterOverride.position));
+                            currentDistance = Vector3.Distance(attachCenterOverride.position, FindNearestPoint(p.GetBonePosition((HumanBodyBones)b), FindBoneEnd((HumanBodyBones)b, p), attachCenterOverride.position));
                         }
                         else
                         {
-                            currentDistance = Vector3.Distance(sync.rigid.position, FindNearestPoint(player.GetBonePosition((HumanBodyBones)b), FindBoneEnd((HumanBodyBones)b, p), sync.rigid.position));
+                            currentDistance = Vector3.Distance(sync.rigid.position, FindNearestPoint(p.GetBonePosition((HumanBodyBones)b), FindBoneEnd((HumanBodyBones)b, p), sync.rigid.position));
                         }
                     }
                     else
                     {
                         if (attachCenterOverride)
                         {
-                            currentDistance = Vector3.Distance(attachCenterOverride.position, player.GetBonePosition((HumanBodyBones)b));
+                            currentDistance = Vector3.Distance(attachCenterOverride.position, p.GetBonePosition((HumanBodyBones)b));
                         }
                         else
                         {
-                            currentDistance = Vector3.Distance(sync.rigid.position, player.GetBonePosition((HumanBodyBones)b));
+                            currentDistance = Vector3.Distance(sync.rigid.position, p.GetBonePosition((HumanBodyBones)b));
                         }
                     }
 
@@ -348,21 +360,26 @@ namespace MMMaellon.LightSync
 
         public override void OnDataDeserialization()
         {
+            PerformAttachment();
+        }
+
+        void PerformAttachment()
+        {
             if (data.playerId == localPlayer.playerId)
             {
                 sync._print("body attachment deserialization");
                 Networking.SetOwner(localPlayer, gameObject);
                 if (data.bone >= 0 && data.bone < (int)HumanBodyBones.LastBone)
                 {
-                    sync.state = LightSyncData.STATE_BONE - data.bone;
+                    sync.state = (sbyte)(LightSync.STATE_BONE - data.bone);
                 }
                 else
                 {
-                    sync.state = LightSyncData.STATE_LOCAL_TO_OWNER;
+                    sync.state = LightSync.STATE_LOCAL_TO_OWNER;
                 }
-                sync.data.pos = data.position;
-                sync.data.rot = data.rotation;
-                sync.data.RequestSerialization();
+                sync.pos = data.position;
+                sync.rot = data.rotation;
+                sync.Sync();
             }
         }
 
@@ -374,6 +391,30 @@ namespace MMMaellon.LightSync
         public override void OnDataObjectCreation(LightSyncEnhancementData enhancementData)
         {
             data = (AttachToPlayerData)enhancementData;
+        }
+
+        public override void OnDrop()
+        {
+            if (attachOnDrop)
+            {
+                Attach();
+            }
+        }
+
+        public override void OnPickupUseDown()
+        {
+            if (attachOnPickupUseDown)
+            {
+                Attach();
+            }
+        }
+
+        public override void InputLookVertical(float value, UdonInputEventArgs args)
+        {
+            if (attachOnRightStickDown && sync.pickup.IsHeld && value < 0.8f)
+            {
+                Attach();
+            }
         }
 
     }

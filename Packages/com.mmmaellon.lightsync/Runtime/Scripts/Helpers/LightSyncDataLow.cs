@@ -38,20 +38,20 @@ namespace MMMaellon.LightSync
 
         public override void AcceptNewSyncData()
         {
-            pos = _pos;
-            rot = _rot;
-            vel = _vel;
-            spin = _spin;
-            state = (sbyte)(_data_state_flags >> 24);
-            syncCount = (byte)((_data_state_flags >> 16) & 0xF);
-            teleportCount = (byte)((_data_state_flags >> 8) & 0xF);
-            localTransformFlag = (_data_state_flags & 0b10000000) != 0;
-            kinematicFlag = (_data_state_flags & 0b01000000) != 0;
-            pickupableFlag = (_data_state_flags & 0b00100000) != 0;
-            leftHandFlag = (_data_state_flags & 0b00010000) != 0;
-            bounceFlag = (_data_state_flags & 0b00001000) != 0;
-            sleepFlag = (_data_state_flags & 0b00000100) != 0;
-            loopTimingFlag = _data_state_flags & 0b00000011;
+            sync.pos = _pos;
+            sync.rot = _rot;
+            sync.vel = _vel;
+            sync.spin = _spin;
+            sync.state = (sbyte)(_data_state_flags >> 24);
+            sync.syncCount = (byte)((_data_state_flags >> 16) & 0xF);
+            sync.teleportCount = (byte)((_data_state_flags >> 8) & 0xF);
+            sync.localTransformFlag = (_data_state_flags & 0b10000000) != 0;
+            sync.kinematicFlag = (_data_state_flags & 0b01000000) != 0;
+            sync.pickupableFlag = (_data_state_flags & 0b00100000) != 0;
+            sync.leftHandFlag = (_data_state_flags & 0b00010000) != 0;
+            sync.bounceFlag = (_data_state_flags & 0b00001000) != 0;
+            sync.sleepFlag = (_data_state_flags & 0b00000100) != 0;
+            sync.loopTimingFlag = _data_state_flags & 0b00000011;
 
             prevPos = _pos;
             prevRot = _rot;
@@ -63,18 +63,18 @@ namespace MMMaellon.LightSync
 
         public override void SyncNewData()
         {
-            IncrementSyncCounter();
-            _data_state_flags = (state << 24) | (syncCount << 16) | (teleportCount << 8) | loopTimingFlag;
-            _data_state_flags |= localTransformFlag ? 0b10000000 : 0b0;
-            _data_state_flags |= kinematicFlag ? 0b01000000 : 0b0;
-            _data_state_flags |= pickupableFlag ? 0b00100000 : 0b0;
-            _data_state_flags |= leftHandFlag ? 0b00010000 : 0b0;
-            _data_state_flags |= bounceFlag ? 0b00001000 : 0b0;
-            _data_state_flags |= sleepFlag ? 0b00000100 : 0b0;
-            _pos = pos;
-            _rot = rot;
-            _vel = vel;
-            _spin = spin;
+            sync.IncrementSyncCounter();
+            _data_state_flags = (sync.state << 24) | (sync.syncCount << 16) | (sync.teleportCount << 8) | sync.loopTimingFlag;
+            _data_state_flags |= sync.localTransformFlag ? 0b10000000 : 0b0;
+            _data_state_flags |= sync.kinematicFlag ? 0b01000000 : 0b0;
+            _data_state_flags |= sync.pickupableFlag ? 0b00100000 : 0b0;
+            _data_state_flags |= sync.leftHandFlag ? 0b00010000 : 0b0;
+            _data_state_flags |= sync.bounceFlag ? 0b00001000 : 0b0;
+            _data_state_flags |= sync.sleepFlag ? 0b00000100 : 0b0;
+            _pos = sync.pos;
+            _rot = sync.rot;
+            _vel = sync.vel;
+            _spin = sync.spin;
         }
 
         const float shortMul = 90f;

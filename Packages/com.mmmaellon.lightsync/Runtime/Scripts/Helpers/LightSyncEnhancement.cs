@@ -14,15 +14,12 @@ namespace MMMaellon.LightSync
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
         public virtual void Reset()
         {
+            sync = GetComponent<LightSync>();
             AutoSetup();
         }
 
         public virtual void AutoSetup()
         {
-            if (!sync)
-            {
-                sync = GetComponent<LightSync>();
-            }
         }
 #endif
     }

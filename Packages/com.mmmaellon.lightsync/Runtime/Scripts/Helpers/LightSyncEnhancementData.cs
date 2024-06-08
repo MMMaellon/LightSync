@@ -6,12 +6,9 @@ namespace MMMaellon.LightSync
     public abstract class LightSyncEnhancementData : UdonSharpBehaviour
     {
         public LightSyncEnhancementWithData enhancement;
-        //IGNORE
-        //These are just here to prevent Unity log spam in the Editor
-        bool _showInternalObjects;
         public override void OnDeserialization()
         {
-            // enhancement.OnDataDeserialization();
+            enhancement.OnDataDeserialization();
         }
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         public virtual void OnValidate()
@@ -21,33 +18,23 @@ namespace MMMaellon.LightSync
 
         public virtual void RefreshHideFlags()
         {
-            if (enhancement != null && enhancement.sync != null)
+            if (enhancement && enhancement.sync && enhancement.enhancementData == this)
             {
-                if (enhancement.enhancementData == this)
+                if (enhancement.sync.showInternalObjects)
                 {
-                    if (enhancement.sync.showInternalObjects == _showInternalObjects)
-                    {
-                        return;
-                    }
-                    _showInternalObjects = enhancement.sync.showInternalObjects;
-                    if (enhancement.sync.showInternalObjects)
-                    {
-                        gameObject.hideFlags = HideFlags.None;
-                    }
-                    else
-                    {
-                        gameObject.hideFlags = HideFlags.HideInHierarchy;
-                    }
-                    return;
+                    gameObject.hideFlags = HideFlags.None;
                 }
                 else
                 {
-                    enhancement = null;
-                    DestroyAsync();
+                    gameObject.hideFlags = HideFlags.HideInHierarchy;
                 }
+                return;
             }
-
-            gameObject.hideFlags = HideFlags.None;
+            else
+            {
+                enhancement = null;
+                DestroyAsync();
+            }
         }
 
         public void DestroyAsync()

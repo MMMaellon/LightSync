@@ -9,7 +9,7 @@ namespace MMMaellon.LightSync
     public class LightSyncDataUnoptimized : LightSyncData
     {
         [UdonSynced(UdonSyncMode.None)]
-        sbyte _stateData = STATE_PHYSICS;
+        sbyte _stateData = LightSync.STATE_PHYSICS;
         [UdonSynced(UdonSyncMode.None)]
         byte _syncCount = 0;
         [UdonSynced(UdonSyncMode.None)]
@@ -37,7 +37,7 @@ namespace MMMaellon.LightSync
         [UdonSynced(UdonSyncMode.None)]
         int _loopTiming;
 
-        sbyte prevStateData = STATE_PHYSICS;
+        sbyte prevStateData = LightSync.STATE_PHYSICS;
         byte prevSyncCount = 0;
         byte prevTeleportCount = 1;//start with a teleport
         bool prevLocalTransformFlag = true;
@@ -71,20 +71,20 @@ namespace MMMaellon.LightSync
 
         public override void AcceptNewSyncData()
         {
-            state = _stateData;
-            syncCount = _syncCount;
-            teleportCount = _teleportCount;
-            localTransformFlag = _localTransformFlag;
-            leftHandFlag = _leftHandFlag;
-            kinematicFlag = _kinematicFlag;
-            pickupableFlag = _pickupableFlag;
-            bounceFlag = _bounceFlag;
-            sleepFlag = _sleepFlag;
-            pos = _pos;
-            rot = _rot;
-            vel = _vel;
-            spin = _spin;
-            loopTimingFlag = _loopTiming;
+            sync.state = _stateData;
+            sync.syncCount = _syncCount;
+            sync.teleportCount = _teleportCount;
+            sync.localTransformFlag = _localTransformFlag;
+            sync.leftHandFlag = _leftHandFlag;
+            sync.kinematicFlag = _kinematicFlag;
+            sync.pickupableFlag = _pickupableFlag;
+            sync.bounceFlag = _bounceFlag;
+            sync.sleepFlag = _sleepFlag;
+            sync.pos = _pos;
+            sync.rot = _rot;
+            sync.vel = _vel;
+            sync.spin = _spin;
+            sync.loopTimingFlag = _loopTiming;
 
             prevStateData = _stateData;
             prevSyncCount = _syncCount;
@@ -104,21 +104,21 @@ namespace MMMaellon.LightSync
 
         public override void SyncNewData()
         {
-            IncrementSyncCounter();
-            _stateData = state;
-            _syncCount = syncCount;
-            _teleportCount = teleportCount;
-            _localTransformFlag = localTransformFlag;
-            _leftHandFlag = leftHandFlag;
-            _kinematicFlag = kinematicFlag;
-            _pickupableFlag = pickupableFlag;
-            _bounceFlag = bounceFlag;
-            _sleepFlag = sleepFlag;
-            _pos = pos;
-            _rot = rot;
-            _vel = vel;
-            _spin = spin;
-            _loopTiming = loopTimingFlag;
+            sync.IncrementSyncCounter();
+            _stateData = sync.state;
+            _syncCount = sync.syncCount;
+            _teleportCount = sync.teleportCount;
+            _localTransformFlag = sync.localTransformFlag;
+            _leftHandFlag = sync.leftHandFlag;
+            _kinematicFlag = sync.kinematicFlag;
+            _pickupableFlag = sync.pickupableFlag;
+            _bounceFlag = sync.bounceFlag;
+            _sleepFlag = sync.sleepFlag;
+            _pos = sync.pos;
+            _rot = sync.rot;
+            _vel = sync.vel;
+            _spin = sync.spin;
+            _loopTiming = sync.loopTimingFlag;
         }
     }
 }

@@ -147,6 +147,7 @@ namespace MMMaellon.LightSync
         readonly string[] serializedPropertyNames = {
         "debugLogs",
         "showInternalObjects",
+        "unparentInternalObjects",
         "kinematicWhileAttachedToPlayer",
         "useWorldSpaceTransforms",
         "useWorldSpaceTransformsWhenHeldOrAttachedToPlayer",
@@ -281,6 +282,18 @@ namespace MMMaellon.LightSync
             foreach (LightSync sync in GameObject.FindObjectsOfType<LightSync>(true))
             {
                 SetupLightSync(sync);
+            }
+            return true;
+        }
+        [MenuItem("MMMaellon/LightSync/Show all hidden gameobjects")]
+        public static bool ShowAllHiddenGameObjects()
+        {
+            foreach (GameObject obj in GameObject.FindObjectsOfType<GameObject>(true))
+            {
+                if (obj.hideFlags == HideFlags.HideInHierarchy)
+                {
+                    obj.hideFlags = HideFlags.None;
+                }
             }
             return true;
         }

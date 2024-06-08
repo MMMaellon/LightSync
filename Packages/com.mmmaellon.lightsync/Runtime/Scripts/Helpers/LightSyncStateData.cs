@@ -6,9 +6,10 @@ namespace MMMaellon.LightSync
     public abstract class LightSyncStateData : UdonSharpBehaviour
     {
         public LightSyncStateWithData state;
-        //IGNORE
-        //These are just here to prevent Unity log spam in the Editor
-        bool _showInternalObjects;
+        public override void OnDeserialization()
+        {
+            state.OnDataDeserialization();
+        }
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         public virtual void OnValidate()
         {
@@ -17,33 +18,23 @@ namespace MMMaellon.LightSync
 
         public virtual void RefreshHideFlags()
         {
-            if (state != null && state.sync != null)
+            if (state && state.sync && state.stateData == this)
             {
-                if (state.stateData == this)
+                if (state.sync.showInternalObjects)
                 {
-                    if (state.sync.showInternalObjects == _showInternalObjects)
-                    {
-                        return;
-                    }
-                    _showInternalObjects = state.sync.showInternalObjects;
-                    if (state.sync.showInternalObjects)
-                    {
-                        gameObject.hideFlags = HideFlags.None;
-                    }
-                    else
-                    {
-                        gameObject.hideFlags = HideFlags.HideInHierarchy;
-                    }
-                    return;
+                    gameObject.hideFlags = HideFlags.None;
                 }
                 else
                 {
-                    state = null;
-                    DestroyAsync();
+                    gameObject.hideFlags = HideFlags.HideInHierarchy;
                 }
+                return;
             }
-
-            gameObject.hideFlags = HideFlags.None;
+            else
+            {
+                state = null;
+                DestroyAsync();
+            }
         }
 
         public void DestroyAsync()//prevents log spam in play mode
