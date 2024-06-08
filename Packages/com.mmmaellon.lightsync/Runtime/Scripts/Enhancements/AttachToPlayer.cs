@@ -100,7 +100,6 @@ namespace MMMaellon.LightSync
         VRCPlayerApi attachTarget;
         public void Attach()
         {
-            Debug.LogWarning("ATTACH");
             if (!sync.IsOwner())
             {
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
@@ -110,7 +109,6 @@ namespace MMMaellon.LightSync
             {
                 return;
             }
-            Debug.LogWarning("AttachTargets: " + attachTargets.Length);
             if (attachToAvatarBones)
             {
                 FindNearestBone(attachTargets, out attachTarget, out data.bone);

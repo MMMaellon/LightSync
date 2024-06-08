@@ -396,7 +396,6 @@ namespace MMMaellon.LightSync
 
         public void StartLoop()
         {
-            Debug.LogWarning("start loop " + prettyPrint());
             switch (loopTimingFlag)
             {
                 case 0://Update
@@ -1431,8 +1430,8 @@ namespace MMMaellon.LightSync
             UdonBehaviour behaviourListener;
             foreach (Component listener in eventListeners)
             {
-                classListener = (LightSyncListener)listener;
-                behaviourListener = (UdonBehaviour)listener;
+                classListener = listener as LightSyncListener;
+                behaviourListener = listener as UdonBehaviour;
                 if (classListener)
                 {
                     classListeners.Add(classListener);

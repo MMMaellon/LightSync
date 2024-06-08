@@ -258,7 +258,6 @@ namespace MMMaellon.LightSync
             }
             else
             {
-                Debug.Log("AUTO Setup");
                 sync.AutoSetup();
                 foreach (LightSyncState state in sync.customStates)
                 {
@@ -266,7 +265,6 @@ namespace MMMaellon.LightSync
                 }
                 foreach (LightSyncEnhancement enhancement in sync.GetComponents<LightSyncEnhancement>())
                 {
-                    Debug.Log("Auto setup enhancements call: " + enhancement.name);
                     enhancement.AutoSetup();
                 }
             }
