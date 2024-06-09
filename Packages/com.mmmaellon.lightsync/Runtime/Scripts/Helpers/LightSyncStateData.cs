@@ -33,13 +33,13 @@ namespace MMMaellon.LightSync
             else
             {
                 state = null;
-                DestroyAsync();
+                DestroyAsync();//can't delete synchronously in OnValidate
             }
         }
 
-        public void DestroyAsync()//prevents log spam in play mode
+        public void DestroyAsync()
         {
-            if (gameObject.activeInHierarchy && enabled)
+            if (gameObject.activeInHierarchy && enabled) //prevents log spam in play mode
             {
                 StartCoroutine(Destroy());
             }

@@ -4,10 +4,8 @@ using UnityEditor;
 using UdonSharpEditor;
 using System.Collections.Generic;
 using System.Linq;
-using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
-using VRC.Udon.Common;
 
 namespace MMMaellon.LightSync
 {
@@ -136,12 +134,19 @@ namespace MMMaellon.LightSync
             {
                 if (GUILayout.Button(new GUIContent("Force Setup")))
                 {
+                    DeleteInternalObjects();
                     SetupSelectedLightSyncs();
                 }
                 ShowAdvancedOptions();
                 serializedObject.ApplyModifiedProperties();
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
+
+            if (foldoutOpen)
+            {
+                EditorGUILayout.Space();
+                ShowInternalObjects();
+            }
         }
 
         readonly string[] serializedPropertyNames = {
@@ -159,14 +164,36 @@ namespace MMMaellon.LightSync
         "minimumSleepFrames",
         };
 
+        readonly string[] serializedInternalObjectNames = {
+        "data",
+        "looper",
+        "fixedLooper",
+        "lateLooper",
+        "rigid",
+        "pickup",
+        "behaviourEventListeners",
+        "classEventListeners",
+        };
+
         IEnumerable<SerializedProperty> serializedProperties;
+        IEnumerable<SerializedProperty> serializedInternalObjects;
         public void OnEnable()
         {
             serializedProperties = serializedPropertyNames.Select(propName => serializedObject.FindProperty(propName));
+            serializedInternalObjects = serializedInternalObjectNames.Select(propName => serializedObject.FindProperty(propName));
         }
         void ShowAdvancedOptions()
         {
             foreach (var property in serializedProperties)
+            {
+                EditorGUILayout.PropertyField(property);
+            }
+        }
+
+        void ShowInternalObjects()
+        {
+            EditorGUILayout.LabelField("Internal Objects", EditorStyles.boldLabel);
+            foreach (var property in serializedInternalObjects)
             {
                 EditorGUILayout.PropertyField(property);
             }
@@ -186,6 +213,14 @@ namespace MMMaellon.LightSync
                 Debug.LogWarningFormat("[LightSync] Auto Setup failed: No LightSync selected");
             }
         }
+        public static void DeleteInternalObjects()
+        {
+            foreach (LightSync sync in Selection.GetFiltered<LightSync>(SelectionMode.Editable))
+            {
+                sync.OnDestroy();
+            }
+        }
+
         public static void MatchRespawnHeights()
         {
             bool syncFound = false;
@@ -259,14 +294,6 @@ namespace MMMaellon.LightSync
             else
             {
                 sync.AutoSetup();
-                foreach (LightSyncState state in sync.customStates)
-                {
-                    state.AutoSetup();
-                }
-                foreach (LightSyncEnhancement enhancement in sync.GetComponents<LightSyncEnhancement>())
-                {
-                    enhancement.AutoSetup();
-                }
             }
         }
         public static bool IsEditable(Component component)

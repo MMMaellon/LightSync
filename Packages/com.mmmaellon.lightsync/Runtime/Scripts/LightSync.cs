@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
 using System.Linq;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
 using VRC.Udon.Common;
+using UdonSharpEditor;
 
 namespace MMMaellon.LightSync
 {
@@ -1322,16 +1323,13 @@ namespace MMMaellon.LightSync
         public void Reset()
         {
             AutoSetup();
-
             respawnHeight = VRC_SceneDescriptor.Instance.RespawnHeightY;
-
-            rigid = GetComponent<Rigidbody>();
-            pickup = GetComponent<VRC_Pickup>();
         }
 
         public void OnValidate()
         {
-            AutoSetupAsync();
+            // AutoSetupAsync();
+            AutoSetup();
         }
 
         public void RefreshHideFlags()
@@ -1344,17 +1342,8 @@ namespace MMMaellon.LightSync
             }
         }
 
-        public void AutoSetupAsync()
+        public void AutoSetup()
         {
-            if (gameObject.activeInHierarchy && enabled)//prevents log spam in play mode
-            {
-                StartCoroutine(AutoSetup());
-            }
-        }
-
-        public IEnumerator<WaitForSeconds> AutoSetup()
-        {
-            yield return new WaitForSeconds(0);
             _print("Auto setup");
             if (!rigid || rigid.gameObject != gameObject)
             {
@@ -1364,7 +1353,7 @@ namespace MMMaellon.LightSync
             {
                 pickup = GetComponent<VRC_Pickup>();
             }
-            lastPickupable = pickup.pickupable;
+            lastPickupable = pickup && pickup.pickupable;
             lastKinematic = rigid.isKinematic;
             CreateDataObject();
             CreateLooperObject();
@@ -1372,6 +1361,11 @@ namespace MMMaellon.LightSync
             SetupEnhancements();
             SetupListeners();
             RefreshHideFlags();
+
+            foreach (LightSyncEnhancement enhancement in GetComponents<LightSyncEnhancement>())
+            {
+                enhancement.AutoSetup();
+            }
 
             //save all the parameters for the first frame
             if (useWorldSpaceTransforms)
@@ -1428,8 +1422,8 @@ namespace MMMaellon.LightSync
         public void SetupListeners()
         {
             eventListeners = eventListeners.Where(obj => Utilities.IsValid(obj)).ToArray();
-            List<LightSyncListener> classListeners = new();
-            List<UdonBehaviour> behaviourListeners = new();
+            System.Collections.Generic.List<LightSyncListener> classListeners = new();
+            System.Collections.Generic.List<UdonBehaviour> behaviourListeners = new();
             LightSyncListener classListener;
             UdonBehaviour behaviourListener;
             foreach (Component listener in eventListeners)
@@ -1498,31 +1492,31 @@ namespace MMMaellon.LightSync
                 case NetworkDataOptimization.Ultra:
                     {
                         dataObject = new(name + "_dataUltra");
-                        data = dataObject.AddComponent<LightSyncDataUltra>();
+                        data = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncDataUltra>(dataObject);
                         break;
                     }
                 case NetworkDataOptimization.High:
                     {
                         dataObject = new(name + "_dataHigh");
-                        data = dataObject.AddComponent<LightSyncDataHigh>();
+                        data = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncDataHigh>(dataObject);
                         break;
                     }
                 case NetworkDataOptimization.Low:
                     {
                         dataObject = new(name + "_dataLow");
-                        data = dataObject.AddComponent<LightSyncDataLow>();
+                        data = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncDataLow>(dataObject);
                         break;
                     }
                 case NetworkDataOptimization.Unoptimized:
                     {
                         dataObject = new(name + "_dataUnoptimized");
-                        data = dataObject.AddComponent<LightSyncDataUnoptimized>();
+                        data = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncDataUnoptimized>(dataObject);
                         break;
                     }
                 default:
                     {
                         dataObject = new(name + "_dataDisabled ");
-                        data = dataObject.AddComponent<LightSyncDataDisabled>();
+                        data = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncDataDisabled>(dataObject);
                         break;
                     }
             }
@@ -1581,7 +1575,7 @@ namespace MMMaellon.LightSync
                 {
                     looperObject.transform.SetParent(transform, false);
                 }
-                looper = looperObject.AddComponent<LightSyncLooperUpdate>();
+                looper = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncLooperUpdate>(looperObject);
                 looper.sync = this;
                 looper.data = data;
                 looper.RefreshHideFlags();
@@ -1606,7 +1600,7 @@ namespace MMMaellon.LightSync
                 fixedLooper = looper.GetComponent<LightSyncLooperFixedUpdate>();
                 if (fixedLooper == null)
                 {
-                    fixedLooper = looperObject.AddComponent<LightSyncLooperFixedUpdate>();
+                    fixedLooper = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncLooperFixedUpdate>(looperObject);
                 }
                 fixedLooper.sync = this;
                 fixedLooper.data = data;
@@ -1631,7 +1625,7 @@ namespace MMMaellon.LightSync
                 lateLooper = looper.GetComponent<LightSyncLooperPostLateUpdate>();
                 if (lateLooper == null)
                 {
-                    lateLooper = looperObject.AddComponent<LightSyncLooperPostLateUpdate>();
+                    lateLooper = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncLooperPostLateUpdate>(looperObject);
                 }
                 lateLooper.sync = this;
                 lateLooper.data = data;

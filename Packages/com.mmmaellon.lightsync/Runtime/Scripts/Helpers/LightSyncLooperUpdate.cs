@@ -38,7 +38,7 @@ namespace MMMaellon.LightSync
                 else
                 {
                     sync = null;
-                    DestroyAsync();
+                    DestroyAsync();//can't delete synchronously in OnValidate
                 }
             }
 
