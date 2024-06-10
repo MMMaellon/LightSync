@@ -20,8 +20,8 @@ namespace MMMaellon.LightSync
     {
         SerializedProperty[] bones;
         SerializedProperty dataProperty;
-        bool showBones = true;
-        bool showAdvanced = false;
+        static bool showBones = true;
+        static bool showAdvanced = false;
 
         public void OnEnable()
         {
@@ -47,17 +47,24 @@ namespace MMMaellon.LightSync
                 showBones = EditorGUILayout.BeginFoldoutHeaderGroup(showBones, "Allowed Bones");
                 if (showBones)
                 {
+                    EditorGUI.indentLevel++;
                     foreach (var bone in bones)
                     {
                         EditorGUILayout.PropertyField(bone);
                     }
+                    EditorGUI.indentLevel--;
                 }
                 EditorGUILayout.EndFoldoutHeaderGroup();
             }
+            EditorGUILayout.Space();
             showAdvanced = EditorGUILayout.BeginFoldoutHeaderGroup(showAdvanced, "Advanced");
             if (showAdvanced)
             {
+                EditorGUI.indentLevel++;
+                GUI.enabled = false;
                 EditorGUILayout.PropertyField(dataProperty);
+                GUI.enabled = false;
+                EditorGUI.indentLevel--;
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
             serializedObject.ApplyModifiedProperties();
@@ -74,14 +81,11 @@ namespace MMMaellon.LightSync
             foreach (AttachToPlayer attach in targets.Cast<AttachToPlayer>())
             {
                 SyncAllowedBones(attach);
-                // attach.StartCoroutine(SyncAllowedBones(attach));
             }
         }
 
-        // public System.Collections.IEnumerator SyncAllowedBones(AttachToPlayer attach)
         public void SyncAllowedBones(AttachToPlayer attach)
         {
-            // yield return null;
             SerializedObject serializedAttach = new SerializedObject(attach);
             List<int> allowedBones = new List<int>();
             for (int i = 0; i < bones.Length; i++)
@@ -169,12 +173,15 @@ namespace MMMaellon.LightSync
         public float maxDistance = 0.5f;
         [Tooltip("Objects further than the max distance but within the snap distance of the max distance will get snapped towards the target until they're within the max distance")]
         public float snapDistance = 0.0f;
-        public bool advancedDistanceCheck = true;
+        [Space]
         public int playerSampleSize = 3;
+        public bool advancedDistanceCheck = true;
         public Transform attachCenterOverride;
+        [Space]
         public bool attachOnDrop = true;
         public bool attachOnPickupUseDown = false;
         public bool attachOnRightStickDown = false;
+        [Space]
         public bool attachToSelf = true;
         public bool attachToOthers = false;
         public bool attachToAvatarBones = true;

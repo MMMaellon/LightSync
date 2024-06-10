@@ -46,14 +46,18 @@ namespace MMMaellon.LightSync
         public VRC_Pickup pickup;
 
         //Settings
+        [Space]
         public float respawnHeight = -1001f;
         [Tooltip("Controls how long it takes for the object to smoothly move into the synced position. Set to 0 for VRChat's algorithm. Set negative for my autosmoothing algorithm. The more negative the smoother. Set to positive for a fixed smoothing time.")]
         public float smoothingTime = -0.25f;
+        [Space]
         public bool allowTheftFromSelf = true;
         public bool allowTheftWhenAttachedToPlayer = true;
         public bool kinematicWhileHeld = true;
+        [Space]
         public bool syncIsKinematic = true;
         public bool syncPickupable = false;
+        [Space]
         public bool sleepOnSpawn = true;
         [Tooltip("Costs performance, but is required if a custom script changes the transform of this object")]
         public bool runEveryFrameOnOwner = false;

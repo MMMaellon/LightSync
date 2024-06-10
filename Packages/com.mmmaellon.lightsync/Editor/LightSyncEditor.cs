@@ -183,19 +183,25 @@ namespace MMMaellon.LightSync
         }
         void ShowAdvancedOptions()
         {
+            EditorGUI.indentLevel++;
             foreach (var property in serializedProperties)
             {
                 EditorGUILayout.PropertyField(property);
             }
+            EditorGUI.indentLevel--;
         }
 
         void ShowInternalObjects()
         {
             EditorGUILayout.LabelField("Internal Objects", EditorStyles.boldLabel);
+            GUI.enabled = false;
+            EditorGUI.indentLevel++;
             foreach (var property in serializedInternalObjects)
             {
                 EditorGUILayout.PropertyField(property);
             }
+            EditorGUI.indentLevel--;
+            GUI.enabled = true;
         }
 
         public static void SetupSelectedLightSyncs()

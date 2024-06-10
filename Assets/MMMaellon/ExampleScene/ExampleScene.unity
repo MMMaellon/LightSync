@@ -1292,8 +1292,8 @@ MonoBehaviour:
   enhancementData: {fileID: 1525347559}
   maxDistance: 3
   snapDistance: 0
-  advancedDistanceCheck: 1
   playerSampleSize: 3
+  advancedDistanceCheck: 1
   attachCenterOverride: {fileID: 0}
   attachOnDrop: 1
   attachOnPickupUseDown: 0
@@ -1301,19 +1301,19 @@ MonoBehaviour:
   attachToSelf: 1
   attachToOthers: 1
   attachToAvatarBones: 1
-  allowedBones: 00000000010000001c00000022000000
+  allowedBones: 0100000002000000030000000400000005000000070000000a000000130000001b0000002100000025000000
   Hips: 0
   LeftUpperLeg: 1
-  RightUpperLeg: 0
-  LeftLowerLeg: 0
-  RightLowerLeg: 0
-  LeftFoot: 0
+  RightUpperLeg: 1
+  LeftLowerLeg: 1
+  RightLowerLeg: 1
+  LeftFoot: 1
   RightFoot: 0
-  Spine: 0
+  Spine: 1
   Chest: 0
   UpperChest: 0
   Neck: 0
-  Head: 0
+  Head: 1
   LeftShoulder: 0
   RightShoulder: 0
   LeftUpperArm: 0
@@ -1322,7 +1322,7 @@ MonoBehaviour:
   RightLowerArm: 0
   LeftHand: 0
   RightHand: 0
-  LeftToes: 0
+  LeftToes: 1
   RightToes: 0
   LeftEye: 0
   RightEye: 0
@@ -1340,7 +1340,7 @@ MonoBehaviour:
   LeftRingIntermediate: 0
   LeftRingDistal: 0
   LeftLittleProximal: 0
-  LeftLittleIntermediate: 0
+  LeftLittleIntermediate: 1
   LeftLittleDistal: 0
   RightThumbProximal: 0
   RightThumbIntermediate: 0
@@ -1358,7 +1358,6 @@ MonoBehaviour:
   RightLittleIntermediate: 0
   RightLittleDistal: 0
   LastBone: 0
-  _allowedBones: 0a000000
   data: {fileID: 1525347559}
 --- !u!114 &657008252
 MonoBehaviour:
@@ -2021,8 +2020,8 @@ MonoBehaviour:
   enhancementData: {fileID: 1758472778}
   maxDistance: 3
   snapDistance: 0
-  advancedDistanceCheck: 1
   playerSampleSize: 3
+  advancedDistanceCheck: 1
   attachCenterOverride: {fileID: 0}
   attachOnDrop: 1
   attachOnPickupUseDown: 0
@@ -2030,12 +2029,12 @@ MonoBehaviour:
   attachToSelf: 1
   attachToOthers: 1
   attachToAvatarBones: 1
-  allowedBones: 00000000010000001c00000022000000
+  allowedBones: 00000000010000000200000003000000040000001b00000021000000
   Hips: 1
   LeftUpperLeg: 1
-  RightUpperLeg: 0
-  LeftLowerLeg: 0
-  RightLowerLeg: 0
+  RightUpperLeg: 1
+  LeftLowerLeg: 1
+  RightLowerLeg: 1
   LeftFoot: 0
   RightFoot: 0
   Spine: 0
@@ -2087,7 +2086,6 @@ MonoBehaviour:
   RightLittleIntermediate: 0
   RightLittleDistal: 0
   LastBone: 0
-  _allowedBones: 0a000000
   data: {fileID: 1758472778}
 --- !u!114 &862106546
 MonoBehaviour:
