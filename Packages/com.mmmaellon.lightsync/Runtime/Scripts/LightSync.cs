@@ -47,7 +47,7 @@ namespace MMMaellon.LightSync
 
         //Settings
         public float respawnHeight = -1001f;
-        [Tooltip("Controls how long it takes for the object to smoothly move into the synced position. Set to 0 for VRChat's algorithm. Set negative for my autosmoothing algorithm. The more negative the smoother.")]
+        [Tooltip("Controls how long it takes for the object to smoothly move into the synced position. Set to 0 for VRChat's algorithm. Set negative for my autosmoothing algorithm. The more negative the smoother. Set to positive for a fixed smoothing time.")]
         public float smoothingTime = -0.25f;
         public bool allowTheftFromSelf = true;
         public bool allowTheftWhenAttachedToPlayer = true;

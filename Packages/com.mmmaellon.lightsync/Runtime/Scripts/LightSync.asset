@@ -574,7 +574,8 @@ MonoBehaviour:
       Entry: 1
       Data: Controls how long it takes for the object to smoothly move into the synced
         position. Set to 0 for VRChat's algorithm. Set negative for my autosmoothing
-        algorithm. The more negative the smoother.
+        algorithm. The more negative the smoother. Set to positive for a fixed smoothing
+        time.
     - Name: 
       Entry: 8
       Data: 

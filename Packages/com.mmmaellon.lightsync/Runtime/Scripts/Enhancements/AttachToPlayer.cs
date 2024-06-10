@@ -293,13 +293,6 @@ namespace MMMaellon.LightSync
         [HideInInspector]
         public bool LastBone;
 
-
-#if !COMPILER_UDONSHARP && UNITY_EDITOR
-        //For displaying in the editor only
-        [HideInInspector]
-        public HumanBodyBones[] _allowedBones = { 0 };
-#endif
-
         [HideInInspector]
         public AttachToPlayerData data;
 
