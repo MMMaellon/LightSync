@@ -11,11 +11,6 @@ namespace MMMaellon.LightSync
             state.OnDataDeserialization();
         }
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        public virtual void OnValidate()
-        {
-            RefreshHideFlags();
-        }
-
         public virtual void RefreshHideFlags()
         {
             if (state && state.sync && state.stateData == this)

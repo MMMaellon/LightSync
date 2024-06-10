@@ -1,4 +1,6 @@
 
+using UdonSharpEditor;
+using UnityEditor;
 using UnityEngine;
 using VRC.SDKBase;
 
@@ -18,9 +20,15 @@ namespace MMMaellon.LightSync
 
         public void OnDestroy()
         {
+            DestroyInternalObjectsAsync();
+        }
+
+        public void DestroyInternalObjectsAsync()
+        {
             if (enhancementData)
             {
                 enhancementData.DestroyAsync();
+                enhancementData = null;
             }
         }
 
@@ -28,6 +36,18 @@ namespace MMMaellon.LightSync
         {
             base.AutoSetup();
             CreateDataObject();
+        }
+
+        public virtual void RefreshFlags()
+        {
+            if (!enhancementData)
+            {
+                AutoSetup();
+            }
+            else
+            {
+                enhancementData.RefreshHideFlags();
+            }
         }
 
         public virtual void CreateDataObject()
@@ -46,20 +66,23 @@ namespace MMMaellon.LightSync
                     return;
                 }
                 GameObject dataObject = new(name + "_enhancementData");
-                enhancementData = dataObject.AddComponent(dataType).GetComponent<LightSyncEnhancementData>();
+                enhancementData = UdonSharpComponentExtensions.AddUdonSharpComponent(dataObject, dataType).GetComponent<LightSyncEnhancementData>();
             }
             if (enhancementData)
             {
                 GameObject dataObject = enhancementData.gameObject;
-                if (sync.unparentInternalObjects && dataObject.transform.parent != null)
+                if (!PrefabUtility.IsPartOfAnyPrefab(dataObject))
                 {
-                    dataObject.transform.SetParent(null, false);
+                    if (sync.unparentInternalObjects && dataObject.transform.parent != null)
+                    {
+                        dataObject.transform.SetParent(null, false);
+                    }
+                    else if (!sync.unparentInternalObjects && dataObject.transform.parent != transform)
+                    {
+                        dataObject.transform.SetParent(transform, false);
+                    }
                 }
-                else if (!sync.unparentInternalObjects && dataObject.transform.parent != transform)
-                {
-                    dataObject.transform.SetParent(transform, false);
-                }
-                dataObject.name = name + "_enhancementData";
+                // dataObject.name = name + "_enhancementData";
                 enhancementData.enhancement = this;
                 enhancementData.RefreshHideFlags();
                 OnDataObjectCreation(enhancementData);

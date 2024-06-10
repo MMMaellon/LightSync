@@ -6,6 +6,7 @@ using VRC.SDKBase;
 using VRC.Udon;
 using VRC.Udon.Common;
 using UdonSharpEditor;
+using UnityEditor;
 
 namespace MMMaellon.LightSync
 {
@@ -1329,7 +1330,7 @@ namespace MMMaellon.LightSync
         public void OnValidate()
         {
             // AutoSetupAsync();
-            AutoSetup();
+            RefreshHideFlags();
         }
 
         public void RefreshHideFlags()
@@ -1337,9 +1338,34 @@ namespace MMMaellon.LightSync
             if (_showInternalObjects != showInternalObjects)
             {
                 _showInternalObjects = showInternalObjects;
-                data.RefreshHideFlags();
-                looper.RefreshHideFlags();
+                if (!data || !looper)
+                {
+                    AutoSetup();
+                }
+                else
+                {
+                    data.RefreshHideFlags();
+                    looper.RefreshHideFlags();
+                    foreach (var state in customStates)
+                    {
+                        if (state is LightSyncStateWithData dataState)
+                        {
+                            dataState.RefreshFlags();
+                        }
+                    }
+                    foreach (var enhancement in GetComponents<LightSyncEnhancementWithData>())
+                    {
+                        enhancement.RefreshFlags();
+                    }
+                }
             }
+        }
+
+        public void ForceSetup()
+        {
+            DestroyInternalObjectsAsync();
+            EditorUtility.SetDirty(this);
+            AutoSetup();
         }
 
         public void AutoSetup()
@@ -1361,11 +1387,6 @@ namespace MMMaellon.LightSync
             SetupEnhancements();
             SetupListeners();
             RefreshHideFlags();
-
-            foreach (LightSyncEnhancement enhancement in GetComponents<LightSyncEnhancement>())
-            {
-                enhancement.AutoSetup();
-            }
 
             //save all the parameters for the first frame
             if (useWorldSpaceTransforms)
@@ -1447,25 +1468,27 @@ namespace MMMaellon.LightSync
         {
             if (data != null)
             {
-                if (unparentInternalObjects && data.transform.parent != null)
+                if (!PrefabUtility.IsPartOfAnyPrefab(this))
                 {
-                    data.transform.SetParent(null, false);
-                    data.transform.localPosition = Vector3.zero;
-                    data.transform.localRotation = Quaternion.identity;
-                    data.transform.localScale = Vector3.one;
+                    if (unparentInternalObjects && data.transform.parent != null)
+                    {
+                        data.transform.SetParent(null, false);
+                    }
+                    else if (data.transform.parent != gameObject)
+                    {
+                        data.transform.SetParent(transform, false);
+                    }
                 }
-                else if (data.transform.parent != gameObject)
-                {
-                    data.transform.SetParent(transform, false);
-                    data.transform.localPosition = Vector3.zero;
-                    data.transform.localRotation = Quaternion.identity;
-                    data.transform.localScale = Vector3.one;
-                }
+                data.transform.localPosition = Vector3.zero;
+                data.transform.localRotation = Quaternion.identity;
+                data.transform.localScale = Vector3.one;
 
                 if (data.sync != this)
                 {
                     data.sync = this;
                 }
+
+                data.RefreshHideFlags();
 
                 if (networkDataOptimization == NetworkDataOptimization.Ultra && data is LightSyncDataUltra)
                 {
@@ -1538,20 +1561,20 @@ namespace MMMaellon.LightSync
             if (looper != null)
             {
                 looperObject = looper.gameObject;
-                if (unparentInternalObjects && looper.transform.parent != null)
+                if (!PrefabUtility.IsPartOfAnyPrefab(this))
                 {
-                    looper.transform.SetParent(null, false);
-                    looper.transform.localPosition = Vector3.zero;
-                    looper.transform.localRotation = Quaternion.identity;
-                    looper.transform.localScale = Vector3.one;
+                    if (unparentInternalObjects && looper.transform.parent != null)
+                    {
+                        looper.transform.SetParent(null, false);
+                    }
+                    else if (looper.transform.parent != gameObject)
+                    {
+                        looper.transform.SetParent(transform, false);
+                    }
                 }
-                else if (looper.transform.parent != gameObject)
-                {
-                    looper.transform.SetParent(transform, false);
-                    looper.transform.localPosition = Vector3.zero;
-                    looper.transform.localRotation = Quaternion.identity;
-                    looper.transform.localScale = Vector3.one;
-                }
+                looper.transform.localPosition = Vector3.zero;
+                looper.transform.localRotation = Quaternion.identity;
+                looper.transform.localScale = Vector3.one;
 
                 if (looper.sync != this)
                 {
@@ -1562,6 +1585,9 @@ namespace MMMaellon.LightSync
                 {
                     looper.data = data;
                 }
+
+                looper.RefreshHideFlags();
+
                 looper.StopLoop();
             }
             else
@@ -1635,15 +1661,41 @@ namespace MMMaellon.LightSync
 
         public void OnDestroy()
         {
+            DestroyInternalObjectsAsync();
+        }
+
+        public void DestroyInternalObjectsAsync()
+        {
             if (data)
             {
                 data.DestroyAsync();
+                data = null;
             }
             if (looper)
             {
                 looper.DestroyAsync();
+                looper = null;
+                fixedLooper = null;
+                lateLooper = null;
+            }
+            foreach (var state in customStates)
+            {
+                if (state is LightSyncStateWithData dataState)
+                {
+                    dataState.DestroyInternalObjectsAsync();
+                }
+            }
+
+            foreach (var enhancement in GetComponents<LightSyncEnhancementWithData>())
+            {
+                if (enhancement is LightSyncEnhancementWithData dataState)
+                {
+                    dataState.DestroyInternalObjectsAsync();
+                }
             }
         }
+
+
 #endif
     }
 }

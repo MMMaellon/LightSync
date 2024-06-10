@@ -134,8 +134,7 @@ namespace MMMaellon.LightSync
             {
                 if (GUILayout.Button(new GUIContent("Force Setup")))
                 {
-                    DeleteInternalObjects();
-                    SetupSelectedLightSyncs();
+                    ForceSetup();
                 }
                 ShowAdvancedOptions();
                 serializedObject.ApplyModifiedProperties();
@@ -213,11 +212,11 @@ namespace MMMaellon.LightSync
                 Debug.LogWarningFormat("[LightSync] Auto Setup failed: No LightSync selected");
             }
         }
-        public static void DeleteInternalObjects()
+        public static void ForceSetup()
         {
             foreach (LightSync sync in Selection.GetFiltered<LightSync>(SelectionMode.Editable))
             {
-                sync.OnDestroy();
+                sync.ForceSetup();
             }
         }
 
@@ -257,6 +256,20 @@ namespace MMMaellon.LightSync
                 if (looper.sync == null || looper.sync.looper != looper)
                 {
                     looper.StartCoroutine(looper.Destroy());
+                }
+            }
+            foreach (var stateData in FindObjectsOfType<LightSyncStateData>())
+            {
+                if (stateData.state == null || stateData.state.data != stateData)
+                {
+                    stateData.StartCoroutine(stateData.Destroy());
+                }
+            }
+            foreach (var enhancementData in FindObjectsOfType<LightSyncEnhancementData>())
+            {
+                if (enhancementData.enhancement == null || enhancementData.enhancement.enhancementData != enhancementData)
+                {
+                    enhancementData.StartCoroutine(enhancementData.Destroy());
                 }
             }
         }

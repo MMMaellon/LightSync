@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon.Common;
-
+using System.Collections.Generic;
+using System;
+using System.Linq;
 
 
 
@@ -16,15 +18,17 @@ namespace MMMaellon.LightSync
 
     public class AttachToPlayerEditor : Editor
     {
-        SerializedProperty _allowedBones;
-        SerializedProperty allowedBones;
+        SerializedProperty[] bones;
+        SerializedProperty dataProperty;
+        bool showBones = true;
+        bool showAdvanced = false;
 
         public void OnEnable()
         {
             // Fetch the objects from the MyScript script to display in the inspector
-            _allowedBones = serializedObject.FindProperty("_allowedBones");
-            allowedBones = serializedObject.FindProperty("allowedBones");
-            SyncAllowedBones();
+            dataProperty = serializedObject.FindProperty("data");
+            AttachToPlayer attach = (AttachToPlayer)target;
+            bones = boneNames.Select(name => serializedObject.FindProperty(name)).ToArray();
         }
         public override void OnInspectorGUI()
         {
@@ -40,29 +44,117 @@ namespace MMMaellon.LightSync
             EditorGUI.BeginChangeCheck();
             if (attach.attachToAvatarBones)
             {
-                EditorGUILayout.PropertyField(_allowedBones, true);
+                showBones = EditorGUILayout.BeginFoldoutHeaderGroup(showBones, "Allowed Bones");
+                if (showBones)
+                {
+                    foreach (var bone in bones)
+                    {
+                        EditorGUILayout.PropertyField(bone);
+                    }
+                }
+                EditorGUILayout.EndFoldoutHeaderGroup();
             }
+            showAdvanced = EditorGUILayout.BeginFoldoutHeaderGroup(showAdvanced, "Advanced");
+            if (showAdvanced)
+            {
+                EditorGUILayout.PropertyField(dataProperty);
+            }
+            EditorGUILayout.EndFoldoutHeaderGroup();
+            serializedObject.ApplyModifiedProperties();
             if (EditorGUI.EndChangeCheck())
             {
                 SyncAllowedBones();
             }
             EditorGUILayout.Space();
+            serializedObject.ApplyModifiedProperties();
         }
 
         public void SyncAllowedBones()
         {
-            allowedBones.ClearArray();
-            AttachToPlayer attach = (AttachToPlayer)target;
-            if (attach && attach.attachToAvatarBones)
+            foreach (AttachToPlayer attach in targets.Cast<AttachToPlayer>())
             {
-                for (int i = 0; i < _allowedBones.arraySize; i++)
+                SyncAllowedBones(attach);
+                // attach.StartCoroutine(SyncAllowedBones(attach));
+            }
+        }
+
+        // public System.Collections.IEnumerator SyncAllowedBones(AttachToPlayer attach)
+        public void SyncAllowedBones(AttachToPlayer attach)
+        {
+            // yield return null;
+            SerializedObject serializedAttach = new SerializedObject(attach);
+            List<int> allowedBones = new List<int>();
+            for (int i = 0; i < bones.Length; i++)
+            {
+                if (serializedAttach.FindProperty(boneNames[i]).boolValue)
                 {
-                    allowedBones.InsertArrayElementAtIndex(i);
-                    allowedBones.GetArrayElementAtIndex(i).intValue = _allowedBones.GetArrayElementAtIndex(i).enumValueIndex;
+                    if (Enum.TryParse(boneNames[i], out HumanBodyBones bone))
+                    {
+                        allowedBones.Add((int)bone);
+                    }
                 }
             }
-            serializedObject.ApplyModifiedProperties();
+            attach.allowedBones = allowedBones.ToArray();
         }
+
+        static readonly string[] boneNames = {
+            "Hips",
+            "LeftUpperLeg",
+            "RightUpperLeg",
+            "LeftLowerLeg",
+            "RightLowerLeg",
+            "LeftFoot",
+            "RightFoot",
+            "Spine",
+            "Chest",
+            "UpperChest",
+            "Neck",
+            "Head",
+            "LeftShoulder",
+            "RightShoulder",
+            "LeftUpperArm",
+            "RightUpperArm",
+            "LeftLowerArm",
+            "RightLowerArm",
+            "LeftHand",
+            "RightHand",
+            "LeftToes",
+            "RightToes",
+            "LeftEye",
+            "RightEye",
+            "Jaw",
+            "LeftThumbProximal",
+            "LeftThumbIntermediate",
+            "LeftThumbDistal",
+            "LeftIndexProximal",
+            "LeftIndexIntermediate",
+            "LeftIndexDistal",
+            "LeftMiddleProximal",
+            "LeftMiddleIntermediate",
+            "LeftMiddleDistal",
+            "LeftRingProximal",
+            "LeftRingIntermediate",
+            "LeftRingDistal",
+            "LeftLittleProximal",
+            "LeftLittleIntermediate",
+            "LeftLittleDistal",
+            "RightThumbProximal",
+            "RightThumbIntermediate",
+            "RightThumbDistal",
+            "RightIndexProximal",
+            "RightIndexIntermediate",
+            "RightIndexDistal",
+            "RightMiddleProximal",
+            "RightMiddleIntermediate",
+            "RightMiddleDistal",
+            "RightRingProximal",
+            "RightRingIntermediate",
+            "RightRingDistal",
+            "RightLittleProximal",
+            "RightLittleIntermediate",
+            "RightLittleDistal",
+            "LastBone"
+        };
     }
 }
 
@@ -88,12 +180,127 @@ namespace MMMaellon.LightSync
         public bool attachToAvatarBones = true;
         [HideInInspector]
         public int[] allowedBones = { 0 };
+        [HideInInspector]
+        public bool Hips = true;
+        [HideInInspector]
+        public bool LeftUpperLeg;
+        [HideInInspector]
+        public bool RightUpperLeg;
+        [HideInInspector]
+        public bool LeftLowerLeg;
+        [HideInInspector]
+        public bool RightLowerLeg;
+        [HideInInspector]
+        public bool LeftFoot;
+        [HideInInspector]
+        public bool RightFoot;
+        [HideInInspector]
+        public bool Spine;
+        [HideInInspector]
+        public bool Chest;
+        [HideInInspector]
+        public bool UpperChest;
+        [HideInInspector]
+        public bool Neck;
+        [HideInInspector]
+        public bool Head;
+        [HideInInspector]
+        public bool LeftShoulder;
+        [HideInInspector]
+        public bool RightShoulder;
+        [HideInInspector]
+        public bool LeftUpperArm;
+        [HideInInspector]
+        public bool RightUpperArm;
+        [HideInInspector]
+        public bool LeftLowerArm;
+        [HideInInspector]
+        public bool RightLowerArm;
+        [HideInInspector]
+        public bool LeftHand;
+        [HideInInspector]
+        public bool RightHand;
+        [HideInInspector]
+        public bool LeftToes;
+        [HideInInspector]
+        public bool RightToes;
+        [HideInInspector]
+        public bool LeftEye;
+        [HideInInspector]
+        public bool RightEye;
+        [HideInInspector]
+        public bool Jaw;
+        [HideInInspector]
+        public bool LeftThumbProximal;
+        [HideInInspector]
+        public bool LeftThumbIntermediate;
+        [HideInInspector]
+        public bool LeftThumbDistal;
+        [HideInInspector]
+        public bool LeftIndexProximal;
+        [HideInInspector]
+        public bool LeftIndexIntermediate;
+        [HideInInspector]
+        public bool LeftIndexDistal;
+        [HideInInspector]
+        public bool LeftMiddleProximal;
+        [HideInInspector]
+        public bool LeftMiddleIntermediate;
+        [HideInInspector]
+        public bool LeftMiddleDistal;
+        [HideInInspector]
+        public bool LeftRingProximal;
+        [HideInInspector]
+        public bool LeftRingIntermediate;
+        [HideInInspector]
+        public bool LeftRingDistal;
+        [HideInInspector]
+        public bool LeftLittleProximal;
+        [HideInInspector]
+        public bool LeftLittleIntermediate;
+        [HideInInspector]
+        public bool LeftLittleDistal;
+        [HideInInspector]
+        public bool RightThumbProximal;
+        [HideInInspector]
+        public bool RightThumbIntermediate;
+        [HideInInspector]
+        public bool RightThumbDistal;
+        [HideInInspector]
+        public bool RightIndexProximal;
+        [HideInInspector]
+        public bool RightIndexIntermediate;
+        [HideInInspector]
+        public bool RightIndexDistal;
+        [HideInInspector]
+        public bool RightMiddleProximal;
+        [HideInInspector]
+        public bool RightMiddleIntermediate;
+        [HideInInspector]
+        public bool RightMiddleDistal;
+        [HideInInspector]
+        public bool RightRingProximal;
+        [HideInInspector]
+        public bool RightRingIntermediate;
+        [HideInInspector]
+        public bool RightRingDistal;
+        [HideInInspector]
+        public bool RightLittleProximal;
+        [HideInInspector]
+        public bool RightLittleIntermediate;
+        [HideInInspector]
+        public bool RightLittleDistal;
+        [HideInInspector]
+        public bool LastBone;
+
+
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
         //For displaying in the editor only
         [HideInInspector]
         public HumanBodyBones[] _allowedBones = { 0 };
 #endif
 
+        [HideInInspector]
         public AttachToPlayerData data;
 
         VRCPlayerApi[] attachTargets = new VRCPlayerApi[4];
@@ -203,7 +410,7 @@ namespace MMMaellon.LightSync
             bone = 0;
             player = null;
             float nearestDistance = -1001f;
-            float currentDistance = -1001f;
+            float currentDistance;
             foreach (VRCPlayerApi p in players)
             {
                 foreach (int b in allowedBones)

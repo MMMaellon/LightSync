@@ -80,7 +80,7 @@ namespace MMMaellon.LightSync
         }
         public void DestroyAsync()
         {
-            if (gameObject.activeInHierarchy && enabled)//prevents log spam in play mode
+            if (gameObject.activeInHierarchy)//prevents log spam in play mode
             {
                 StartCoroutine(Destroy());
             }

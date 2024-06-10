@@ -1,4 +1,6 @@
 
+using UdonSharpEditor;
+using UnityEditor;
 using UnityEngine;
 using VRC.SDKBase;
 
@@ -18,9 +20,15 @@ namespace MMMaellon.LightSync
 
         public void OnDestroy()
         {
+            DestroyInternalObjectsAsync();
+        }
+
+        public void DestroyInternalObjectsAsync()
+        {
             if (stateData)
             {
                 stateData.DestroyAsync();
+                stateData = null;
             }
         }
 
@@ -28,6 +36,18 @@ namespace MMMaellon.LightSync
         {
             base.AutoSetup();
             CreateDataObject();
+        }
+
+        public virtual void RefreshFlags()
+        {
+            if (!stateData)
+            {
+                AutoSetup();
+            }
+            else
+            {
+                stateData.RefreshHideFlags();
+            }
         }
 
         public virtual void CreateDataObject()
@@ -47,18 +67,21 @@ namespace MMMaellon.LightSync
                 }
                 GameObject dataObject = new(name + "_statedata" + stateID);
                 dataObject.transform.SetParent(transform, false);
-                stateData = dataObject.AddComponent(dataType).GetComponent<LightSyncStateData>();
+                stateData = UdonSharpComponentExtensions.AddUdonSharpComponent(dataObject, dataType).GetComponent<LightSyncStateData>();
             }
             if (stateData)
             {
                 GameObject dataObject = stateData.gameObject;
-                if (sync.unparentInternalObjects && dataObject.transform.parent != null)
+                if (!PrefabUtility.IsPartOfAnyPrefab(dataObject))
                 {
-                    dataObject.transform.SetParent(null, false);
-                }
-                else if (!sync.unparentInternalObjects && dataObject.transform.parent != transform)
-                {
-                    dataObject.transform.SetParent(transform, false);
+                    if (sync.unparentInternalObjects && dataObject.transform.parent != null)
+                    {
+                        dataObject.transform.SetParent(null, false);
+                    }
+                    else if (!sync.unparentInternalObjects && dataObject.transform.parent != transform)
+                    {
+                        dataObject.transform.SetParent(transform, false);
+                    }
                 }
                 dataObject.name = name + "_statedata" + stateID;
                 stateData.state = this;
