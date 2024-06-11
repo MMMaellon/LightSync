@@ -1,13 +1,13 @@
-﻿using UnityEngine;
-using VRC.SDKBase;
+﻿using VRC.SDKBase;
 using VRC.Udon.Common;
 using System.Collections.Generic;
+using UnityEngine;
 using System;
-using System.Linq;
 
 
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
+using System.Linq;
 using UnityEditor;
 using UdonSharpEditor;
 

@@ -1,8 +1,10 @@
 
-using UdonSharpEditor;
-using UnityEditor;
 using UnityEngine;
 using VRC.SDKBase;
+#if !COMPILER_UDONSHARP && UNITY_EDITOR
+using UdonSharpEditor;
+using UnityEditor;
+#endif
 
 namespace MMMaellon.LightSync
 {
