@@ -20,7 +20,7 @@ namespace MMMaellon.LightSync
         public override void OnDeserialization(VRC.Udon.Common.DeserializationResult result)
         {
             sync.CalcSmoothingTime(result.sendTime);
-            if (sync.localSyncCount > sync.syncCount && sync.localSyncCount - sync.syncCount < 8)//means we got updates out of order
+            if (!sync.allowOutOfOrderData && sync.localSyncCount > sync.syncCount && sync.localSyncCount - sync.syncCount < 8)//means we got updates out of order
             {
                 //revert all synced values
                 sync._print("Out of order network packet received");

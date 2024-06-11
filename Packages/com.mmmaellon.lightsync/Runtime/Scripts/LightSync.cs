@@ -86,7 +86,11 @@ namespace MMMaellon.LightSync
         [HideInInspector]
         public bool useWorldSpaceTransformsWhenHeldOrAttachedToPlayer = false;
         [HideInInspector]
+        public bool syncCollisions = true;
+        [HideInInspector]
         public bool syncParticleCollisions = true;
+        [HideInInspector]
+        public bool allowOutOfOrderData = false;
         [HideInInspector]
         public bool takeOwnershipOfOtherObjectsOnCollision = true;
         [HideInInspector]
@@ -454,7 +458,7 @@ namespace MMMaellon.LightSync
         public int lastCollision = -1001;
         public void OnCollisionEnter(Collision other)
         {
-            if (lastCollision == Time.frameCount)
+            if (lastCollision == Time.frameCount || !syncCollisions)
             {
                 return;
             }
@@ -472,7 +476,7 @@ namespace MMMaellon.LightSync
 
         public void OnCollisionExit(Collision other)
         {
-            if (lastCollision == Time.frameCount)
+            if (lastCollision == Time.frameCount || !syncCollisions)
             {
                 return;
             }
