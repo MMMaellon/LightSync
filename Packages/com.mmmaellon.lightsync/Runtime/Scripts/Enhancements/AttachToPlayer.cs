@@ -616,7 +616,7 @@ namespace MMMaellon.LightSync
 
         public override void InputLookVertical(float value, UdonInputEventArgs args)
         {
-            if (attachOnRightStickDown && sync.pickup.IsHeld && value < 0.8f)
+            if (attachOnRightStickDown && sync.pickup.IsHeld && value < -0.95f && Networking.LocalPlayer.IsUserInVR())
             {
                 Attach();
             }
