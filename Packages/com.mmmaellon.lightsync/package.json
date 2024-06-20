@@ -1,9 +1,9 @@
 {
     "name": "com.mmmaellon.lightsync",
     "displayName": "LightSync",
-    "version": "1.1.11",
+    "version": "1.1.12",
     "unity": "2022.3",
-    "description": "",
+    "description": "A modernized set of scripts for syncing an object in VRChat with an emphasis on network efficiency and ease of use. Replaces SmartObjectSync.",
     "url": "https://github.com/MMMaellon/lightsync.git",
     "dependencies": {},
     "gitDependencies": {},
