@@ -410,8 +410,10 @@ namespace MMMaellon.LightSync
             StartLoop();
         }
 
+        bool firstLoop = false;
         public void StartLoop()
         {
+            firstLoop = true;
             switch (loopTimingFlag)
             {
                 case 0://Update
@@ -846,6 +848,25 @@ namespace MMMaellon.LightSync
             }
         }
 
+        public float GetInterpolation()
+        {
+            switch (loopTimingFlag)
+            {
+                case 0://Update
+                    {
+                        return looper.GetAutoSmoothedInterpolation(Time.timeSinceLevelLoad - looper.startTime);
+                    }
+                case 1://FixedUpdate
+                    {
+                        return fixedLooper.GetAutoSmoothedInterpolation(Time.timeSinceLevelLoad - fixedLooper.startTime);
+                    }
+                default://PostLateUpdate
+                    {
+                        return lateLooper.GetAutoSmoothedInterpolation(Time.timeSinceLevelLoad - lateLooper.startTime);
+                    }
+            }
+        }
+
         bool _continueBool;
         public bool OnLerp(float elapsedTime, float autoSmoothedLerp)
         {
@@ -856,32 +877,53 @@ namespace MMMaellon.LightSync
             if (state >= 0 && state < customStates.Length)
             {
                 _continueBool = customStates[state].OnLerp(elapsedTime, autoSmoothedLerp);
-                return _continueBool;
             }
-            switch (state)
+            else
             {
-                case STATE_PHYSICS:
-                    {
-                        _continueBool = PhysicsLerp(elapsedTime, autoSmoothedLerp);
-                        break;
-                    }
-                case STATE_HELD:
-                    {
-                        _continueBool = HeldLerp(elapsedTime, autoSmoothedLerp);
-                        break;
-                    }
-                case STATE_LOCAL_TO_OWNER:
-                    {
-                        _continueBool = LocalLerp(elapsedTime, autoSmoothedLerp);
-                        break;
-                    }
-                default:
-                    {
-                        _continueBool = BoneLerp(elapsedTime, autoSmoothedLerp);
-                        break;
-                    }
+                switch (state)
+                {
+                    case STATE_PHYSICS:
+                        {
+                            _continueBool = PhysicsLerp(elapsedTime, autoSmoothedLerp);
+                            break;
+                        }
+                    case STATE_HELD:
+                        {
+                            _continueBool = HeldLerp(elapsedTime, autoSmoothedLerp);
+                            break;
+                        }
+                    case STATE_LOCAL_TO_OWNER:
+                        {
+                            _continueBool = LocalLerp(elapsedTime, autoSmoothedLerp);
+                            break;
+                        }
+                    default:
+                        {
+                            _continueBool = BoneLerp(elapsedTime, autoSmoothedLerp);
+                            break;
+                        }
+                }
+            }
+            if (firstLoop && !_continueBool || autoSmoothedLerp >= 1.0f)
+            {
+                OnLerpEnd();
+                firstLoop = false;
             }
             return _continueBool;
+        }
+        public void OnLerpEnd()
+        {
+            //Gets called by data object
+            foreach (LightSyncListener listener in classEventListeners)
+            {
+                listener.OnLerpEnd(this);
+            }
+
+            foreach (UdonBehaviour behaviour in behaviourEventListeners)
+            {
+                behaviour.SetProgramVariable<LightSync>(LightSyncListener.syncVariableName, this);
+                behaviour.SendCustomEvent(LightSyncListener.lerpStopEventName);
+            }
         }
 
         bool shouldSync;

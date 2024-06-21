@@ -10,6 +10,7 @@ namespace MMMaellon.LightSync
     {
         public abstract void OnChangeState(LightSync sync, int prevState, int currentState);
         public abstract void OnChangeOwner(LightSync sync, VRCPlayerApi prevOwner, VRCPlayerApi currentOwner);
+        public abstract void OnLerpEnd(LightSync sync);
 
         /// <summary>
         /// Variable name that will be set before the OnChangeState and OnChangeOwner events is sent to the listener.
@@ -46,6 +47,11 @@ namespace MMMaellon.LightSync
         /// </summary>
         [PublicAPI]
         public const string changeStateEventName = "OnChangeState";
+        /// <summary>
+        /// The name of the event that gets called when the light sync changes state
+        /// </summary>
+        [PublicAPI]
+        public const string lerpStopEventName = "OnLerpEnd";
         /// <summary>
         /// The name of the event that gets called when the light sync changes owner
         /// </summary>
