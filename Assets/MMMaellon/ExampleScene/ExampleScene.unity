@@ -716,7 +716,9 @@ MonoBehaviour:
   kinematicWhileAttachedToPlayer: 1
   useWorldSpaceTransforms: 0
   useWorldSpaceTransformsWhenHeldOrAttachedToPlayer: 0
+  syncCollisions: 1
   syncParticleCollisions: 1
+  allowOutOfOrderData: 0
   takeOwnershipOfOtherObjectsOnCollision: 1
   allowOthersToTakeOwnershipOnCollision: 1
   positionDesyncThreshold: 0.015
@@ -1231,8 +1233,6 @@ GameObject:
   - component: {fileID: 657008254}
   - component: {fileID: 657008253}
   - component: {fileID: 657008252}
-  - component: {fileID: 657008251}
-  - component: {fileID: 657008250}
   m_Layer: 13
   m_Name: AttachToPlayer
   m_TagString: Untagged
@@ -1240,125 +1240,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &657008250
-MonoBehaviour:
-  m_ObjectHideFlags: 2
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 657008249}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 45115577ef41a5b4ca741ed302693907, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  interactTextPlacement: {fileID: 0}
-  interactText: Use
-  interactTextGO: {fileID: 0}
-  proximity: 2
-  SynchronizePosition: 0
-  AllowCollisionOwnershipTransfer: 0
-  Reliable: 0
-  _syncMethod: 2
-  serializedProgramAsset: {fileID: 11400000, guid: 4ee19fb399965284a92060587e937db9,
-    type: 2}
-  programSource: {fileID: 11400000, guid: 467585bfad544204480e759c14b2a724, type: 2}
-  serializedPublicVariablesBytesString: Ai8AAAAAATIAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAFQAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AAAAAAAYBAAAAAAAAACcBBAAAAHQAeQBwAGUAAWgAAABTAHkAcwB0AGUAbQAuAEMAbwBsAGwAZQBjAHQAaQBvAG4AcwAuAEcAZQBuAGUAcgBpAGMALgBMAGkAcwB0AGAAMQBbAFsAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4ALgBJAG4AdABlAHIAZgBhAGMAZQBzAC4ASQBVAGQAbwBuAFYAYQByAGkAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AXQBdACwAIABtAHMAYwBvAHIAbABpAGIAAQEJAAAAVgBhAHIAaQBhAGIAbABlAHMALwEAAAABaAAAAFMAeQBzAHQAZQBtAC4AQwBvAGwAbABlAGMAdABpAG8AbgBzAC4ARwBlAG4AZQByAGkAYwAuAEwAaQBzAHQAYAAxAFsAWwBWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAEkAbgB0AGUAcgBmAGEAYwBlAHMALgBJAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlACwAIABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgBdAF0ALAAgAG0AcwBjAG8AcgBsAGkAYgABAAAABgEAAAAAAAAAAi8CAAAAAUkAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAGAAMQBbAFsAUwB5AHMAdABlAG0ALgBJAG4AdAAzADIALAAgAG0AcwBjAG8AcgBsAGkAYgBdAF0ALAAgAFYAUgBDAC4AVQBkAG8AbgAuAEMAbwBtAG0AbwBuAAIAAAAGAgAAAAAAAAAnAQQAAAB0AHkAcABlAAEXAAAAUwB5AHMAdABlAG0ALgBTAHQAcgBpAG4AZwAsACAAbQBzAGMAbwByAGwAaQBiACcBCgAAAFMAeQBtAGIAbwBsAE4AYQBtAGUAAR8AAABfAF8AXwBVAGQAbwBuAFMAaABhAHIAcABCAGUAaABhAHYAaQBvAHUAcgBWAGUAcgBzAGkAbwBuAF8AXwBfACcBBAAAAHQAeQBwAGUAARYAAABTAHkAcwB0AGUAbQAuAEkAbgB0ADMAMgAsACAAbQBzAGMAbwByAGwAaQBiABcBBQAAAFYAYQBsAHUAZQACAAAABwUHBQcF
-  publicVariablesUnityEngineObjects: []
-  publicVariablesSerializationDataFormat: 0
---- !u!114 &657008251
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 657008249}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d6bc8627a82a6848a320c63e7788f31, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  serializationData:
-    SerializedFormat: 2
-    SerializedBytes: 
-    ReferencedUnityObjects: []
-    SerializedBytesString: 
-    Prefab: {fileID: 0}
-    PrefabModificationsReferencedUnityObjects: []
-    PrefabModifications: []
-    SerializationNodes: []
-  _udonSharpBackingUdonBehaviour: {fileID: 657008250}
-  sync: {fileID: 657008253}
-  enhancementData: {fileID: 1525347559}
-  maxDistance: 3
-  snapDistance: 0
-  playerSampleSize: 3
-  advancedDistanceCheck: 1
-  attachCenterOverride: {fileID: 0}
-  attachOnDrop: 1
-  attachOnPickupUseDown: 0
-  attachOnRightStickDown: 0
-  attachToSelf: 1
-  attachToOthers: 1
-  attachToAvatarBones: 1
-  allowedBones: 0100000002000000030000000400000005000000070000000a000000130000001b0000002100000025000000
-  Hips: 0
-  LeftUpperLeg: 1
-  RightUpperLeg: 1
-  LeftLowerLeg: 1
-  RightLowerLeg: 1
-  LeftFoot: 1
-  RightFoot: 0
-  Spine: 1
-  Chest: 0
-  UpperChest: 0
-  Neck: 0
-  Head: 1
-  LeftShoulder: 0
-  RightShoulder: 0
-  LeftUpperArm: 0
-  RightUpperArm: 0
-  LeftLowerArm: 0
-  RightLowerArm: 0
-  LeftHand: 0
-  RightHand: 0
-  LeftToes: 1
-  RightToes: 0
-  LeftEye: 0
-  RightEye: 0
-  Jaw: 0
-  LeftThumbProximal: 0
-  LeftThumbIntermediate: 0
-  LeftThumbDistal: 0
-  LeftIndexProximal: 1
-  LeftIndexIntermediate: 0
-  LeftIndexDistal: 0
-  LeftMiddleProximal: 0
-  LeftMiddleIntermediate: 0
-  LeftMiddleDistal: 0
-  LeftRingProximal: 1
-  LeftRingIntermediate: 0
-  LeftRingDistal: 0
-  LeftLittleProximal: 0
-  LeftLittleIntermediate: 1
-  LeftLittleDistal: 0
-  RightThumbProximal: 0
-  RightThumbIntermediate: 0
-  RightThumbDistal: 0
-  RightIndexProximal: 0
-  RightIndexIntermediate: 0
-  RightIndexDistal: 0
-  RightMiddleProximal: 0
-  RightMiddleIntermediate: 0
-  RightMiddleDistal: 0
-  RightRingProximal: 0
-  RightRingIntermediate: 0
-  RightRingDistal: 0
-  RightLittleProximal: 0
-  RightLittleIntermediate: 0
-  RightLittleDistal: 0
-  LastBone: 0
-  data: {fileID: 1525347559}
 --- !u!114 &657008252
 MonoBehaviour:
   m_ObjectHideFlags: 2
@@ -1415,7 +1296,7 @@ MonoBehaviour:
   rigid: {fileID: 657008255}
   pickup: {fileID: 657008254}
   respawnHeight: -100
-  smoothingTime: -0.25
+  smoothingTime: 0.5
   allowTheftFromSelf: 1
   allowTheftWhenAttachedToPlayer: 1
   kinematicWhileHeld: 1
@@ -1432,7 +1313,9 @@ MonoBehaviour:
   kinematicWhileAttachedToPlayer: 1
   useWorldSpaceTransforms: 0
   useWorldSpaceTransformsWhenHeldOrAttachedToPlayer: 0
+  syncCollisions: 1
   syncParticleCollisions: 1
+  allowOutOfOrderData: 0
   takeOwnershipOfOtherObjectsOnCollision: 1
   allowOthersToTakeOwnershipOnCollision: 1
   positionDesyncThreshold: 0.015
@@ -1808,7 +1691,9 @@ MonoBehaviour:
   kinematicWhileAttachedToPlayer: 1
   useWorldSpaceTransforms: 0
   useWorldSpaceTransformsWhenHeldOrAttachedToPlayer: 0
+  syncCollisions: 1
   syncParticleCollisions: 1
+  allowOutOfOrderData: 0
   takeOwnershipOfOtherObjectsOnCollision: 1
   allowOthersToTakeOwnershipOnCollision: 1
   positionDesyncThreshold: 0.015
@@ -2160,13 +2045,15 @@ MonoBehaviour:
   kinematicWhileAttachedToPlayer: 1
   useWorldSpaceTransforms: 0
   useWorldSpaceTransformsWhenHeldOrAttachedToPlayer: 0
+  syncCollisions: 1
   syncParticleCollisions: 1
+  allowOutOfOrderData: 0
   takeOwnershipOfOtherObjectsOnCollision: 1
   allowOthersToTakeOwnershipOnCollision: 1
   positionDesyncThreshold: 0.015
   rotationDesyncThreshold: 0.995
   minimumSleepFrames: 4
-  spawnPos: {x: 7.7233105, y: 0.04999852, z: 13.018343}
+  spawnPos: {x: 8.572, y: 0.04999852, z: 13.122}
   spawnRot: {x: -0, y: 0.87461966, z: -0, w: -0.4848098}
   localTransformFlag: 1
   leftHandFlag: 0
@@ -2319,7 +2206,7 @@ Transform:
   m_GameObject: {fileID: 862106543}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.87461966, z: -0, w: -0.4848098}
-  m_LocalPosition: {x: 7.7233105, y: 0.04999852, z: 13.018343}
+  m_LocalPosition: {x: 8.572, y: 0.04999852, z: 13.122}
   m_LocalScale: {x: 0.10000004, y: 0.1, z: 0.10000004}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2727,7 +2614,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1219239828
 Transform:
   m_ObjectHideFlags: 0
@@ -3058,7 +2945,7 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 1525347560}
-  enhancement: {fileID: 657008251}
+  enhancement: {fileID: 0}
   attach: {fileID: 0}
 --- !u!114 &1525347560
 MonoBehaviour:
@@ -4797,7 +4684,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   launchedFromSDKPipeline: 0
   completedSDKPipeline: 0
-  blueprintId: 
+  blueprintId: wrld_936ae2a5-36ed-4bc3-9a33-8b10e3737ba1
   contentType: 1
   assetBundleUnityVersion: 
   fallbackStatus: 0
@@ -4842,7 +4729,9 @@ MonoBehaviour:
   DynamicPrefabs: []
   DynamicMaterials:
   - {fileID: 2100000, guid: a3e939fd6fc13494ea65ba6bf0d9ea58, type: 2}
+  - {fileID: 2100000, guid: 07bdc824d9b5ea44ca9ffbb9f9c20d1b, type: 2}
   - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 97454862df734844ba555f9c99d581ec, type: 2}
   - {fileID: 2100000, guid: 2c1e6f9f3575ae347a1df450c4a65d2b, type: 2}
   LightMapsNear: []
   LightMapsFar: []
@@ -4902,99 +4791,98 @@ MonoBehaviour:
     SerializedTypeNames:
     - VRC.SDK3.Components.VRCPickup
     - VRC.Udon.UdonBehaviour
-  - gameObject: {fileID: 1731318789}
-    ID: 11
-    SerializedTypeNames:
-    - VRC.SDK3.Components.VRCPickup
-    - VRC.Udon.UdonBehaviour
-  - gameObject: {fileID: 1643253214}
-    ID: 14
-    SerializedTypeNames:
-    - VRC.Udon.UdonBehaviour
-  - gameObject: {fileID: 55563874}
-    ID: 15
-    SerializedTypeNames:
-    - VRC.Udon.UdonBehaviour
-  - gameObject: {fileID: 3480278762663670689}
-    ID: 16
-    SerializedTypeNames:
-    - VRC.Udon.UdonBehaviour
-    - VRC.Udon.UdonBehaviour
-  - gameObject: {fileID: 1867223245}
-    ID: 17
-    SerializedTypeNames:
-    - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 1999637038}
-    ID: 18
+    ID: 11
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 570671197}
-    ID: 19
+    ID: 12
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
     - VRC.Udon.UdonBehaviour
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 1369063837}
-    ID: 20
+    ID: 13
     SerializedTypeNames:
     - VRC.SDK3.Components.VRCPickup
     - VRC.SDK3.Components.VRCObjectSync
-  - gameObject: {fileID: 2020172277}
-    ID: 21
-    SerializedTypeNames:
-    - VRC.Udon.UdonBehaviour
-  - gameObject: {fileID: 657008249}
-    ID: 22
+  - gameObject: {fileID: 1731318789}
+    ID: 14
     SerializedTypeNames:
     - VRC.SDK3.Components.VRCPickup
     - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 2020172277}
+    ID: 15
+    SerializedTypeNames:
+    - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 657008249}
+    ID: 16
+    SerializedTypeNames:
+    - VRC.SDK3.Components.VRCPickup
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 862106543}
-    ID: 23
+    ID: 17
     SerializedTypeNames:
     - VRC.SDK3.Components.VRCPickup
     - VRC.Udon.UdonBehaviour
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 1828169752}
-    ID: 24
+    ID: 18
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 1758472777}
-    ID: 25
+    ID: 19
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 4268449}
-    ID: 26
+    ID: 20
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
     - VRC.Udon.UdonBehaviour
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 762630634}
-    ID: 27
+    ID: 21
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 1525347558}
-    ID: 28
+    ID: 22
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 1053227166}
-    ID: 29
+    ID: 23
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
     - VRC.Udon.UdonBehaviour
     - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 1867223245}
+    ID: 24
+    SerializedTypeNames:
+    - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 775719450}
-    ID: 30
+    ID: 25
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 1699695624}
-    ID: 31
+    ID: 26
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 550377673}
-    ID: 32
+    ID: 27
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
+    - VRC.Udon.UdonBehaviour
+    - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 1643253214}
+    ID: 28
+    SerializedTypeNames:
+    - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 55563874}
+    ID: 29
+    SerializedTypeNames:
+    - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 3480278762663670689}
+    ID: 30
+    SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
     - VRC.Udon.UdonBehaviour
   portraitCameraPositionOffset: {x: 0, y: 0, z: 0}

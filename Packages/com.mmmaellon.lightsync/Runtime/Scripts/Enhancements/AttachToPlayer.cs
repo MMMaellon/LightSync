@@ -572,7 +572,6 @@ namespace MMMaellon.LightSync
         {
             if (data.playerId == localPlayer.playerId)
             {
-                sync._print("body attachment deserialization");
                 Networking.SetOwner(localPlayer, gameObject);
                 if (data.bone >= 0 && data.bone < (int)HumanBodyBones.LastBone)
                 {

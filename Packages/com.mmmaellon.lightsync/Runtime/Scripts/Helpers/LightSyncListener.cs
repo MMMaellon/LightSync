@@ -48,7 +48,7 @@ namespace MMMaellon.LightSync
         [PublicAPI]
         public const string changeStateEventName = "OnChangeState";
         /// <summary>
-        /// The name of the event that gets called when the light sync changes state
+        /// The name of the event that gets called when the light sync finishes its lerp period. This usually is where the light sync is synced up with where the owner is.
         /// </summary>
         [PublicAPI]
         public const string lerpStopEventName = "OnLerpEnd";

@@ -14,7 +14,10 @@ namespace MMMaellon.LightSync
         public override void OnPreSerialization()
         {
             SyncNewData();
-            sync._print("SENDING DATA: " + sync.prettyPrint());
+            if (sync.debugLogs)
+            {
+                sync._print("Sending: " + sync.prettyPrint());
+            }
         }
 
         public override void OnDeserialization(VRC.Udon.Common.DeserializationResult result)
@@ -23,7 +26,6 @@ namespace MMMaellon.LightSync
             if (!sync.allowOutOfOrderData && sync.localSyncCount > sync.syncCount && sync.localSyncCount - sync.syncCount < 8)//means we got updates out of order
             {
                 //revert all synced values
-                sync._print("Out of order network packet received");
                 RejectNewSyncData();
                 return;
             }
@@ -31,7 +33,11 @@ namespace MMMaellon.LightSync
             AcceptNewSyncData();
             sync.localSyncCount = sync.syncCount;
 
-            sync._print("NEW DATA: " + sync.prettyPrint());
+            if (sync.debugLogs)
+            {
+                sync._print("Receiving: " + sync.prettyPrint());
+            }
+
             sync.StartLoop();
         }
 

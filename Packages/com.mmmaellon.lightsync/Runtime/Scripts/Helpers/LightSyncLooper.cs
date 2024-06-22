@@ -37,19 +37,20 @@ namespace MMMaellon.LightSync
             {
                 elapsedTime = Time.timeSinceLevelLoad - firstLoopTime;
             }
-            if (!sync.OnLerp(elapsedTime, GetAutoSmoothedInterpolation(elapsedTime)))
+            if (!sync.OnLerp(elapsedTime, GetAutoSmoothedInterpolation(Time.realtimeSinceStartup - startTime)))
             {
                 StopLoop();
             }
         }
 
-        public virtual float GetAutoSmoothedInterpolation(float elapsedTime)
+        public virtual float GetAutoSmoothedInterpolation(float realElapsedTime)
         {
-            return lerpPeriod <= 0 ? 1 : (Time.realtimeSinceStartup - startTime) / lerpPeriod;
+            // return lerpPeriod <= 0 ? 1 : (Time.realtimeSinceStartup - startTime) / lerpPeriod;
+            return lerpPeriod <= 0 ? 1 : realElapsedTime / lerpPeriod;
         }
 
-        bool firstLerp;
-        float lerpPeriod;
+        protected bool firstLerp;
+        protected float lerpPeriod;
         public void StartLoop()
         {
             firstLerp = true;

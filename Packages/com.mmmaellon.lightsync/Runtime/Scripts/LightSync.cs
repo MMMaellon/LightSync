@@ -4,6 +4,7 @@ using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
 using VRC.Udon.Common;
+
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
 using System.Linq;
 using UdonSharpEditor;
@@ -313,23 +314,6 @@ namespace MMMaellon.LightSync
             return Utilities.IsValid(Owner) && Owner.isLocal;
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         public void Start()
         {
             Owner = Networking.GetOwner(gameObject);
@@ -392,6 +376,7 @@ namespace MMMaellon.LightSync
             rigid.Sleep();
         }
 
+        [System.Diagnostics.Conditional("DEBUG")]
         public void _print(string message)
         {
             if (!debugLogs)
@@ -904,7 +889,7 @@ namespace MMMaellon.LightSync
                         }
                 }
             }
-            if (firstLoop && !_continueBool || autoSmoothedLerp >= 1.0f)
+            if (firstLoop && (!_continueBool || autoSmoothedLerp >= 1.0f))
             {
                 OnLerpEnd();
                 firstLoop = false;
@@ -983,8 +968,7 @@ namespace MMMaellon.LightSync
                 if (bounceFlag)
                 {
                     //don't smoothly lerp the velocity to simulate a bounce
-                    // endVel = (data.pos - recordedPos) / 2f;
-                    endVel = Vector3.zero;
+                    endVel = startVel;
                 }
                 else
                 {
@@ -997,6 +981,11 @@ namespace MMMaellon.LightSync
                 {
                     ApplyVelocities();
                     return false;
+                }
+                if (rigid.isKinematic)
+                {
+                    rigid.velocity = Vector3.zero;
+                    rigid.angularVelocity = Vector3.zero;
                 }
                 return true;
             }
@@ -1042,6 +1031,11 @@ namespace MMMaellon.LightSync
                 tempPos = HermiteInterpolatePosition(recordedPos, Vector3.zero, pos, Vector3.zero, autoSmoothedLerp, autoSmoothingTime);
                 tempRot = Quaternion.Slerp(recordedRot, rot, autoSmoothedLerp);
                 ApplyRelativeTransforms(parentPos, parentRot, tempPos, tempRot);
+                if (!rigid.isKinematic)
+                {
+                    rigid.velocity = Vector3.zero;
+                    rigid.angularVelocity = Vector3.zero;
+                }
             }
             return true;
         }
@@ -1067,6 +1061,11 @@ namespace MMMaellon.LightSync
                 tempPos = HermiteInterpolatePosition(recordedPos, Vector3.zero, pos, Vector3.zero, autoSmoothedLerp, autoSmoothingTime);
                 tempRot = Quaternion.Slerp(recordedRot, rot, autoSmoothedLerp);
                 ApplyRelativeTransforms(parentPos, parentRot, tempPos, tempRot);
+            }
+            if (!rigid.isKinematic)
+            {
+                rigid.velocity = Vector3.zero;
+                rigid.angularVelocity = Vector3.zero;
             }
             return true;
         }
@@ -1103,6 +1102,11 @@ namespace MMMaellon.LightSync
                 tempPos = HermiteInterpolatePosition(recordedPos, Vector3.zero, pos, Vector3.zero, autoSmoothedLerp, autoSmoothingTime);
                 tempRot = Quaternion.Slerp(recordedRot, rot, autoSmoothedLerp);
                 ApplyRelativeTransforms(parentPos, parentRot, tempPos, tempRot);
+            }
+            if (!rigid.isKinematic)
+            {
+                rigid.velocity = Vector3.zero;
+                rigid.angularVelocity = Vector3.zero;
             }
             return true;
         }
@@ -1422,7 +1426,6 @@ namespace MMMaellon.LightSync
 
         public void AutoSetup()
         {
-            _print("Auto setup");
             if (!rigid || rigid.gameObject != gameObject)
             {
                 rigid = GetComponent<Rigidbody>();
@@ -1469,7 +1472,6 @@ namespace MMMaellon.LightSync
         public void SetupStates()
         {
             customStates = GetComponents<LightSyncState>();
-            _print("Found " + customStates.Length + " custom states");
             if (customStates.Length >= sbyte.MaxValue)
             {
                 Debug.LogError("WHAT THE FUCK are you doing? How is it possible that you've got this many states on one LightSync?");
