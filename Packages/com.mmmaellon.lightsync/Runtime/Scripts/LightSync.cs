@@ -68,9 +68,9 @@ namespace MMMaellon.LightSync
         //Extensions
         public Component[] eventListeners = new Component[0];
         [SerializeField, HideInInspector]
-        private UdonBehaviour[] behaviourEventListeners = new UdonBehaviour[0];
+        public UdonBehaviour[] _behaviourEventListeners = new UdonBehaviour[0];
         [SerializeField, HideInInspector]
-        private LightSyncListener[] classEventListeners = new LightSyncListener[0];
+        public LightSyncListener[] _classEventListeners = new LightSyncListener[0];
 
         [HideInInspector]
         public LightSyncState[] customStates = new LightSyncState[0];
@@ -568,12 +568,12 @@ namespace MMMaellon.LightSync
         public void OnChangeOwner()
         {
             //Gets called by data object
-            foreach (LightSyncListener listener in classEventListeners)
+            foreach (LightSyncListener listener in _classEventListeners)
             {
                 listener.OnChangeOwner(this, prevOwner, Owner);
             }
 
-            foreach (UdonBehaviour behaviour in behaviourEventListeners)
+            foreach (UdonBehaviour behaviour in _behaviourEventListeners)
             {
                 behaviour.SetProgramVariable<LightSync>(LightSyncListener.syncVariableName, this);
                 behaviour.SetProgramVariable<VRCPlayerApi>(LightSyncListener.prevOwnerVariableName, prevOwner);
@@ -785,11 +785,11 @@ namespace MMMaellon.LightSync
                 }
 
             }
-            foreach (LightSyncListener listener in classEventListeners)
+            foreach (LightSyncListener listener in _classEventListeners)
             {
                 listener.OnChangeState(this, prevState, state);
             }
-            foreach (UdonBehaviour behaviour in behaviourEventListeners)
+            foreach (UdonBehaviour behaviour in _behaviourEventListeners)
             {
                 behaviour.SetProgramVariable<LightSync>(LightSyncListener.syncVariableName, this);
                 behaviour.SetProgramVariable<int>(LightSyncListener.prevStateVariableName, prevState);
@@ -899,12 +899,12 @@ namespace MMMaellon.LightSync
         public void OnLerpEnd()
         {
             //Gets called by data object
-            foreach (LightSyncListener listener in classEventListeners)
+            foreach (LightSyncListener listener in _classEventListeners)
             {
                 listener.OnLerpEnd(this);
             }
 
-            foreach (UdonBehaviour behaviour in behaviourEventListeners)
+            foreach (UdonBehaviour behaviour in _behaviourEventListeners)
             {
                 behaviour.SetProgramVariable<LightSync>(LightSyncListener.syncVariableName, this);
                 behaviour.SendCustomEvent(LightSyncListener.lerpStopEventName);
@@ -1467,6 +1467,16 @@ namespace MMMaellon.LightSync
                 state = STATE_PHYSICS;
             }
             data.SyncNewData();
+            var serializedSync = new SerializedObject(this);
+            var serializedData = new SerializedObject(data);
+            var serializedLooper = new SerializedObject(looper);
+            var serializedLateLooper = new SerializedObject(lateLooper);
+            var serializedFixedLooper = new SerializedObject(fixedLooper);
+            serializedSync.Update();
+            serializedData.Update();
+            serializedLooper.Update();
+            serializedLateLooper.Update();
+            serializedFixedLooper.Update();
         }
 
         public void SetupStates()
@@ -1482,6 +1492,8 @@ namespace MMMaellon.LightSync
                 customStates[i].sync = this;
                 customStates[i].data = data;
                 customStates[i].AutoSetup();
+                var serialized = new SerializedObject(customStates[i]);
+                serialized.Update();
             }
         }
 
@@ -1491,6 +1503,8 @@ namespace MMMaellon.LightSync
             {
                 enhancement.sync = this;
                 enhancement.AutoSetup();
+                var serialized = new SerializedObject(enhancement);
+                serialized.Update();
             }
         }
 
@@ -1513,9 +1527,11 @@ namespace MMMaellon.LightSync
                 {
                     behaviourListeners.Add(behaviourListener);
                 }
+                var serialized = new SerializedObject(listener);
+                serialized.Update();
             }
-            classEventListeners = classListeners.ToArray();
-            behaviourEventListeners = behaviourListeners.ToArray();
+            _classEventListeners = classListeners.ToArray();
+            _behaviourEventListeners = behaviourListeners.ToArray();
         }
 
         public void CreateDataObject()

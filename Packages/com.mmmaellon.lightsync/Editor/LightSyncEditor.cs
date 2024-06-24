@@ -22,8 +22,9 @@ namespace MMMaellon.LightSync
             int rigidSetupCount = 0;
             int respawnYSetupCount = 0;
             int stateSetupCount = 0;
-            foreach (LightSync sync in Selection.GetFiltered<LightSync>(SelectionMode.Editable))
+            foreach (var t in targets)
             {
+                var sync = (LightSync)t;
                 if (!Utilities.IsValid(sync))
                 {
                     continue;
@@ -102,7 +103,7 @@ namespace MMMaellon.LightSync
                 }
                 if (GUILayout.Button(new GUIContent("Auto Setup")))
                 {
-                    SetupSelectedLightSyncs();
+                    SetupLightSyncs(targets);
                 }
             }
             if (respawnYSetupCount > 0)
@@ -117,7 +118,7 @@ namespace MMMaellon.LightSync
                 }
                 if (GUILayout.Button(new GUIContent("Match Scene Respawn Height")))
                 {
-                    MatchRespawnHeights();
+                    MatchRespawnHeights(targets);
                 }
             }
             if (target && UdonSharpGUI.DrawDefaultUdonSharpBehaviourHeader(target))
@@ -134,7 +135,7 @@ namespace MMMaellon.LightSync
             {
                 if (GUILayout.Button(new GUIContent("Force Setup")))
                 {
-                    ForceSetup();
+                    ForceSetup(targets);
                 }
                 ShowAdvancedOptions();
                 serializedObject.ApplyModifiedProperties();
@@ -172,8 +173,8 @@ namespace MMMaellon.LightSync
         "lateLooper",
         "rigid",
         "pickup",
-        "behaviourEventListeners",
-        "classEventListeners",
+        "_behaviourEventListeners",
+        "_classEventListeners",
         };
 
         IEnumerable<SerializedProperty> serializedProperties;
@@ -188,7 +189,10 @@ namespace MMMaellon.LightSync
             EditorGUI.indentLevel++;
             foreach (var property in serializedProperties)
             {
-                EditorGUILayout.PropertyField(property);
+                if (property != null)
+                {
+                    EditorGUILayout.PropertyField(property);
+                }
             }
             EditorGUI.indentLevel--;
         }
@@ -200,19 +204,26 @@ namespace MMMaellon.LightSync
             EditorGUI.indentLevel++;
             foreach (var property in serializedInternalObjects)
             {
-                EditorGUILayout.PropertyField(property);
+                if (property != null)
+                {
+                    EditorGUILayout.PropertyField(property);
+                }
             }
             EditorGUI.indentLevel--;
             GUI.enabled = true;
         }
 
-        public static void SetupSelectedLightSyncs()
+        public static void SetupLightSyncs(Object[] objects)
         {
             bool syncFound = false;
-            foreach (LightSync sync in Selection.GetFiltered<LightSync>(SelectionMode.Editable))
+            foreach (var obj in objects)
             {
-                syncFound = true;
-                sync.AutoSetup();
+                var sync = (LightSync)obj;
+                if (Utilities.IsValid(sync))
+                {
+                    syncFound = true;
+                    sync.AutoSetup();
+                }
             }
 
             if (!syncFound)
@@ -220,21 +231,29 @@ namespace MMMaellon.LightSync
                 Debug.LogWarningFormat("[LightSync] Auto Setup failed: No LightSync selected");
             }
         }
-        public static void ForceSetup()
+        public static void ForceSetup(Object[] objects)
         {
-            foreach (LightSync sync in Selection.GetFiltered<LightSync>(SelectionMode.Editable))
+            foreach (var obj in objects)
             {
-                sync.ForceSetup();
+                var sync = (LightSync)obj;
+                if (Utilities.IsValid(sync))
+                {
+                    sync.ForceSetup();
+                }
             }
         }
 
-        public static void MatchRespawnHeights()
+        public static void MatchRespawnHeights(Object[] objects)
         {
             bool syncFound = false;
-            foreach (LightSync sync in Selection.GetFiltered<LightSync>(SelectionMode.Editable))
+            foreach (var obj in objects)
             {
-                syncFound = true;
-                sync.respawnHeight = VRC_SceneDescriptor.Instance.RespawnHeightY;
+                var sync = (LightSync)obj;
+                if (Utilities.IsValid(sync))
+                {
+                    syncFound = true;
+                    sync.respawnHeight = VRC_SceneDescriptor.Instance.RespawnHeightY;
+                }
             }
 
             if (!syncFound)
@@ -295,7 +314,10 @@ namespace MMMaellon.LightSync
 
         public static void OnPlayModeStateChanged(PlayModeStateChange change)
         {
-            if (change != PlayModeStateChange.ExitingEditMode) return;
+            if (change != PlayModeStateChange.ExitingEditMode)
+            {
+                return;
+            }
             AutoSetup();
         }
         public bool OnBuildRequested(VRCSDKRequestedBuildType requestedBuildType)
