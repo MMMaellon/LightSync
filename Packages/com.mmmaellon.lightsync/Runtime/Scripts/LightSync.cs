@@ -323,6 +323,89 @@ namespace MMMaellon.LightSync
             }
         }
 
+        UdonBehaviour[] newBehaviourListeners;
+        public void AddBehaviourListener(UdonBehaviour listener)
+        {
+            foreach (UdonBehaviour udon in _behaviourEventListeners)
+            {
+                if (udon == listener)
+                {
+                    return;
+                }
+            }
+            newBehaviourListeners = new UdonBehaviour[_behaviourEventListeners.Length + 1];
+            _behaviourEventListeners.CopyTo(newBehaviourListeners, 0);
+            newBehaviourListeners[_behaviourEventListeners.Length] = listener;
+            _behaviourEventListeners = newBehaviourListeners;
+        }
+
+        bool foundListener = false;
+        public void RemoveBehaviourListener(UdonBehaviour listener)
+        {
+            newBehaviourListeners = new UdonBehaviour[_behaviourEventListeners.Length - 1];
+            foundListener = false;
+            for (int i = 0; i < newBehaviourListeners.Length; i++)
+            {
+                if (_behaviourEventListeners[i] == listener)
+                {
+                    foundListener = true;
+                }
+                if (foundListener)
+                {
+                    newBehaviourListeners[i] = _behaviourEventListeners[i + 1];
+                }
+                else
+                {
+                    newBehaviourListeners[i] = _behaviourEventListeners[i];
+                }
+            }
+            if (foundListener)
+            {
+                _behaviourEventListeners = newBehaviourListeners;
+            }
+        }
+
+        LightSyncListener[] newClassListeners;
+        public void AddClassListener(LightSyncListener listener)
+        {
+            foreach (LightSyncListener classListener in _classEventListeners)
+            {
+                if (classListener == listener)
+                {
+                    return;
+                }
+            }
+            newClassListeners = new LightSyncListener[_classEventListeners.Length + 1];
+            _classEventListeners.CopyTo(newBehaviourListeners, 0);
+            newClassListeners[_classEventListeners.Length] = listener;
+            _classEventListeners = newClassListeners;
+        }
+
+        public void RemoveClassListener(LightSyncListener listener)
+        {
+            newClassListeners = new LightSyncListener[_classEventListeners.Length - 1];
+            foundListener = false;
+            for (int i = 0; i < newClassListeners.Length; i++)
+            {
+                if (_classEventListeners[i] == listener)
+                {
+                    foundListener = true;
+                }
+                if (foundListener)
+                {
+                    newClassListeners[i] = _classEventListeners[i + 1];
+                }
+                else
+                {
+                    newClassListeners[i] = _classEventListeners[i];
+                }
+            }
+            if (foundListener)
+            {
+                _classEventListeners = newClassListeners;
+            }
+        }
+
         public void Respawn()
         {
             if (useWorldSpaceTransforms)
@@ -337,10 +420,7 @@ namespace MMMaellon.LightSync
 
         public void TeleportToLocalSpace(Vector3 position, Quaternion rotation, bool shouldSleep)
         {
-            if (!IsOwner())
-            {
-                Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            }
+            TakeOwnershipIfNotOwner();
             transform.localPosition = position;
             transform.localRotation = rotation;
             state = STATE_PHYSICS;
@@ -355,10 +435,7 @@ namespace MMMaellon.LightSync
 
         public void TeleportToWorldSpace(Vector3 position, Quaternion rotation, bool shouldSleep)
         {
-            if (!IsOwner())
-            {
-                Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            }
+            TakeOwnershipIfNotOwner();
             transform.position = position;
             transform.rotation = rotation;
             state = STATE_PHYSICS;
@@ -388,10 +465,7 @@ namespace MMMaellon.LightSync
 
         public void Sync()
         {
-            if (!IsOwner())
-            {
-                Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            }
+            TakeOwnershipIfNotOwner();
             StartLoop();
         }
 
@@ -496,12 +570,22 @@ namespace MMMaellon.LightSync
             lastCollision = Time.frameCount;
         }
 
-        public override void OnPickup()
+        public void TakeOwnership()
+        {
+            Networking.SetOwner(Networking.LocalPlayer, gameObject);
+        }
+
+        public void TakeOwnershipIfNotOwner()
         {
             if (!IsOwner())
             {
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
             }
+        }
+
+        public override void OnPickup()
+        {
+            TakeOwnershipIfNotOwner();
             state = STATE_HELD;
             Sync();
         }
@@ -552,11 +636,6 @@ namespace MMMaellon.LightSync
             get => state <= STATE_LOCAL_TO_OWNER;
         }
 
-        // public void OnEnable()
-        // {
-        //     Networking.SetOwner(Networking.GetOwner(gameObject), data.gameObject);
-        // }
-
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
             if (Utilities.IsValid(player) && player.isLocal)
@@ -584,7 +663,7 @@ namespace MMMaellon.LightSync
 
         public void ChangeState(sbyte newStateID)
         {
-            Networking.SetOwner(Networking.LocalPlayer, gameObject);
+            TakeOwnershipIfNotOwner();
             state = newStateID;
             Sync();
         }
@@ -686,7 +765,6 @@ namespace MMMaellon.LightSync
                             break;
                         }
                 }
-                RecordTransforms();
             }
             else
             {
@@ -1042,8 +1120,8 @@ namespace MMMaellon.LightSync
 
         bool LocalLerp(float elapsedTime, float autoSmoothedLerp)
         {
-            Vector3 parentPos = Owner.GetPosition();
-            Quaternion parentRot = Owner.GetRotation();
+            parentPos = Owner.GetPosition();
+            parentRot = Owner.GetRotation();
             if (elapsedTime == 0)
             {
                 RecordRelativeTransforms(parentPos, parentRot);
@@ -1072,8 +1150,6 @@ namespace MMMaellon.LightSync
 
         bool BoneLerp(float elapsedTime, float autoSmoothedLerp)
         {
-            Vector3 parentPos;
-            Quaternion parentRot;
             if (localTransformFlag && state <= STATE_BONE && state > STATE_BONE - ((sbyte)HumanBodyBones.LastBone))
             {
                 HumanBodyBones parentBone = (HumanBodyBones)(STATE_BONE - state);
@@ -1116,75 +1192,75 @@ namespace MMMaellon.LightSync
         Quaternion recordedRot;
         Vector3 recordedVel;
         Vector3 recordedSpin;
-        public void RecordTransforms()
-        {
-            switch (state)
-            {
-                case STATE_PHYSICS:
-                    {
-                        if (localTransformFlag)
-                        {
-                            RecordLocalTransforms();
-                        }
-                        else
-                        {
-                            RecordWorldTransforms();
-                        }
-                        break;
-                    }
-                case STATE_HELD:
-                    {
-                        Vector3 parentPos = Vector3.zero;
-                        Quaternion parentRot = Quaternion.identity;
-                        if (localTransformFlag)
-                        {
-                            if (leftHandFlag)
-                            {
-                                parentPos = Owner.GetBonePosition(HumanBodyBones.LeftHand);
-                                parentRot = Owner.GetBoneRotation(HumanBodyBones.LeftHand);
-                            }
-                            else
-                            {
-                                parentPos = Owner.GetBonePosition(HumanBodyBones.RightHand);
-                                parentRot = Owner.GetBoneRotation(HumanBodyBones.RightHand);
-                            }
-                        }
-
-                        if (!localTransformFlag || parentPos == Vector3.zero)
-                        {
-                            parentPos = Owner.GetPosition();
-                            parentRot = Owner.GetRotation();
-                        }
-                        RecordRelativeTransforms(parentPos, parentRot);
-                        break;
-                    }
-                case STATE_LOCAL_TO_OWNER:
-                    {
-                        Vector3 parentPos = Owner.GetPosition();
-                        Quaternion parentRot = Owner.GetRotation();
-                        RecordRelativeTransforms(parentPos, parentRot);
-                        break;
-                    }
-                default:
-                    {
-                        Vector3 parentPos;
-                        Quaternion parentRot;
-                        if (localTransformFlag && state <= STATE_BONE && state > STATE_BONE - ((sbyte)HumanBodyBones.LastBone))
-                        {
-                            HumanBodyBones parentBone = (HumanBodyBones)(STATE_BONE - state);
-                            parentPos = Owner.GetBonePosition(parentBone);
-                            parentRot = Owner.GetBoneRotation(parentBone);
-                        }
-                        else
-                        {
-                            parentPos = Owner.GetPosition();
-                            parentRot = Owner.GetRotation();
-                        }
-                        RecordRelativeTransforms(parentPos, parentRot);
-                        break;
-                    }
-            }
-        }
+        // public void RecordTransforms()
+        // {
+        //     switch (state)
+        //     {
+        //         case STATE_PHYSICS:
+        //             {
+        //                 if (localTransformFlag)
+        //                 {
+        //                     RecordLocalTransforms();
+        //                 }
+        //                 else
+        //                 {
+        //                     RecordWorldTransforms();
+        //                 }
+        //                 break;
+        //             }
+        //         case STATE_HELD:
+        //             {
+        //                 Vector3 parentPos = Vector3.zero;
+        //                 Quaternion parentRot = Quaternion.identity;
+        //                 if (localTransformFlag)
+        //                 {
+        //                     if (leftHandFlag)
+        //                     {
+        //                         parentPos = Owner.GetBonePosition(HumanBodyBones.LeftHand);
+        //                         parentRot = Owner.GetBoneRotation(HumanBodyBones.LeftHand);
+        //                     }
+        //                     else
+        //                     {
+        //                         parentPos = Owner.GetBonePosition(HumanBodyBones.RightHand);
+        //                         parentRot = Owner.GetBoneRotation(HumanBodyBones.RightHand);
+        //                     }
+        //                 }
+        //
+        //                 if (!localTransformFlag || parentPos == Vector3.zero)
+        //                 {
+        //                     parentPos = Owner.GetPosition();
+        //                     parentRot = Owner.GetRotation();
+        //                 }
+        //                 RecordRelativeTransforms(parentPos, parentRot);
+        //                 break;
+        //             }
+        //         case STATE_LOCAL_TO_OWNER:
+        //             {
+        //                 Vector3 parentPos = Owner.GetPosition();
+        //                 Quaternion parentRot = Owner.GetRotation();
+        //                 RecordRelativeTransforms(parentPos, parentRot);
+        //                 break;
+        //             }
+        //         default:
+        //             {
+        //                 Vector3 parentPos;
+        //                 Quaternion parentRot;
+        //                 if (localTransformFlag && state <= STATE_BONE && state > STATE_BONE - ((sbyte)HumanBodyBones.LastBone))
+        //                 {
+        //                     HumanBodyBones parentBone = (HumanBodyBones)(STATE_BONE - state);
+        //                     parentPos = Owner.GetBonePosition(parentBone);
+        //                     parentRot = Owner.GetBoneRotation(parentBone);
+        //                 }
+        //                 else
+        //                 {
+        //                     parentPos = Owner.GetPosition();
+        //                     parentRot = Owner.GetRotation();
+        //                 }
+        //                 RecordRelativeTransforms(parentPos, parentRot);
+        //                 break;
+        //             }
+        //     }
+        // }
 
         public void RecordWorldTransforms()
         {
