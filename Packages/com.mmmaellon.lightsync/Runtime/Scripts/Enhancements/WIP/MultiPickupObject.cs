@@ -74,9 +74,9 @@ namespace MMMaellon.LightSync
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         public void Reset()
         {
-            Setup();
+            AutoSetup();
         }
-        public void Setup()
+        public override void AutoSetup()
         {
             rigid = GetComponent<Rigidbody>();
             handles = handles.Where(x => x != null).ToArray();
@@ -87,7 +87,7 @@ namespace MMMaellon.LightSync
                 if (newListeners.Count() != handle.sync.eventListeners.Length)
                 {
                     handle.sync.eventListeners = newListeners.ToArray();
-                    handle.sync.SetupListeners();
+                    handle.sync.AddClassListener(this);
                 }
             }
         }
@@ -95,44 +95,3 @@ namespace MMMaellon.LightSync
 
     }
 }
-
-#if UNITY_EDITOR && !COMPILER_UDONSHARP
-namespace MMMaellon.LightSync
-{
-
-    public class MultiPickupObjectBuildHandler : IVRCSDKBuildRequestedCallback
-    {
-        public int callbackOrder => 1;
-
-        [InitializeOnLoadMethod]
-        public static void Initialize()
-        {
-            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
-        }
-
-        public static void OnPlayModeStateChanged(PlayModeStateChange change)
-        {
-            if (change != PlayModeStateChange.ExitingEditMode)
-            {
-                return;
-            }
-            AutoSetup();
-        }
-
-        public bool OnBuildRequested(VRCSDKRequestedBuildType requestedBuildType)
-        {
-            AutoSetup();
-            return true;
-        }
-
-        public static void AutoSetup()
-        {
-            foreach (MultiPickupObject obj in GameObject.FindObjectsOfType<MultiPickupObject>(true))
-            {
-                obj.Setup();
-            }
-        }
-    }
-}
-
-#endif

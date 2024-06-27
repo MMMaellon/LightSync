@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using VRC.SDKBase;
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
 
 namespace MMMaellon.LightSync
 {
@@ -320,9 +322,32 @@ namespace MMMaellon.LightSync
             }
             AutoSetup();
         }
+
         public bool OnBuildRequested(VRCSDKRequestedBuildType requestedBuildType)
         {
+            if (!EditorPrefs.GetBool(autoSetupKey, true))
+            {
+                return true;
+            }
             return AutoSetup();
+        }
+
+        public static void SetupLightSyncListener(LightSyncListener listener)
+        {
+            if (!Utilities.IsValid(listener))
+            {
+                return;
+            }
+            if (!IsEditable(listener))
+            {
+                Debug.LogErrorFormat(listener, "<color=red>[LightSync AutoSetup]: ERROR</color> {0}", "LightSyncListener is not editable");
+            }
+            else
+            {
+                listener.AutoSetup();
+                new SerializedObject(listener).Update();
+                PrefabUtility.RecordPrefabInstancePropertyModifications(listener);
+            }
         }
         public static void SetupLightSync(LightSync sync)
         {
@@ -343,14 +368,38 @@ namespace MMMaellon.LightSync
         {
             return !EditorUtility.IsPersistent(component.transform.root.gameObject) && !(component.gameObject.hideFlags == HideFlags.NotEditable || component.gameObject.hideFlags == HideFlags.HideAndDontSave);
         }
+        private const string MenuItemPath = "MMMaellon/LightSync/Automatically run setup";
+        private const string autoSetupKey = "MyToggleFeatureEnabled";
+        [MenuItem(MenuItemPath)]
+        private static void ToggleAutoSetup()
+        {
+            var autoSetupOn = EditorPrefs.GetBool(autoSetupKey, true);
+            autoSetupOn = !autoSetupOn;
+            Menu.SetChecked(MenuItemPath, autoSetupOn);
+            EditorPrefs.SetBool(autoSetupKey, autoSetupOn);
+        }
 
-        [MenuItem("MMMaellon/LightSync/AutoSetup")]
+        [MenuItem(MenuItemPath, true)]
+        private static bool ValidateToggleAutoSetup()
+        {
+            var autoSetupOn = EditorPrefs.GetBool(autoSetupKey, true);
+            Menu.SetChecked(MenuItemPath, autoSetupOn);
+            return true;
+        }
+
+        [MenuItem("MMMaellon/LightSync/Run setup")]
         public static bool AutoSetup()
         {
+            Debug.Log("Running LightSync AutoSetup");
+            foreach (LightSyncListener listener in GameObject.FindObjectsOfType<LightSyncListener>(true))
+            {
+                SetupLightSyncListener(listener);
+            }
             foreach (LightSync sync in GameObject.FindObjectsOfType<LightSync>(true))
             {
                 SetupLightSync(sync);
             }
+            EditorSceneManager.SaveScene(SceneManager.GetActiveScene());
             return true;
         }
         [MenuItem("MMMaellon/LightSync/Show all hidden gameobjects")]

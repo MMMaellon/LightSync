@@ -1516,7 +1516,7 @@ namespace MMMaellon.LightSync
             CreateLooperObject();
             SetupStates();
             SetupEnhancements();
-            SetupListeners();
+            Sortlisteners();
             RefreshHideFlags();
 
             //save all the parameters for the first frame
@@ -1553,6 +1553,11 @@ namespace MMMaellon.LightSync
             serializedLooper.Update();
             serializedLateLooper.Update();
             serializedFixedLooper.Update();
+            PrefabUtility.RecordPrefabInstancePropertyModifications(this);
+            PrefabUtility.RecordPrefabInstancePropertyModifications(data);
+            PrefabUtility.RecordPrefabInstancePropertyModifications(looper);
+            PrefabUtility.RecordPrefabInstancePropertyModifications(lateLooper);
+            PrefabUtility.RecordPrefabInstancePropertyModifications(fixedLooper);
         }
 
         public void SetupStates()
@@ -1570,6 +1575,7 @@ namespace MMMaellon.LightSync
                 customStates[i].AutoSetup();
                 var serialized = new SerializedObject(customStates[i]);
                 serialized.Update();
+                PrefabUtility.RecordPrefabInstancePropertyModifications(customStates[i]);
             }
         }
 
@@ -1581,12 +1587,13 @@ namespace MMMaellon.LightSync
                 enhancement.AutoSetup();
                 var serialized = new SerializedObject(enhancement);
                 serialized.Update();
+                PrefabUtility.RecordPrefabInstancePropertyModifications(enhancement);
             }
         }
 
-        public void SetupListeners()
+        public void Sortlisteners()
         {
-            eventListeners = eventListeners.Where(obj => Utilities.IsValid(obj)).ToArray();
+            eventListeners = eventListeners.Where(obj => Utilities.IsValid(obj)).Distinct().ToArray();
             System.Collections.Generic.List<LightSyncListener> classListeners = new();
             System.Collections.Generic.List<UdonBehaviour> behaviourListeners = new();
             LightSyncListener classListener;
@@ -1605,6 +1612,7 @@ namespace MMMaellon.LightSync
                 }
                 var serialized = new SerializedObject(listener);
                 serialized.Update();
+                PrefabUtility.RecordPrefabInstancePropertyModifications(listener);
             }
             _classEventListeners = classListeners.ToArray();
             _behaviourEventListeners = behaviourListeners.ToArray();

@@ -10,7 +10,8 @@ namespace MMMaellon.LightSync
     {
         public abstract void OnChangeState(LightSync sync, int prevState, int currentState);
         public abstract void OnChangeOwner(LightSync sync, VRCPlayerApi prevOwner, VRCPlayerApi currentOwner);
-        public virtual void OnLerpEnd(LightSync sync){
+        public virtual void OnLerpEnd(LightSync sync)
+        {
         }
 
         /// <summary>
@@ -58,5 +59,10 @@ namespace MMMaellon.LightSync
         /// </summary>
         [PublicAPI]
         public const string changeOwnerEventName = "OnChangeOwner";
+
+        public virtual void AutoSetup()
+        {
+
+        }
     }
 }
