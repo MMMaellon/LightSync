@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5136146375e9a0a498a72a0091b40cc1, type: 3}
   m_Name: Packages_com.mmmaellon.lightsync_Runtime_com.mmmaellon.lightsync
   m_EditorClassIdentifier: 
-  sourceAssembly: {fileID: 5897886265953266890, guid: 8430340841c3c1d4495e49fb2bbd8c15,
+  sourceAssembly: {fileID: 5897886265953266890, guid: 5d0b5245822e300499e0ce5efe7c73e3,
     type: 3}
