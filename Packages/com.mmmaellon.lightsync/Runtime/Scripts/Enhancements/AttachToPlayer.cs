@@ -32,7 +32,7 @@ namespace MMMaellon.LightSync
         }
         public override void OnInspectorGUI()
         {
-            if (!target || UdonSharpGUI.DrawDefaultUdonSharpBehaviourHeader(target)) return;
+            if (UdonSharpGUI.DrawDefaultUdonSharpBehaviourHeader(targets)) return;
             base.OnInspectorGUI();
             AttachToPlayer attach = (AttachToPlayer)target;
             if (!attach)

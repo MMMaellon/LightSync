@@ -17,6 +17,10 @@ namespace MMMaellon.LightSync
 
         public override void OnInspectorGUI()
         {
+            if (UdonSharpGUI.DrawDefaultUdonSharpBehaviourHeader(targets))
+            {
+                return;
+            }
             int syncCount = 0;
             int pickupSetupCount = 0;
             int rigidSetupCount = 0;
@@ -120,10 +124,6 @@ namespace MMMaellon.LightSync
                 {
                     MatchRespawnHeights(targets);
                 }
-            }
-            if (UdonSharpGUI.DrawDefaultUdonSharpBehaviourHeader(targets))
-            {
-                return;
             }
 
             EditorGUILayout.Space();
