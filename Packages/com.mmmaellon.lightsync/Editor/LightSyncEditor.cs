@@ -121,7 +121,7 @@ namespace MMMaellon.LightSync
                     MatchRespawnHeights(targets);
                 }
             }
-            if (target && UdonSharpGUI.DrawDefaultUdonSharpBehaviourHeader(target))
+            if (UdonSharpGUI.DrawDefaultUdonSharpBehaviourHeader(targets))
             {
                 return;
             }
