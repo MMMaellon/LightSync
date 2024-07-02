@@ -342,6 +342,10 @@ namespace MMMaellon.LightSync
         bool foundListener = false;
         public void RemoveBehaviourListener(UdonBehaviour listener)
         {
+            if (_behaviourEventListeners.Length == 0)
+            {
+                return;
+            }
             newBehaviourListeners = new UdonBehaviour[_behaviourEventListeners.Length - 1];
             foundListener = false;
             for (int i = 0; i < newBehaviourListeners.Length; i++)
