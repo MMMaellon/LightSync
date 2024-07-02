@@ -387,6 +387,10 @@ namespace MMMaellon.LightSync
 
         public void RemoveClassListener(LightSyncListener listener)
         {
+            if (_classEventListeners.Length == 0)
+            {
+                return;
+            }
             newClassListeners = new LightSyncListener[_classEventListeners.Length - 1];
             foundListener = false;
             for (int i = 0; i < newClassListeners.Length; i++)
