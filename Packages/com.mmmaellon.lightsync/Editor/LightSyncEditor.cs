@@ -66,14 +66,29 @@ namespace MMMaellon.LightSync
                     }
                     if (!errorFound)
                     {
-                        foreach (LightSyncState state in stateComponents)
+                        if (sync.enterFirstCustomStateOnStart && stateComponents.Length > 0 && stateComponents[0].stateID != 0)
                         {
-                            if (state != null && (state.sync != sync || state.stateID < 0 || state.stateID >= sync.customStates.Length || sync.customStates[state.stateID] != state))
+                            errorFound = true;
+                        }
+                        else
+                        {
+                            foreach (LightSyncState state in stateComponents)
                             {
-                                errorFound = true;
-                                break;
+                                if (state != null && (state.sync != sync || state.stateID < 0 || state.stateID >= sync.customStates.Length || sync.customStates[state.stateID] != state))
+                                {
+                                    errorFound = true;
+                                    break;
+                                }
                             }
                         }
+                    }
+                    if (!errorFound)
+                    {
+                        errorFound = sync.enterFirstCustomStateOnStart && sync.state < 0;
+                    }
+                    if (!errorFound)
+                    {
+                        errorFound = !sync.enterFirstCustomStateOnStart && sync.state >= 0;
                     }
                     if (errorFound)
                     {
@@ -154,6 +169,7 @@ namespace MMMaellon.LightSync
         readonly string[] serializedPropertyNames = {
         "debugLogs",
         "showInternalObjects",
+        "enterFirstCustomStateOnStart",
         "unparentInternalObjects",
         "kinematicWhileAttachedToPlayer",
         "useWorldSpaceTransforms",
@@ -175,6 +191,7 @@ namespace MMMaellon.LightSync
         "lateLooper",
         "rigid",
         "pickup",
+        "customStates",
         "_behaviourEventListeners",
         "_classEventListeners",
         };
@@ -189,6 +206,9 @@ namespace MMMaellon.LightSync
         void ShowAdvancedOptions()
         {
             EditorGUI.indentLevel++;
+            GUI.enabled = false;
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("_state"));
+            GUI.enabled = true;
             foreach (var property in serializedProperties)
             {
                 if (property != null)

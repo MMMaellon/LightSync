@@ -726,6 +726,7 @@ MonoBehaviour:
   minimumSleepFrames: 4
   spawnPos: {x: -0.6293056, y: 1.0524757, z: 2.736596}
   spawnRot: {x: -0, y: 0.87461966, z: -0, w: -0.4848098}
+  _state: -1
   localTransformFlag: 1
   leftHandFlag: 0
   kinematicFlag: 0
@@ -1510,6 +1511,7 @@ MonoBehaviour:
   minimumSleepFrames: 4
   spawnPos: {x: 7.7233105, y: 0.04999852, z: 13.018343}
   spawnRot: {x: -0, y: 0.87461966, z: -0, w: -0.4848098}
+  _state: -1
   localTransformFlag: 1
   leftHandFlag: 0
   kinematicFlag: 0
@@ -1770,6 +1772,7 @@ MonoBehaviour:
   minimumSleepFrames: 4
   spawnPos: {x: -0.25, y: 0.100000024, z: -0.5}
   spawnRot: {x: 0, y: 0, z: 0, w: 1}
+  _state: -1
   localTransformFlag: 1
   leftHandFlag: 0
   kinematicFlag: 1
@@ -2330,6 +2333,7 @@ MonoBehaviour:
   minimumSleepFrames: 4
   spawnPos: {x: -17.02963, y: -11.6695385, z: 18.6614}
   spawnRot: {x: 0, y: 0, z: 0, w: 1}
+  _state: -1
   localTransformFlag: 1
   leftHandFlag: 0
   kinematicFlag: 0
@@ -2558,6 +2562,7 @@ MonoBehaviour:
   minimumSleepFrames: 4
   spawnPos: {x: 0.25, y: 0.100000024, z: 0.5}
   spawnRot: {x: 0, y: 0, z: 0, w: 1}
+  _state: -1
   localTransformFlag: 1
   leftHandFlag: 0
   kinematicFlag: 1
@@ -3007,6 +3012,7 @@ MonoBehaviour:
   minimumSleepFrames: 4
   spawnPos: {x: 8.572, y: 0.04999852, z: 13.122}
   spawnRot: {x: -0, y: 0.87461966, z: -0, w: -0.4848098}
+  _state: -1
   localTransformFlag: 1
   leftHandFlag: 0
   kinematicFlag: 0
@@ -4794,6 +4800,7 @@ MonoBehaviour:
   minimumSleepFrames: 4
   spawnPos: {x: -0.25, y: 0.100000024, z: 0.50000274}
   spawnRot: {x: 0, y: 0, z: 0, w: 1}
+  _state: -1
   localTransformFlag: 1
   leftHandFlag: 0
   kinematicFlag: 1
@@ -6580,6 +6587,7 @@ MonoBehaviour:
   minimumSleepFrames: 4
   spawnPos: {x: 0.25, y: 0.100000024, z: -0.5000001}
   spawnRot: {x: 0, y: 0, z: 0, w: 1}
+  _state: -1
   localTransformFlag: 1
   leftHandFlag: 0
   kinematicFlag: 1

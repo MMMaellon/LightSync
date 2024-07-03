@@ -19,6 +19,7 @@ namespace MMMaellon.LightSync
         public virtual void AutoSetup()
         {
         }
+
 #endif
         [HideInInspector]
         public sbyte stateID;

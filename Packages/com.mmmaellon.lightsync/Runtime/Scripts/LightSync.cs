@@ -112,6 +112,7 @@ namespace MMMaellon.LightSync
 
         [System.NonSerialized]
         public sbyte prevState;
+        [SerializeField]
         sbyte _state = STATE_PHYSICS;
         public sbyte state
         {
@@ -1471,6 +1472,10 @@ namespace MMMaellon.LightSync
         {
             // AutoSetupAsync();
             RefreshHideFlags();
+            if (enterFirstCustomStateOnStart && customStates.Length > 0)
+            {
+                _state = customStates[0].stateID;
+            }
         }
 
         public void RefreshHideFlags()
