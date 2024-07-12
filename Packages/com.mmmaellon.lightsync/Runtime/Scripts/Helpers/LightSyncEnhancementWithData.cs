@@ -101,9 +101,9 @@ namespace MMMaellon.LightSync
 
         // public virtual void OnEnable()
         // {
-        //     if (Networking.LocalPlayer.IsOwner(gameObject))
+        //     if (Networking.LocalPlayer.IsOwner(gameObject) && !Networking.LocalPlayer.IsOwner(enhancementData.gameObject))
         //     {
-        //         Networking.SetOwner(Networking.LocalPlayer, _data.gameObject);
+        //         Networking.SetOwner(Networking.LocalPlayer, enhancementData.gameObject);
         //     }
         // }
     }

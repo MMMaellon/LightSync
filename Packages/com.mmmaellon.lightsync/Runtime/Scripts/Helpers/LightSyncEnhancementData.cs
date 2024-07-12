@@ -3,6 +3,7 @@ using UdonSharp;
 using UnityEngine;
 namespace MMMaellon.LightSync
 {
+    [AddComponentMenu("")]//prevents it from showing up in the add component menu
     public abstract class LightSyncEnhancementData : UdonSharpBehaviour
     {
         public LightSyncEnhancementWithData enhancement;

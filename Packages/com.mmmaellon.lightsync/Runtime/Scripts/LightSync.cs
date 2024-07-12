@@ -417,6 +417,7 @@ namespace MMMaellon.LightSync
 
         public void Respawn()
         {
+            Debug.LogWarning("respawn " + sleepCount);
             if (useWorldSpaceTransforms)
             {
                 TeleportToWorldSpace(spawnPos, spawnRot, sleepOnSpawn);
@@ -430,31 +431,59 @@ namespace MMMaellon.LightSync
         public void TeleportToLocalSpace(Vector3 position, Quaternion rotation, bool shouldSleep)
         {
             TakeOwnershipIfNotOwner();
+            //prevent collisions from overriding this
+            lastCollision = Time.frameCount;
             transform.localPosition = position;
             transform.localRotation = rotation;
             state = STATE_PHYSICS;
             if (shouldSleep)
             {
                 sleepFlag = true;
-                rigid.Sleep();
+                StartEnsureSleep();
             }
             teleportFlag = true;
             Sync();
+            if (shouldSleep)
+            {
+                //needs to record transforms early
+                if (localTransformFlag)
+                {
+                    RecordLocalTransforms();
+                }
+                else
+                {
+                    RecordWorldTransforms();
+                }
+            }
         }
 
         public void TeleportToWorldSpace(Vector3 position, Quaternion rotation, bool shouldSleep)
         {
             TakeOwnershipIfNotOwner();
+            //prevent collisions from overriding this
+            lastCollision = Time.frameCount;
             transform.position = position;
             transform.rotation = rotation;
             state = STATE_PHYSICS;
             if (shouldSleep)
             {
                 sleepFlag = true;
-                rigid.Sleep();
+                StartEnsureSleep();
             }
             teleportFlag = true;
             Sync();
+            if (shouldSleep)
+            {
+                //needs to record transforms early
+                if (localTransformFlag)
+                {
+                    RecordLocalTransforms();
+                }
+                else
+                {
+                    RecordWorldTransforms();
+                }
+            }
         }
 
         public void Sleep()
@@ -572,10 +601,10 @@ namespace MMMaellon.LightSync
                     Sync();
                 }
             }
-            else if (sleepCount <= 0 && minimumSleepFrames > 0 && sleepFlag && state == STATE_PHYSICS)
-            {
-                EnsureSleep();
-            }
+            // else if (sleepCount <= 0 && minimumSleepFrames > 0 && sleepFlag && state == STATE_PHYSICS)
+            // {
+            //     EnsureSleep();
+            // }
             lastCollision = Time.frameCount;
         }
 
@@ -1034,7 +1063,7 @@ namespace MMMaellon.LightSync
                     pickupableFlag = pickup.pickupable;
                     shouldSync = true;
                 }
-                else if (sleepFlag != rigid.IsSleeping())
+                else if (sleepFlag != rigid.IsSleeping() && lastEnsureSleep > Time.frameCount - 1)
                 {
                     sleepFlag = rigid.IsSleeping();
                     shouldSync = true;
@@ -1345,8 +1374,7 @@ namespace MMMaellon.LightSync
             }
             if (sleepFlag)
             {
-                rigid.Sleep();
-                SendCustomEventDelayedFrames(nameof(EnsureSleep), 0);
+                StartEnsureSleep();
             }
             else if (localTransformFlag)
             {
@@ -1389,6 +1417,13 @@ namespace MMMaellon.LightSync
                     }
                 }
             }
+        }
+
+        public void StartEnsureSleep()
+        {
+            rigid.Sleep();
+            lastEnsureSleep = Time.frameCount;
+            SendCustomEventDelayedFrames(nameof(EnsureSleep), 1);
         }
 
         public void ApplyWorldVelocities()
