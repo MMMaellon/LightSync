@@ -1128,7 +1128,7 @@ namespace MMMaellon.LightSync
                     pickupableFlag = pickup.pickupable;
                     shouldSync = true;
                 }
-                if (sleepFlag != rigid.IsSleeping() && (lastEnsureSleep < 0 || lastEnsureSleep < Time.frameCount - 1))
+                if (!rigid.isKinematic && sleepFlag != rigid.IsSleeping() && (lastEnsureSleep < 0 || lastEnsureSleep < Time.frameCount - 1))
                 {
                     sleepFlag = rigid.IsSleeping();
                     shouldSync = true;

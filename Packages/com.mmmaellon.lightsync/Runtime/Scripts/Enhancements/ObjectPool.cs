@@ -16,6 +16,8 @@ namespace MMMaellon.LightSync
     public class ObjectPool : UdonSharpBehaviour
     {
         public bool AutoPopulateFromChildren = true;
+        public bool ForceOwnershipTransfer = true;
+
         public ObjectPoolObject[] objects;
         [OdinSerialize]
         [HideInInspector]
@@ -63,6 +65,16 @@ namespace MMMaellon.LightSync
             return tmpObj;
         }
 
+        public ObjectPoolObject SpawnRandom(Vector3 position, Quaternion rotation)
+        {
+            tmpObj = GetRandomHidden();
+            if (tmpObj)
+            {
+                tmpObj.Show(position, rotation);
+            }
+            return tmpObj;
+        }
+
         public bool HideById(int index)
         {
             if (index < 0 || index >= objects.Length)
@@ -79,6 +91,15 @@ namespace MMMaellon.LightSync
                 return false;
             }
             objects[index].Show();
+            return true;
+        }
+        public bool ShowById(int index, Vector3 position, Quaternion rotation)
+        {
+            if (index < 0 || index >= objects.Length)
+            {
+                return false;
+            }
+            objects[index].Show(position, rotation);
             return true;
         }
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
@@ -99,9 +120,15 @@ namespace MMMaellon.LightSync
                 objects[i].pool = this;
                 objects[i].id = i;
                 objects[i].data.hidden = objects[i].defaultHidden;
+                objects[i].data.spawnPos = objects[i].transform.position;
+                objects[i].data.spawnRot = objects[i].transform.rotation;
+                objects[i].data.startSpawnPos = objects[i].transform.position;
+                objects[i].data.startSpawnRot = objects[i].transform.rotation;
                 objects[i].SetVisibility();
                 PrefabUtility.RecordPrefabInstancePropertyModifications(objects[i]);
+                PrefabUtility.RecordPrefabInstancePropertyModifications(objects[i].data);
                 new SerializedObject(objects[i]).Update();
+                new SerializedObject(objects[i].data).Update();
             }
             PrefabUtility.RecordPrefabInstancePropertyModifications(this);
             new SerializedObject(this).Update();

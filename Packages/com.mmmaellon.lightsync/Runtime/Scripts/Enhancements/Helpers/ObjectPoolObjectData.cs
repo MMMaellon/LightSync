@@ -13,13 +13,28 @@ namespace MMMaellon.LightSync
     {
         [UdonSynced]
         public bool hidden = true;
+        [UdonSynced]
+        public Vector3 spawnPos;
+        [UdonSynced]
+        public Quaternion spawnRot;
+
+        public Vector3 startSpawnPos;
+        public Quaternion startSpawnRot;
+
         public virtual void Show()
+        {
+            Show(startSpawnPos, startSpawnRot);
+        }
+
+        public virtual void Show(Vector3 position, Quaternion rotation)
         {
             if (!Networking.LocalPlayer.IsOwner(gameObject))
             {
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
             }
             hidden = false;
+            spawnPos = position;
+            spawnRot = rotation;
             RequestSerialization();
         }
 
@@ -31,6 +46,17 @@ namespace MMMaellon.LightSync
             }
             hidden = true;
             RequestSerialization();
+        }
+
+        public void RequestOwnershipSync()
+        {
+            SendCustomNetworkEvent(VRC.Udon.Common.Interfaces.NetworkEventTarget.Owner, nameof(SyncOwnership));
+        }
+
+        public void SyncOwnership()
+        {
+            Networking.SetOwner(Networking.LocalPlayer, enhancement.gameObject);
+            enhancement.sync.Sync();
         }
     }
 }

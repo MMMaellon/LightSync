@@ -25,15 +25,6 @@ namespace MMMaellon.LightSync
         [SerializeField]
         bool _hidden = false;
         public bool defaultHidden = true;
-        public bool hidden
-        {
-            get => data.hidden;
-            set
-            {
-                data.hidden = value;
-                // SetVisibility();
-            }
-        }
 
         public override string GetDataTypeName()
         {
@@ -75,6 +66,12 @@ namespace MMMaellon.LightSync
             OnShow();
         }
 
+        public virtual void Show(Vector3 position, Quaternion rotation)
+        {
+            data.Show(position, rotation);
+            OnShow();
+        }
+
         public virtual void Hide()
         {
             data.Hide();
@@ -89,21 +86,16 @@ namespace MMMaellon.LightSync
         public virtual void OnShow()
         {
             _hidden = false;
-            if (sync.useWorldSpaceTransforms)
-            {
-                transform.position = sync.spawnPos;
-                transform.rotation = sync.spawnRot;
-            }
-            else
-            {
-                transform.localPosition = sync.spawnPos;
-                transform.localRotation = sync.spawnRot;
-            }
-
+            transform.position = data.spawnPos;
+            transform.rotation = data.spawnRot;
             gameObject.SetActive(!_hidden);
             if (sync.IsOwner())
             {
-                sync.Respawn();
+                sync.TeleportToWorldSpace(data.spawnPos, data.spawnRot, sync.sleepOnSpawn);
+                if (pool.ForceOwnershipTransfer)
+                {
+                    data.RequestOwnershipSync();
+                }
             }
             if (!pool.lookupTable.ContainsKey(id))
             {
@@ -139,10 +131,6 @@ namespace MMMaellon.LightSync
                 sync.pickup.Drop();
             }
             gameObject.SetActive(!_hidden);
-            if (sync.IsOwner())
-            {
-                sync.Respawn();
-            }
             tmpToken = new DataToken(id);
             if (pool.lookupTable.ContainsKey(tmpToken))
             {
