@@ -142,7 +142,7 @@ namespace MMMaellon.LightSync
         [System.NonSerialized]
         public byte teleportCount = 1;
         [System.NonSerialized]
-        public byte localTeleportCount; //counts up every time we receive new data;
+        public byte localTeleportCount; //counts up every time we teleport
         [System.NonSerialized]
         public int loopTimingFlag = LOOP_POSTLATEUPDATE;
 
@@ -167,14 +167,11 @@ namespace MMMaellon.LightSync
                         {
                             teleportCount++;
                         }
+                        localTeleportCount = teleportCount;
                     }
                 }
                 else
                 {
-                    if (IsOwner())
-                    {
-                        teleportCount = localTeleportCount;
-                    }
                     localTeleportCount = teleportCount;
                 }
             }
@@ -312,7 +309,15 @@ namespace MMMaellon.LightSync
         }
         public bool IsOwner()
         {
-            return Utilities.IsValid(Owner) && Owner.isLocal;
+#if !COMPILER_UDONSHARP && UNITY_EDITOR
+            return true;
+#endif
+            if (!Utilities.IsValid(Owner))
+            {
+                Owner = Networking.GetOwner(gameObject);
+                return Owner.isLocal;
+            }
+            return Owner.isLocal;
         }
 
         public void Start()
@@ -417,7 +422,6 @@ namespace MMMaellon.LightSync
 
         public void Respawn()
         {
-            Debug.LogWarning("respawn " + sleepCount);
             if (useWorldSpaceTransforms)
             {
                 TeleportToWorldSpace(spawnPos, spawnRot, sleepOnSpawn);
@@ -431,8 +435,7 @@ namespace MMMaellon.LightSync
         public void TeleportToLocalSpace(Vector3 position, Quaternion rotation, bool shouldSleep)
         {
             TakeOwnershipIfNotOwner();
-            //prevent collisions from overriding this
-            lastCollision = Time.frameCount;
+            lastTeleport = Time.frameCount;
             transform.localPosition = position;
             transform.localRotation = rotation;
             state = STATE_PHYSICS;
@@ -460,8 +463,7 @@ namespace MMMaellon.LightSync
         public void TeleportToWorldSpace(Vector3 position, Quaternion rotation, bool shouldSleep)
         {
             TakeOwnershipIfNotOwner();
-            //prevent collisions from overriding this
-            lastCollision = Time.frameCount;
+            lastTeleport = Time.frameCount;
             transform.position = position;
             transform.rotation = rotation;
             state = STATE_PHYSICS;
@@ -555,9 +557,11 @@ namespace MMMaellon.LightSync
         }
         [System.NonSerialized]
         public int lastCollision = -1001;
+        [System.NonSerialized]
+        public int lastTeleport = -1001;
         public void OnCollisionEnter(Collision other)
         {
-            if (lastCollision == Time.frameCount || !syncCollisions)
+            if (lastCollision == Time.frameCount || !syncCollisions || lastTeleport + 1 >= Time.frameCount)
             {
                 return;
             }
@@ -575,7 +579,7 @@ namespace MMMaellon.LightSync
 
         public void OnCollisionExit(Collision other)
         {
-            if (lastCollision == Time.frameCount || !syncCollisions)
+            if (lastCollision == Time.frameCount || !syncCollisions || lastTeleport + 1 >= Time.frameCount)
             {
                 return;
             }
@@ -584,7 +588,7 @@ namespace MMMaellon.LightSync
 
         public void OnParticleCollision(GameObject other)
         {
-            if (!syncParticleCollisions || other == gameObject || lastCollision == Time.frameCount)
+            if (!syncParticleCollisions || other == gameObject || lastCollision == Time.frameCount || lastTeleport + 1 >= Time.frameCount)
             {
                 return;
             }
@@ -598,16 +602,65 @@ namespace MMMaellon.LightSync
                 if (state == STATE_PHYSICS)
                 {
                     bounceFlag = true;
+                    sleepFlag = rigid.IsSleeping();
                     Sync();
                 }
             }
-            // else if (sleepCount <= 0 && minimumSleepFrames > 0 && sleepFlag && state == STATE_PHYSICS)
+            // else if (!fixedLooper.enabled && minimumSleepFrames > 0 && sleepFlag && state == STATE_PHYSICS)
             // {
-            //     EnsureSleep();
+            //     RequestLocalDriftCheck();
             // }
             lastCollision = Time.frameCount;
         }
 
+        bool driftCheckRequested = false;
+        float lastLocalDriftCheckRequest;
+        float localdriftcheckDelay;
+        public void RequestLocalDriftCheck()
+        {
+            if (driftCheckRequested)
+            {
+                return;
+            }
+            driftCheckRequested = true;
+            lastLocalDriftCheckRequest = Time.timeSinceLevelLoad;
+            localdriftcheckDelay = Random.Range(2, 5) * (Time.realtimeSinceStartup - Networking.SimulationTime(gameObject));
+            SendCustomEventDelayedSeconds(nameof(LocalDriftCheck), localdriftcheckDelay);
+        }
+        public void LocalDriftCheck()
+        {
+            driftCheckRequested = false;
+            if (IsOwner() || state != STATE_PHYSICS)
+            {
+                return;
+            }
+            if (lastLocalDriftCheckRequest > data.lastDeserialization)
+            {
+                if (localTransformFlag)
+                {
+                    if (!LooseLocalTransformDrifted())
+                    {
+                        return;
+                    }
+                }
+                else if (!LooseWorldTransformDrifted())
+                {
+                    return;
+                }
+                //replay the last message
+                StartLoop();
+            }
+        }
+
+        public bool LooseLocalTransformDrifted()
+        {
+            return Vector3.Distance(transform.localPosition, pos) > 0.25f || Quaternion.Angle(transform.localRotation, rot) < 3f;
+        }
+
+        public bool LooseWorldTransformDrifted()
+        {
+            return Vector3.Distance(rigid.position, pos) > 0.25f || Quaternion.Angle(rigid.rotation, rot) < 3f;
+        }
         public void TakeOwnership()
         {
             Networking.SetOwner(Networking.LocalPlayer, gameObject);
@@ -615,7 +668,11 @@ namespace MMMaellon.LightSync
 
         public void TakeOwnershipIfNotOwner()
         {
-            if (!IsOwner())
+#if !COMPILER_UDONSHARP && UNITY_EDITOR
+            return;
+#endif
+            //use the native thing to make sure we get it right
+            if (!Networking.LocalPlayer.IsOwner(gameObject))
             {
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
             }
@@ -623,7 +680,7 @@ namespace MMMaellon.LightSync
 
         public override void OnPickup()
         {
-            TakeOwnershipIfNotOwner();
+            TakeOwnership();
             state = STATE_HELD;
             Sync();
         }
@@ -674,6 +731,14 @@ namespace MMMaellon.LightSync
             get => state <= STATE_LOCAL_TO_OWNER;
         }
 
+        public void OnEnable()
+        {
+            if (Owner != Networking.GetOwner(gameObject))
+            {
+                Owner = Networking.GetOwner(gameObject);
+            }
+        }
+
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
             if (Utilities.IsValid(player) && player.isLocal)
@@ -701,7 +766,7 @@ namespace MMMaellon.LightSync
 
         public void ChangeState(sbyte newStateID)
         {
-            TakeOwnershipIfNotOwner();
+            TakeOwnership();
             state = newStateID;
             Sync();
         }
@@ -1058,17 +1123,17 @@ namespace MMMaellon.LightSync
                     kinematicFlag = rigid.isKinematic;
                     shouldSync = true;
                 }
-                else if (syncPickupable && pickup && (pickupableFlag != pickup.pickupable))
+                if (syncPickupable && pickup && (pickupableFlag != pickup.pickupable))
                 {
                     pickupableFlag = pickup.pickupable;
                     shouldSync = true;
                 }
-                else if (sleepFlag != rigid.IsSleeping() && lastEnsureSleep > Time.frameCount - 1)
+                if (sleepFlag != rigid.IsSleeping() && (lastEnsureSleep < 0 || lastEnsureSleep < Time.frameCount - 1))
                 {
                     sleepFlag = rigid.IsSleeping();
                     shouldSync = true;
                 }
-                else if (rigid.position.y < respawnHeight)
+                if (rigid.position.y < respawnHeight)
                 {
                     Respawn();
                     return true;
@@ -1077,7 +1142,7 @@ namespace MMMaellon.LightSync
                 {
                     Sync();
                 }
-                return shouldSync || runEveryFrameOnOwner || !rigid.IsSleeping();
+                return shouldSync || runEveryFrameOnOwner || !rigid.IsSleeping() || (lastEnsureSleep >= 0 && lastEnsureSleep > Time.frameCount - 1);
             }
             else
             {
@@ -1090,18 +1155,22 @@ namespace MMMaellon.LightSync
                 {
                     endVel = vel;
                 }
-                tempPos = HermiteInterpolatePosition(recordedPos, startVel, pos, endVel, autoSmoothedLerp, autoSmoothingTime);
-                tempRot = Quaternion.Slerp(recordedRot, rot, autoSmoothedLerp);
-                ApplyTransforms(tempPos, tempRot);
                 if (autoSmoothedLerp >= 1.0f)
                 {
+                    ApplyTransforms(pos, rot);
                     ApplyVelocities();
                     return false;
                 }
-                if (rigid.isKinematic)
+                else
                 {
-                    rigid.velocity = Vector3.zero;
-                    rigid.angularVelocity = Vector3.zero;
+                    tempPos = HermiteInterpolatePosition(recordedPos, startVel, pos, endVel, autoSmoothedLerp, autoSmoothingTime);
+                    tempRot = Quaternion.Slerp(recordedRot, rot, autoSmoothedLerp);
+                    ApplyTransforms(tempPos, tempRot);
+                    if (!rigid.isKinematic)
+                    {
+                        rigid.velocity = Vector3.zero;
+                        rigid.angularVelocity = Vector3.zero;
+                    }
                 }
                 return true;
             }
@@ -1398,7 +1467,10 @@ namespace MMMaellon.LightSync
             {
                 if (!rigid.IsSleeping())
                 {
-                    ApplyTransforms(pos, rot);
+                    if (TransformDrifted())
+                    {
+                        ApplyTransforms(pos, rot);
+                    }
                     rigid.Sleep();
                     SendCustomEventDelayedFrames(nameof(EnsureSleep), 0);
                     sleepCount = 0;
@@ -1422,7 +1494,7 @@ namespace MMMaellon.LightSync
         public void StartEnsureSleep()
         {
             rigid.Sleep();
-            lastEnsureSleep = Time.frameCount;
+            lastEnsureSleep = Time.frameCount - 1;
             SendCustomEventDelayedFrames(nameof(EnsureSleep), 1);
         }
 

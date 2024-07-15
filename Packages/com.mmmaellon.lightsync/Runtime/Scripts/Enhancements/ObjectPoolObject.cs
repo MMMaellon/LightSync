@@ -1,12 +1,15 @@
 ﻿
-using System.Linq;
 using UdonSharp;
-using UdonSharpEditor;
-using UnityEditor;
 using UnityEngine;
 using VRC.SDK3.Data;
 using VRC.SDKBase;
 using VRC.Udon;
+
+#if !COMPILER_UDONSHARP && UNITY_EDITOR
+using UnityEditor;
+using UdonSharpEditor;
+using System.Linq;
+#endif
 
 namespace MMMaellon.LightSync
 {
@@ -28,7 +31,7 @@ namespace MMMaellon.LightSync
             set
             {
                 data.hidden = value;
-                SetVisibility();
+                // SetVisibility();
             }
         }
 
@@ -48,47 +51,73 @@ namespace MMMaellon.LightSync
             _hidden = data.hidden;
         }
 
+        public override void OnOwnershipTransferred(VRCPlayerApi player)
+        {
+            //do nothing, we intentionally let the data object have a diff owner
+            //owner of the data object is who is requesting that the object be shown or hidden
+        }
+
         public void SetVisibility()
         {
             if (data.hidden)
             {
-                Hide();
+                OnHide();
             }
             else
             {
-                Show();
+                OnShow();
             }
         }
 
-        DataToken tmpToken;
-        DataToken tmpToken2;
         public virtual void Show()
         {
-            if (!_hidden)
-            {
-                return;
-            }
+            data.Show();
+            OnShow();
+        }
+
+        public virtual void Hide()
+        {
+            data.Hide();
+            OnHide();
+        }
+
+
+
+        DataToken tmpToken;
+        DataToken tmpToken2;
+
+        public virtual void OnShow()
+        {
             _hidden = false;
+            if (sync.useWorldSpaceTransforms)
+            {
+                transform.position = sync.spawnPos;
+                transform.rotation = sync.spawnRot;
+            }
+            else
+            {
+                transform.localPosition = sync.spawnPos;
+                transform.localRotation = sync.spawnRot;
+            }
+
             gameObject.SetActive(!_hidden);
             if (sync.IsOwner())
             {
-                data.hidden = _hidden;
-                data.RequestSerialization();
+                sync.Respawn();
             }
-            if (!pool.lookupTable.Remove(id, out tmpToken))
+            if (!pool.lookupTable.ContainsKey(id))
             {
                 return;
             }
-
-            //stupid bug. like seriously what the fuck
-            Debug.LogWarning("count right now: " + pool.hiddenPoolIndexes.Count);
+            tmpToken = pool.lookupTable[id];
+            pool.lookupTable.Remove(id);
+            //stupid bug.
             if (pool.hiddenPoolIndexes.Count == 1)
             {
                 pool.hiddenPoolIndexes.Clear();
             }
             else
             {
-                Debug.LogWarning("removing " + tmpToken.Int);
                 pool.hiddenPoolIndexes.RemoveAt(tmpToken.Int);
             }
 
@@ -102,18 +131,17 @@ namespace MMMaellon.LightSync
             }
         }
 
-        public virtual void Hide()
+        public virtual void OnHide()
         {
-            if (_hidden)
-            {
-                return;
-            }
             _hidden = true;
+            if (sync.pickup && sync.pickup.IsHeld)
+            {
+                sync.pickup.Drop();
+            }
             gameObject.SetActive(!_hidden);
             if (sync.IsOwner())
             {
-                data.hidden = _hidden;
-                data.RequestSerialization();
+                sync.Respawn();
             }
             tmpToken = new DataToken(id);
             if (pool.lookupTable.ContainsKey(tmpToken))
@@ -123,15 +151,6 @@ namespace MMMaellon.LightSync
             tmpToken2 = new DataToken(pool.lookupTable.Count);
             pool.hiddenPoolIndexes.Add(tmpToken);
             pool.lookupTable.Add(tmpToken, tmpToken2);
-        }
-
-        //we have a detached data object so we have to make sure it stays in sync with us
-        public virtual void OnEnable()
-        {
-            if (Networking.LocalPlayer.IsOwner(gameObject) && !Networking.LocalPlayer.IsOwner(enhancementData.gameObject))
-            {
-                Networking.SetOwner(Networking.LocalPlayer, enhancementData.gameObject);
-            }
         }
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR

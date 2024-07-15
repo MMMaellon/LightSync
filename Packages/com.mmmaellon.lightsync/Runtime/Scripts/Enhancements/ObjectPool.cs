@@ -24,11 +24,6 @@ namespace MMMaellon.LightSync
         [HideInInspector]
         public DataDictionary lookupTable;
 
-        public void Start()
-        {
-            Debug.LogWarning("Hidden Count: " + HiddenCount());
-        }
-
         public int HiddenCount()
         {
             return hiddenPoolIndexes.Count;
@@ -61,13 +56,9 @@ namespace MMMaellon.LightSync
         public ObjectPoolObject SpawnRandom()
         {
             tmpObj = GetRandomHidden();
-            Debug.LogWarning("random hidden acquired: " + tmpObj);
             if (tmpObj)
             {
-                Debug.LogWarning("valid");
-                tmpObj.sync.TakeOwnershipIfNotOwner();
                 tmpObj.Show();
-                tmpObj.sync.Respawn();
             }
             return tmpObj;
         }
@@ -78,7 +69,6 @@ namespace MMMaellon.LightSync
             {
                 return false;
             }
-            Networking.SetOwner(Networking.LocalPlayer, objects[index].gameObject);
             objects[index].Hide();
             return true;
         }
@@ -88,7 +78,6 @@ namespace MMMaellon.LightSync
             {
                 return false;
             }
-            Networking.SetOwner(Networking.LocalPlayer, objects[index].gameObject);
             objects[index].Show();
             return true;
         }
@@ -109,7 +98,8 @@ namespace MMMaellon.LightSync
             {
                 objects[i].pool = this;
                 objects[i].id = i;
-                objects[i].hidden = objects[i].defaultHidden;
+                objects[i].data.hidden = objects[i].defaultHidden;
+                objects[i].SetVisibility();
                 PrefabUtility.RecordPrefabInstancePropertyModifications(objects[i]);
                 new SerializedObject(objects[i]).Update();
             }

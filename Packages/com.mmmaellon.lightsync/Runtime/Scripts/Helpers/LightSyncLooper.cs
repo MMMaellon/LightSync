@@ -45,6 +45,11 @@ namespace MMMaellon.LightSync
 
         public virtual float GetAutoSmoothedInterpolation(float realElapsedTime)
         {
+            if (sync.teleportFlag)
+            {
+                sync.teleportFlag = false;
+                return 1;
+            }
             // return lerpPeriod <= 0 ? 1 : (Time.realtimeSinceStartup - startTime) / lerpPeriod;
             return lerpPeriod <= 0 ? 1 : realElapsedTime / lerpPeriod;
         }

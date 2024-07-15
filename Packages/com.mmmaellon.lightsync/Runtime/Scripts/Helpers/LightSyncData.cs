@@ -20,17 +20,20 @@ namespace MMMaellon.LightSync
             }
         }
 
+        public float lastDeserialization;
         public override void OnDeserialization(VRC.Udon.Common.DeserializationResult result)
         {
             sync.CalcSmoothingTime(result.sendTime);
             if (!sync.allowOutOfOrderData && sync.localSyncCount > sync.syncCount && sync.localSyncCount - sync.syncCount < 8)//means we got updates out of order
             {
+                sync._print("Rejecting Data");
                 //revert all synced values
                 RejectNewSyncData();
                 return;
             }
             sync.StopLoop();
             AcceptNewSyncData();
+            lastDeserialization = Time.timeSinceLevelLoad;
             sync.localSyncCount = sync.syncCount;
 
             if (sync.debugLogs)
