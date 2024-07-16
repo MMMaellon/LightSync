@@ -13,13 +13,27 @@ namespace MMMaellon.LightSync
     {
         [UdonSynced]
         public bool hidden = true;
-        [UdonSynced]
-        public Vector3 spawnPos;
-        [UdonSynced]
-        public Quaternion spawnRot;
 
         public Vector3 startSpawnPos;
         public Quaternion startSpawnRot;
+
+        public virtual Vector3 GetSpawnPos()
+        {
+            return startSpawnPos;
+        }
+
+        public virtual Quaternion GetSpawnRot()
+        {
+            return startSpawnRot;
+        }
+
+        public virtual void SetSpawnPos(Vector3 pos)
+        {
+        }
+
+        public virtual void SetSpawnRot(Quaternion rot)
+        {
+        }
 
         public virtual void Show()
         {
@@ -33,8 +47,6 @@ namespace MMMaellon.LightSync
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
             }
             hidden = false;
-            spawnPos = position;
-            spawnRot = rotation;
             RequestSerialization();
         }
 

@@ -13,10 +13,14 @@ using VRC.SDKBase.Editor.BuildPipeline;
 
 namespace MMMaellon.LightSync
 {
+    [AddComponentMenu("LightSync/ObjectPool (lightsync)")]
     public class ObjectPool : UdonSharpBehaviour
     {
         public bool AutoPopulateFromChildren = true;
+        [Header("Advanced Settings")]
         public bool ForceOwnershipTransfer = true;
+        [Tooltip("Only needed if your lightsync data objects are parented. Costs some extra networking bandwidth.")]
+        public bool AdvancedSpawnTransformSyncing = false;
 
         public ObjectPoolObject[] objects;
         [OdinSerialize]
@@ -114,14 +118,16 @@ namespace MMMaellon.LightSync
 
         public void UpdateObjectList()
         {
-            objects = objects.Union(GetComponentsInChildren<ObjectPoolObject>(true)).Distinct().ToArray();
+            objects = objects.Union(GetComponentsInChildren<ObjectPoolObject>(true)).Distinct().Where((x) => x != null).ToArray();
+            hiddenPoolIndexes.Clear();
+            lookupTable.Clear();
             for (int i = 0; i < objects.Length; i++)
             {
                 objects[i].pool = this;
                 objects[i].id = i;
                 objects[i].data.hidden = objects[i].defaultHidden;
-                objects[i].data.spawnPos = objects[i].transform.position;
-                objects[i].data.spawnRot = objects[i].transform.rotation;
+                objects[i].data.SetSpawnPos(objects[i].transform.position);
+                objects[i].data.SetSpawnRot(objects[i].transform.rotation);
                 objects[i].data.startSpawnPos = objects[i].transform.position;
                 objects[i].data.startSpawnRot = objects[i].transform.rotation;
                 objects[i].SetVisibility();

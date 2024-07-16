@@ -21,7 +21,7 @@ public class Teleporter : UdonSharpBehaviour
             }
             foreach (var light in lights)
             {
-                light.TeleportToLocalSpace(light.spawnPos + (Vector3.up * 0.25f), light.spawnRot, false);
+                light.TeleportToLocalSpace(light.spawnPos + (Vector3.up * 0.25f), light.spawnRot, true);
             }
         }
         else
@@ -32,7 +32,7 @@ public class Teleporter : UdonSharpBehaviour
             }
             foreach (var light in lights)
             {
-                light.TeleportToLocalSpace(light.spawnPos, light.spawnRot, false);
+                light.TeleportToLocalSpace(light.spawnPos, light.spawnRot, true);
             }
         }
     }

@@ -314,7 +314,7 @@ namespace MMMaellon.LightSync
 #endif
             if (!Utilities.IsValid(Owner))
             {
-                Owner = Networking.GetOwner(gameObject);
+                Owner = Networking.GetOwner(data.gameObject);
                 return Owner.isLocal;
             }
             return Owner.isLocal;
@@ -322,7 +322,7 @@ namespace MMMaellon.LightSync
 
         public void Start()
         {
-            Owner = Networking.GetOwner(gameObject);
+            Owner = Networking.GetOwner(data.gameObject);
             if (sleepOnSpawn && syncCount == 0)
             {
                 rigid.Sleep();
@@ -663,7 +663,7 @@ namespace MMMaellon.LightSync
         }
         public void TakeOwnership()
         {
-            Networking.SetOwner(Networking.LocalPlayer, gameObject);
+            Networking.SetOwner(Networking.LocalPlayer, data.gameObject);
         }
 
         public void TakeOwnershipIfNotOwner()
@@ -672,9 +672,9 @@ namespace MMMaellon.LightSync
             return;
 #endif
             //use the native thing to make sure we get it right
-            if (!Networking.LocalPlayer.IsOwner(gameObject))
+            if (!IsOwner())
             {
-                Networking.SetOwner(Networking.LocalPlayer, gameObject);
+                TakeOwnership();
             }
         }
 
@@ -733,15 +733,20 @@ namespace MMMaellon.LightSync
 
         public void OnEnable()
         {
-            if (Owner != Networking.GetOwner(gameObject))
+            // if(Networking.GetOwner(data.gameObject) != Networking.GetOwner())
+            if (Owner != Networking.GetOwner(data.gameObject))
             {
-                Owner = Networking.GetOwner(gameObject);
+                Owner = Networking.GetOwner(data.gameObject);
+            }
+            if ((Networking.GetOwner(gameObject) != Owner) && Utilities.IsValid(Owner) && Owner.isLocal)
+            {
+                Networking.SetOwner(Owner, gameObject);
             }
         }
 
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
-            if (Utilities.IsValid(player) && player.isLocal)
+            if (Utilities.IsValid(player) && player.isLocal && !IsOwner())
             {
                 Networking.SetOwner(player, data.gameObject);
             }
@@ -1565,7 +1570,7 @@ namespace MMMaellon.LightSync
         public bool showInternalObjects = false;
 
         [HideInInspector]
-        public bool unparentInternalObjects = false;
+        public bool unparentInternalDataObject = false;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
 
 
@@ -1742,11 +1747,14 @@ namespace MMMaellon.LightSync
         {
             if (data != null)
             {
-                if (!PrefabUtility.IsPartOfAnyPrefab(this))
+                if (!PrefabUtility.IsPartOfAnyPrefab(data))
                 {
-                    if (unparentInternalObjects && data.transform.parent != null)
+                    if (unparentInternalDataObject)
                     {
-                        data.transform.SetParent(null, false);
+                        if (data.transform.parent != null)
+                        {
+                            data.transform.SetParent(null, false);
+                        }
                     }
                     else if (data.transform.parent != gameObject)
                     {
@@ -1817,7 +1825,7 @@ namespace MMMaellon.LightSync
                         break;
                     }
             }
-            if (unparentInternalObjects)
+            if (unparentInternalDataObject)
             {
                 dataObject.transform.SetParent(null, false);
             }
@@ -1835,16 +1843,9 @@ namespace MMMaellon.LightSync
             if (looper != null)
             {
                 looperObject = looper.gameObject;
-                if (!PrefabUtility.IsPartOfAnyPrefab(this))
+                if (!PrefabUtility.IsPartOfAnyPrefab(looper))
                 {
-                    if (unparentInternalObjects && looper.transform.parent != null)
-                    {
-                        looper.transform.SetParent(null, false);
-                    }
-                    else if (looper.transform.parent != gameObject)
-                    {
-                        looper.transform.SetParent(transform, false);
-                    }
+                    looper.transform.SetParent(transform, false);
                 }
                 looper.transform.localPosition = Vector3.zero;
                 looper.transform.localRotation = Quaternion.identity;
@@ -1867,14 +1868,7 @@ namespace MMMaellon.LightSync
             else
             {
                 looperObject = new(name + "_looper");
-                if (unparentInternalObjects)
-                {
-                    looperObject.transform.SetParent(null, false);
-                }
-                else
-                {
-                    looperObject.transform.SetParent(transform, false);
-                }
+                looperObject.transform.SetParent(transform, false);
                 looper = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncLooperUpdate>(looperObject);
                 looper.sync = this;
                 looper.data = data;
@@ -1968,8 +1962,6 @@ namespace MMMaellon.LightSync
                 }
             }
         }
-
-
 #endif
     }
 }

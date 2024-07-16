@@ -53,6 +53,7 @@ namespace MMMaellon.LightSync
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
             sync.Owner = player;
+            Networking.SetOwner(sync.Owner, sync.gameObject);
         }
 
 
@@ -87,6 +88,7 @@ namespace MMMaellon.LightSync
 
             gameObject.hideFlags = HideFlags.None;
         }
+
         public void DestroyAsync()
         {
             if (gameObject.activeInHierarchy)//prevents log spam in play mode
@@ -94,6 +96,7 @@ namespace MMMaellon.LightSync
                 StartCoroutine(Destroy());
             }
         }
+
         public IEnumerator<WaitForSeconds> Destroy()
         {
             yield return new WaitForSeconds(0);

@@ -1418,14 +1418,16 @@ namespace MMMaellon.LightSync
         {
             if (data != null)
             {
-                if (unparentInternalObjects && data.transform.parent != null)
+                if (unparentInternalObjects)
                 {
-                    data.transform.SetParent(null, false);
-                    data.transform.localPosition = Vector3.zero;
-                    data.transform.localRotation = Quaternion.identity;
-                    data.transform.localScale = Vector3.one;
+                    if (data.transform.parent != null)
+                        data.transform.SetParent(null, false);
+                        data.transform.localPosition = Vector3.zero;
+                        data.transform.localRotation = Quaternion.identity;
+                        data.transform.localScale = Vector3.one;
+                    }
                 }
-                else if (data.transform.parent != gameObject)
+                else if (data.transform.parent != transform)
                 {
                     data.transform.SetParent(transform, false);
                     data.transform.localPosition = Vector3.zero;
@@ -1509,14 +1511,16 @@ namespace MMMaellon.LightSync
             if (looper != null)
             {
                 looperObject = looper.gameObject;
-                if (unparentInternalObjects && looper.transform.parent != null)
+                if (unparentInternalObjects)
                 {
-                    looper.transform.SetParent(null, false);
-                    looper.transform.localPosition = Vector3.zero;
-                    looper.transform.localRotation = Quaternion.identity;
-                    looper.transform.localScale = Vector3.one;
+                    if (looper.transform.parent != null)
+                        looper.transform.SetParent(null, false);
+                        looper.transform.localPosition = Vector3.zero;
+                        looper.transform.localRotation = Quaternion.identity;
+                        looper.transform.localScale = Vector3.one;
+                    }
                 }
-                else if (looper.transform.parent != gameObject)
+                else if (looper.transform.parent != transform)
                 {
                     looper.transform.SetParent(transform, false);
                     looper.transform.localPosition = Vector3.zero;

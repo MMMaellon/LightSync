@@ -76,11 +76,14 @@ namespace MMMaellon.LightSync
                 GameObject dataObject = stateData.gameObject;
                 if (!PrefabUtility.IsPartOfAnyPrefab(dataObject))
                 {
-                    if (sync.unparentInternalObjects && dataObject.transform.parent != null)
+                    if (sync.unparentInternalDataObject)
                     {
-                        dataObject.transform.SetParent(null, false);
+                        if (dataObject.transform.parent != null)
+                        {
+                            dataObject.transform.SetParent(null, false);
+                        }
                     }
-                    else if (!sync.unparentInternalObjects && dataObject.transform.parent != transform)
+                    else if (dataObject.transform.parent != transform)
                     {
                         dataObject.transform.SetParent(transform, false);
                     }

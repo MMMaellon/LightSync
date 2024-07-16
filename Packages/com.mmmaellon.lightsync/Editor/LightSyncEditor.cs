@@ -170,7 +170,7 @@ namespace MMMaellon.LightSync
         "debugLogs",
         "showInternalObjects",
         "enterFirstCustomStateOnStart",
-        "unparentInternalObjects",
+        "unparentInternalDataObject",
         "kinematicWhileAttachedToPlayer",
         "useWorldSpaceTransforms",
         "useWorldSpaceTransformsWhenHeldOrAttachedToPlayer",
@@ -349,6 +349,7 @@ namespace MMMaellon.LightSync
             {
                 return true;
             }
+            ClearOrphanedObjects();
             return AutoSetup();
         }
 
@@ -422,6 +423,56 @@ namespace MMMaellon.LightSync
             EditorSceneManager.SaveScene(SceneManager.GetActiveScene());
             return true;
         }
+
+        [MenuItem("MMMaellon/LightSync/Clear Orphaned Internal Objects")]
+        public static void ClearOrphanedObjects()
+        {
+            foreach (LightSyncData data in GameObject.FindObjectsOfType<LightSyncData>(true))
+            {
+                if (!data)
+                {
+                    continue;
+                }
+                if (!data.sync || data.sync.data != data)
+                {
+                    GameObject.DestroyImmediate(data.gameObject);
+                }
+            }
+            foreach (LightSyncLooper looper in GameObject.FindObjectsOfType<LightSyncLooperUpdate>(true))
+            {
+                if (!looper)
+                {
+                    continue;
+                }
+                if (!looper.sync || looper.sync.looper != looper)
+                {
+                    GameObject.DestroyImmediate(looper.gameObject);
+                }
+            }
+            foreach (LightSyncEnhancementData data in GameObject.FindObjectsOfType<LightSyncEnhancementData>(true))
+            {
+                if (!data)
+                {
+                    continue;
+                }
+                if (!data.enhancement || data.enhancement.enhancementData != data)
+                {
+                    GameObject.DestroyImmediate(data.gameObject);
+                }
+            }
+            foreach (LightSyncStateData data in GameObject.FindObjectsOfType<LightSyncStateData>(true))
+            {
+                if (!data)
+                {
+                    continue;
+                }
+                if (!data.state || data.state.stateData != data)
+                {
+                    GameObject.DestroyImmediate(data.gameObject);
+                }
+            }
+        }
+
         [MenuItem("MMMaellon/LightSync/Show all hidden gameobjects")]
         public static bool ShowAllHiddenGameObjects()
         {

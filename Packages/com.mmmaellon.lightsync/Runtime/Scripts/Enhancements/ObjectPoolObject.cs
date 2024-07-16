@@ -13,6 +13,7 @@ using System.Linq;
 
 namespace MMMaellon.LightSync
 {
+    [AddComponentMenu("LightSync/ObjectPool Object (lightsync)")]
     public class ObjectPoolObject : LightSyncEnhancementWithData
     {
         [HideInInspector]
@@ -22,12 +23,14 @@ namespace MMMaellon.LightSync
         [HideInInspector]
         public ObjectPoolObjectData data;
 
-        [SerializeField]
-        bool _hidden = false;
         public bool defaultHidden = true;
 
         public override string GetDataTypeName()
         {
+            if (pool && pool.AdvancedSpawnTransformSyncing)
+            {
+                return "MMMaellon.LightSync.ObjectPoolObjectDataWithPosition";
+            }
             return "MMMaellon.LightSync.ObjectPoolObjectData";
         }
 
@@ -39,7 +42,6 @@ namespace MMMaellon.LightSync
         public override void OnDataObjectCreation(LightSyncEnhancementData enhancementData)
         {
             data = (ObjectPoolObjectData)enhancementData;
-            _hidden = data.hidden;
         }
 
         public override void OnOwnershipTransferred(VRCPlayerApi player)
@@ -70,6 +72,10 @@ namespace MMMaellon.LightSync
         {
             data.Show(position, rotation);
             OnShow();
+            if (sync.unparentInternalDataObject)
+            {
+                sync.TeleportToWorldSpace(position, rotation, sync.sleepOnSpawn);
+            }
         }
 
         public virtual void Hide()
@@ -78,73 +84,137 @@ namespace MMMaellon.LightSync
             OnHide();
         }
 
-
-
         DataToken tmpToken;
         DataToken tmpToken2;
 
         public virtual void OnShow()
         {
-            _hidden = false;
-            transform.position = data.spawnPos;
-            transform.rotation = data.spawnRot;
-            gameObject.SetActive(!_hidden);
-            if (sync.IsOwner())
+            //move it first in case it's in a despawner
+            transform.position = data.GetSpawnPos();
+            transform.rotation = data.GetSpawnRot();
+            gameObject.SetActive(true);
+            if (!sync.unparentInternalDataObject)
             {
-                sync.TeleportToWorldSpace(data.spawnPos, data.spawnRot, sync.sleepOnSpawn);
-                if (pool.ForceOwnershipTransfer)
+                if (sync.IsOwner())
                 {
-                    data.RequestOwnershipSync();
+                    sync.TeleportToWorldSpace(data.GetSpawnPos(), data.GetSpawnRot(), sync.sleepOnSpawn);
+                    if (pool.ForceOwnershipTransfer)
+                    {
+                        data.RequestOwnershipSync();
+                    }
                 }
             }
+            else if (sync.sleepOnSpawn)
+            {
+                sync.EnsureSleep();
+            }
+
+            // Debug.LogWarning("ON SHOW");
+            // for (int i = 0; i < pool.hiddenPoolIndexes.Count; i++)
+            // {
+            //     Debug.LogWarning(pool.hiddenPoolIndexes[i]);
+            // }
+            // var keys = pool.lookupTable.GetKeys();
+            // for (int i = 0; i < keys.Count; i++)
+            // {
+            //     Debug.LogWarning(keys[i] + ":" + pool.lookupTable[keys[i]]);
+            // }
+            // Debug.LogWarning("Removing " + id);
+
             if (!pool.lookupTable.ContainsKey(id))
             {
                 return;
             }
-            tmpToken = pool.lookupTable[id];
-            pool.lookupTable.Remove(id);
             //stupid bug.
-            if (pool.hiddenPoolIndexes.Count == 1)
+            if (pool.hiddenPoolIndexes.Count <= 1)
             {
                 pool.hiddenPoolIndexes.Clear();
+                pool.lookupTable.Clear();
             }
             else
             {
-                pool.hiddenPoolIndexes.RemoveAt(tmpToken.Int);
+                int removeIndex = pool.lookupTable[id].Int;
+                int newValue = pool.hiddenPoolIndexes[pool.hiddenPoolIndexes.Count - 1].Int;
+                // Debug.LogWarning("removeIndex " + removeIndex);
+                pool.hiddenPoolIndexes.SetValue(removeIndex, newValue);
+                pool.lookupTable.SetValue(newValue, removeIndex);
+
+                pool.lookupTable.Remove(id);
+                pool.hiddenPoolIndexes.RemoveAt(pool.hiddenPoolIndexes.Count - 1);
             }
 
+            // for (int i = 0; i < pool.hiddenPoolIndexes.Count; i++)
+            // {
+            //     Debug.LogWarning(pool.hiddenPoolIndexes[i]);
+            // }
+            // keys = pool.lookupTable.GetKeys();
+            // for (int i = 0; i < keys.Count; i++)
+            // {
+            //     Debug.LogWarning(keys[i] + ":" + pool.lookupTable[keys[i]]);
+            // }
+
             //this part keeps all the indexes the same in the lookuptable
-            if (pool.hiddenPoolIndexes.Count > 0)
-            {
-                tmpToken2 = pool.hiddenPoolIndexes[pool.hiddenPoolIndexes.Count - 1];
-                pool.hiddenPoolIndexes.Insert(tmpToken.Int, pool.hiddenPoolIndexes[pool.hiddenPoolIndexes.Count - 1]);
-                pool.hiddenPoolIndexes.RemoveAt(pool.hiddenPoolIndexes.Count - 1);
-                pool.lookupTable.SetValue(tmpToken2, tmpToken);
-            }
+            // if (pool.hiddenPoolIndexes.Count > 0)
+            // {
+            //     tmpToken2 = pool.hiddenPoolIndexes[pool.hiddenPoolIndexes.Count - 1];
+            //     pool.hiddenPoolIndexes.Insert(tmpToken.Int, pool.hiddenPoolIndexes[pool.hiddenPoolIndexes.Count - 1]);
+            //     pool.hiddenPoolIndexes.RemoveAt(pool.hiddenPoolIndexes.Count - 1);
+            //     pool.lookupTable.SetValue(tmpToken2, tmpToken);
+            // }
         }
 
         public virtual void OnHide()
         {
-            _hidden = true;
             if (sync.pickup && sync.pickup.IsHeld)
             {
                 sync.pickup.Drop();
             }
-            gameObject.SetActive(!_hidden);
-            tmpToken = new DataToken(id);
-            if (pool.lookupTable.ContainsKey(tmpToken))
+            gameObject.SetActive(false);
+
+            // Debug.LogWarning("ON HIDE");
+            // for (int i = 0; i < pool.hiddenPoolIndexes.Count; i++)
+            // {
+            //     Debug.LogWarning(pool.hiddenPoolIndexes[i]);
+            // }
+            // var keys = pool.lookupTable.GetKeys();
+            // for (int i = 0; i < keys.Count; i++)
+            // {
+            //     Debug.LogWarning(keys[i] + ":" + pool.lookupTable[keys[i]]);
+            // }
+
+            if (sync.IsOwner())
+            {
+                sync.TeleportToWorldSpace(data.GetSpawnPos(), data.GetSpawnRot(), sync.sleepOnSpawn);
+            }
+            if (pool.lookupTable.ContainsKey(id))
             {
                 return;
             }
             tmpToken2 = new DataToken(pool.lookupTable.Count);
-            pool.hiddenPoolIndexes.Add(tmpToken);
-            pool.lookupTable.Add(tmpToken, tmpToken2);
+            pool.hiddenPoolIndexes.Add(id);
+            pool.lookupTable.Add(id, tmpToken2);
+            // Debug.LogWarning("Adding " + id + ":" + tmpToken2);
+            // for (int i = 0; i < pool.hiddenPoolIndexes.Count; i++)
+            // {
+            //     Debug.LogWarning(pool.hiddenPoolIndexes[i]);
+            // }
+            // keys = pool.lookupTable.GetKeys();
+            // for (int i = 0; i < keys.Count; i++)
+            // {
+            //     Debug.LogWarning(keys[i] + ":" + pool.lookupTable[keys[i]]);
+            // }
         }
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
+        public override void Reset()
+        {
+            base.Reset();
+            sync.unparentInternalDataObject = true;
+        }
         public override void CreateDataObject()
         {
-            if (!enhancementData || enhancementData.enhancement != this)
+            bool isCorrectType = pool && (pool.AdvancedSpawnTransformSyncing == (enhancementData is ObjectPoolObjectDataWithPosition));
+            if (!enhancementData || enhancementData.enhancement != this || !isCorrectType)
             {
                 System.Type dataType = System.Type.GetType(GetDataTypeName());
                 if (dataType == null || dataType.ToString() == "")
@@ -158,6 +228,10 @@ namespace MMMaellon.LightSync
                     return;
                 }
                 GameObject dataObject = new(name + "_enhancementData");
+                if (enhancementData)
+                {
+                    enhancementData.DestroyAsync();
+                }
                 enhancementData = UdonSharpComponentExtensions.AddUdonSharpComponent(dataObject, dataType).GetComponent<LightSyncEnhancementData>();
             }
             if (enhancementData)

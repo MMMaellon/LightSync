@@ -6,12 +6,15 @@ using VRC.Udon;
 
 namespace MMMaellon.LightSync
 {
+    [AddComponentMenu("LightSync/ObjectPool Spawner (lightsync)")]
     public class ObjectPoolSpawner : UdonSharpBehaviour
     {
         public ObjectPool pool;
+
         public Transform spawnCenter;
         public float spawnPositionVariation = 0.0f;
         public float spawnRotationVariation = 0.0f;
+
         public void Spawn()
         {
             if (!spawnCenter)
