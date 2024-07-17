@@ -56,6 +56,31 @@ namespace MMMaellon.LightSync
             Networking.SetOwner(sync.Owner, sync.gameObject);
         }
 
+        bool syncRequested = false;
+        public virtual void RequestSync()
+        {
+            if (!Networking.LocalPlayer.IsOwner(gameObject))
+            {
+                syncRequested = false;
+                return;
+            }
+            if (Networking.IsClogged)
+            {
+                if (!syncRequested)
+                {
+                    syncRequested = true;
+                    SendCustomEventDelayedFrames(nameof(RequestSyncCallback), 5);
+                }
+                return;
+            }
+            RequestSerialization();
+        }
+
+        public virtual void RequestSyncCallback()
+        {
+            syncRequested = false;
+            RequestSync();
+        }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         public void OnValidate()

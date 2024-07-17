@@ -569,9 +569,9 @@ namespace MMMaellon.LightSync
             if (IsOwner() && takeOwnershipOfOtherObjectsOnCollision && Utilities.IsValid(other) && Utilities.IsValid(other.collider))
             {
                 LightSync otherSync = other.collider.GetComponent<LightSync>();
-                if (otherSync && otherSync.state == STATE_PHYSICS && !otherSync.IsOwner() && otherSync.allowOthersToTakeOwnershipOnCollision && (!otherSync.takeOwnershipOfOtherObjectsOnCollision || otherSync.rigid.velocity.sqrMagnitude < rigid.velocity.sqrMagnitude))
+                if (otherSync && otherSync.state == STATE_PHYSICS && otherSync.allowOthersToTakeOwnershipOnCollision && (!otherSync.takeOwnershipOfOtherObjectsOnCollision || otherSync.rigid.velocity.sqrMagnitude < rigid.velocity.sqrMagnitude))
                 {
-                    Networking.SetOwner(Networking.LocalPlayer, otherSync.gameObject);
+                    otherSync.TakeOwnershipIfNotOwner();
                 }
             }
             OnCollision();
@@ -680,7 +680,7 @@ namespace MMMaellon.LightSync
 
         public override void OnPickup()
         {
-            TakeOwnership();
+            TakeOwnershipIfNotOwner();
             state = STATE_HELD;
             Sync();
         }
@@ -733,12 +733,11 @@ namespace MMMaellon.LightSync
 
         public void OnEnable()
         {
-            // if(Networking.GetOwner(data.gameObject) != Networking.GetOwner())
             if (Owner != Networking.GetOwner(data.gameObject))
             {
                 Owner = Networking.GetOwner(data.gameObject);
             }
-            if ((Networking.GetOwner(gameObject) != Owner) && Utilities.IsValid(Owner) && Owner.isLocal)
+            if (IsOwner() && (!Networking.LocalPlayer.IsOwner(gameObject)))
             {
                 Networking.SetOwner(Owner, gameObject);
             }
@@ -746,9 +745,9 @@ namespace MMMaellon.LightSync
 
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
-            if (Utilities.IsValid(player) && player.isLocal && !IsOwner())
+            if (Utilities.IsValid(player) && player.isLocal)
             {
-                Networking.SetOwner(player, data.gameObject);
+                TakeOwnershipIfNotOwner();
             }
         }
 
@@ -771,7 +770,7 @@ namespace MMMaellon.LightSync
 
         public void ChangeState(sbyte newStateID)
         {
-            TakeOwnership();
+            TakeOwnershipIfNotOwner();
             state = newStateID;
             Sync();
         }

@@ -28,10 +28,7 @@ namespace MMMaellon.LightSync
                 firstLerp = false;
                 firstLoopTime = Time.timeSinceLevelLoad;
                 elapsedTime = 0;
-                if (sync.IsOwner())
-                {
-                    data.RequestSerialization();
-                }
+                data.RequestSync();
             }
             else
             {

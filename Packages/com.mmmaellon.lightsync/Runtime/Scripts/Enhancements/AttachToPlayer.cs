@@ -307,10 +307,7 @@ namespace MMMaellon.LightSync
         VRCPlayerApi attachTarget;
         public void Attach()
         {
-            if (!sync.IsOwner())
-            {
-                Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            }
+            sync.TakeOwnershipIfNotOwner();
             FindNearestPlayers(ref attachTargets);
             if (attachTargets == null || attachTargets.Length <= 0 || !Utilities.IsValid(attachTargets[0]))
             {
@@ -333,7 +330,7 @@ namespace MMMaellon.LightSync
             }
             else
             {
-                data.RequestSerialization();
+                data.RequestSync();
             }
         }
 
@@ -572,7 +569,7 @@ namespace MMMaellon.LightSync
         {
             if (data.playerId == localPlayer.playerId)
             {
-                Networking.SetOwner(localPlayer, gameObject);
+                sync.TakeOwnershipIfNotOwner();
                 if (data.bone >= 0 && data.bone < (int)HumanBodyBones.LastBone)
                 {
                     sync.state = (sbyte)(LightSync.STATE_BONE - data.bone);

@@ -30,18 +30,12 @@ namespace MMMaellon.LightSync
 
         public virtual void EnterState()
         {
-            if (!sync.IsOwner())
-            {
-                Networking.SetOwner(Networking.LocalPlayer, sync.gameObject);
-            }
+            sync.TakeOwnershipIfNotOwner();
             sync.state = stateID;
         }
         public virtual void ExitState()
         {
-            if (!sync.IsOwner())
-            {
-                Networking.SetOwner(Networking.LocalPlayer, sync.gameObject);
-            }
+            sync.TakeOwnershipIfNotOwner();
             sync.state = LightSync.STATE_PHYSICS;
         }
 

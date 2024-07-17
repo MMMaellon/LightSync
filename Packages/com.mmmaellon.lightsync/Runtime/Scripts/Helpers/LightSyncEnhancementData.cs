@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UdonSharp;
 using UnityEngine;
+using VRC.SDKBase;
 namespace MMMaellon.LightSync
 {
     [AddComponentMenu("")]//prevents it from showing up in the add component menu
@@ -11,6 +12,32 @@ namespace MMMaellon.LightSync
         public override void OnDeserialization()
         {
             enhancement.OnDataDeserialization();
+        }
+
+        bool syncRequested = false;
+        public virtual void RequestSync()
+        {
+            if (!Networking.LocalPlayer.IsOwner(gameObject))
+            {
+                syncRequested = false;
+                return;
+            }
+            if (Networking.IsClogged)
+            {
+                if (!syncRequested)
+                {
+                    syncRequested = true;
+                    SendCustomEventDelayedFrames(nameof(RequestSyncCallback), 5);
+                }
+                return;
+            }
+            RequestSerialization();
+        }
+
+        public virtual void RequestSyncCallback()
+        {
+            syncRequested = false;
+            RequestSync();
         }
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         public virtual void RefreshHideFlags()
