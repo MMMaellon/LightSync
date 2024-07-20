@@ -17,7 +17,7 @@ namespace MMMaellon.LightSync
                 obj = other.GetComponent<ObjectPoolObject>();
                 if (obj && obj.sync.IsOwner())
                 {
-                    obj.Hide();
+                    obj.Despawn();
                 }
             }
         }

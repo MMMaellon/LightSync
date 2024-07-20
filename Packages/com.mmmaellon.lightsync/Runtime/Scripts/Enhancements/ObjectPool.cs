@@ -49,7 +49,7 @@ namespace MMMaellon.LightSync
             return objects[index];
         }
 
-        public ObjectPoolObject GetRandomHidden()
+        public ObjectPoolObject GetRandomUnspawned()
         {
             if (HiddenCount() <= 0)
             {
@@ -61,51 +61,67 @@ namespace MMMaellon.LightSync
         ObjectPoolObject tmpObj;
         public ObjectPoolObject SpawnRandom()
         {
-            tmpObj = GetRandomHidden();
+            tmpObj = GetRandomUnspawned();
             if (tmpObj)
             {
-                tmpObj.Show();
+                tmpObj.Spawn();
             }
             return tmpObj;
         }
 
         public ObjectPoolObject SpawnRandom(Vector3 position, Quaternion rotation)
         {
-            tmpObj = GetRandomHidden();
+            tmpObj = GetRandomUnspawned();
             if (tmpObj)
             {
-                tmpObj.Show(position, rotation);
+                tmpObj.Spawn(position, rotation);
             }
             return tmpObj;
         }
 
-        public bool HideById(int index)
+        public bool DespawnById(int index)
         {
             if (index < 0 || index >= objects.Length)
             {
                 return false;
             }
-            objects[index].Hide();
+            objects[index].Despawn();
             return true;
         }
-        public bool ShowById(int index)
+
+        public void DespawnAll()
+        {
+            //despawns all objects responsibly by checking for network clogging and stuff
+            int delay = 0;
+            foreach (var obj in objects)
+            {
+                if (!obj.spawned)
+                {
+                    obj.DelayedDespawn(delay++);
+                }
+            }
+        }
+
+        public bool SpawnById(int index)
         {
             if (index < 0 || index >= objects.Length)
             {
                 return false;
             }
-            objects[index].Show();
+            objects[index].Spawn();
             return true;
         }
-        public bool ShowById(int index, Vector3 position, Quaternion rotation)
+
+        public bool SpawnById(int index, Vector3 position, Quaternion rotation)
         {
             if (index < 0 || index >= objects.Length)
             {
                 return false;
             }
-            objects[index].Show(position, rotation);
+            objects[index].Spawn(position, rotation);
             return true;
         }
+
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
         public void OnValidate()
         {
@@ -125,7 +141,7 @@ namespace MMMaellon.LightSync
             {
                 objects[i].pool = this;
                 objects[i].id = i;
-                objects[i].data.hidden = objects[i].defaultHidden;
+                objects[i].data.spawned = objects[i].defaultSpawned;
                 objects[i].data.SetSpawnPos(objects[i].transform.position);
                 objects[i].data.SetSpawnRot(objects[i].transform.rotation);
                 objects[i].data.startSpawnPos = objects[i].transform.position;

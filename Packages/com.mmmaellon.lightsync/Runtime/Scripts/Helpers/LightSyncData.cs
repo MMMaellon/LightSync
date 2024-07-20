@@ -53,7 +53,19 @@ namespace MMMaellon.LightSync
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
             sync.Owner = player;
-            Networking.SetOwner(sync.Owner, sync.gameObject);
+            if (player.isLocal)
+            {
+                BubbleUpOwnership();
+            }
+            //we made need to do some special stuff here eventually
+        }
+
+        public virtual void BubbleUpOwnership()
+        {
+            if (Utilities.IsValid(sync.Owner) && !sync.Owner.IsOwner(sync.gameObject))
+            {
+                Networking.SetOwner(sync.Owner, sync.gameObject);
+            }
         }
 
         bool syncRequested = false;

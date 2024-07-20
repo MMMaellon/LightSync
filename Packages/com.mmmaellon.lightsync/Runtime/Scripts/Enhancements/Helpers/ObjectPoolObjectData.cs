@@ -12,7 +12,7 @@ namespace MMMaellon.LightSync
     public class ObjectPoolObjectData : LightSyncEnhancementData
     {
         [UdonSynced]
-        public bool hidden = true;
+        public bool spawned = false;
 
         public Vector3 startSpawnPos;
         public Quaternion startSpawnRot;
@@ -35,28 +35,28 @@ namespace MMMaellon.LightSync
         {
         }
 
-        public virtual void Show()
+        public virtual void Spawn()
         {
-            Show(startSpawnPos, startSpawnRot);
+            Spawn(startSpawnPos, startSpawnRot);
         }
 
-        public virtual void Show(Vector3 position, Quaternion rotation)
+        public virtual void Spawn(Vector3 position, Quaternion rotation)
         {
             if (!Networking.LocalPlayer.IsOwner(gameObject))
             {
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
             }
-            hidden = false;
+            spawned = true;
             RequestSerialization();
         }
 
-        public virtual void Hide()
+        public virtual void Despawn()
         {
             if (!Networking.LocalPlayer.IsOwner(gameObject))
             {
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
             }
-            hidden = true;
+            spawned = false;
             RequestSerialization();
         }
 

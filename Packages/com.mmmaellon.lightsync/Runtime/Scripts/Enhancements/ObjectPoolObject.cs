@@ -23,7 +23,16 @@ namespace MMMaellon.LightSync
         [HideInInspector]
         public ObjectPoolObjectData data;
 
-        public bool defaultHidden = true;
+        public bool spawned
+        {
+            get => data.spawned;
+            set
+            {
+                data.spawned = value;
+            }
+        }
+
+        public bool defaultSpawned = false;
 
         public override string GetDataTypeName()
         {
@@ -52,42 +61,59 @@ namespace MMMaellon.LightSync
 
         public void SetVisibility()
         {
-            if (data.hidden)
+            if (data.spawned)
             {
-                OnHide();
+                OnSpawnPoolObject();
             }
             else
             {
-                OnShow();
+                OnDespawn();
             }
         }
 
-        public virtual void Show()
+        public virtual void Spawn()
         {
-            data.Show();
-            OnShow();
+            data.Spawn();
+            OnSpawnPoolObject();
         }
 
-        public virtual void Show(Vector3 position, Quaternion rotation)
+        public virtual void Spawn(Vector3 position, Quaternion rotation)
         {
-            data.Show(position, rotation);
-            OnShow();
+            data.Spawn(position, rotation);
+            OnSpawnPoolObject();
             if (sync.unparentInternalDataObject)
             {
                 sync.TeleportToWorldSpace(position, rotation, sync.sleepOnSpawn);
             }
         }
 
-        public virtual void Hide()
+        public virtual void DelayedDespawn(int delayFrames)
         {
-            data.Hide();
-            OnHide();
+            SendCustomEventDelayedFrames(nameof(DespawnIfNetworkUnclogged), delayFrames);
+        }
+
+        public virtual void DespawnIfNetworkUnclogged()
+        {
+            if (Networking.IsClogged)
+            {
+                SendCustomEventDelayedFrames(nameof(DespawnIfNetworkUnclogged), Random.Range(1, 10));
+            }
+            else
+            {
+                Despawn();
+            }
+        }
+
+        public virtual void Despawn()
+        {
+            data.Despawn();
+            OnDespawn();
         }
 
         DataToken tmpToken;
         DataToken tmpToken2;
 
-        public virtual void OnShow()
+        public virtual void OnSpawnPoolObject()
         {
             //move it first in case it's in a despawner
             transform.position = data.GetSpawnPos();
@@ -163,7 +189,7 @@ namespace MMMaellon.LightSync
             // }
         }
 
-        public virtual void OnHide()
+        public virtual void OnDespawn()
         {
             if (sync.pickup && sync.pickup.IsHeld)
             {

@@ -420,6 +420,23 @@ namespace MMMaellon.LightSync
             }
         }
 
+        public void DelayedRespawn(int delayFrames)
+        {
+            SendCustomEventDelayedFrames(nameof(RespawnIfNetworkNotClogged), delayFrames);
+        }
+
+        public void RespawnIfNetworkNotClogged()
+        {
+            if (Networking.IsClogged)
+            {
+                SendCustomEventDelayedFrames(nameof(RespawnIfNetworkNotClogged), Random.Range(1, 10));
+            }
+            else
+            {
+                Respawn();
+            }
+        }
+
         public void Respawn()
         {
             if (useWorldSpaceTransforms)
@@ -513,6 +530,11 @@ namespace MMMaellon.LightSync
         public void StartLoop()
         {
             firstLoop = true;
+#if !COMPILER_UDONSHARP && UNITY_EDITOR
+            OnLerp(0, 0);
+            data.SyncNewData();
+            return;
+#endif
             switch (loopTimingFlag)
             {
                 case 0://Update
@@ -661,6 +683,7 @@ namespace MMMaellon.LightSync
         {
             return Vector3.Distance(rigid.position, pos) > 0.25f || Quaternion.Angle(rigid.rotation, rot) < 3f;
         }
+
         public void TakeOwnership()
         {
             Networking.SetOwner(Networking.LocalPlayer, data.gameObject);

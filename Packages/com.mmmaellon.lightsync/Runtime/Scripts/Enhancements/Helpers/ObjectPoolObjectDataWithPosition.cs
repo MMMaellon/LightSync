@@ -24,13 +24,13 @@ namespace MMMaellon.LightSync
             return spawnRot;
         }
 
-        public override void Show(Vector3 position, Quaternion rotation)
+        public override void Spawn(Vector3 position, Quaternion rotation)
         {
             if (!Networking.LocalPlayer.IsOwner(gameObject))
             {
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
             }
-            hidden = false;
+            spawned = true;
             spawnPos = position;
             spawnRot = rotation;
             RequestSerialization();
