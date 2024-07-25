@@ -91,13 +91,16 @@ namespace MMMaellon.LightSync
 
         public void DespawnAll()
         {
-            //despawns all objects responsibly by checking for network clogging and stuff
-            int delay = 0;
+            SendCustomNetworkEvent(VRC.Udon.Common.Interfaces.NetworkEventTarget.All, nameof(DespawnAllOwned));
+        }
+
+        public void DespawnAllOwned()
+        {
             foreach (var obj in objects)
             {
-                if (!obj.spawned)
+                if (!obj.spawned && Networking.LocalPlayer.IsOwner(obj.data.gameObject))
                 {
-                    obj.DelayedDespawn(delay++);
+                    obj.Despawn();
                 }
             }
         }

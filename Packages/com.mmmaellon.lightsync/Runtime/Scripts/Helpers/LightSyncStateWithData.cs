@@ -67,7 +67,7 @@ namespace MMMaellon.LightSync
                     Debug.LogWarning($"ERROR: {GetType().FullName} cannot be setup because {dataType.FullName} does not inherit from {typeof(LightSyncStateData).FullName}");
                     return;
                 }
-                GameObject dataObject = new(name + "_statedata" + stateID);
+                GameObject dataObject = new(name + "_statedata" + stateID + "_" + GUID.Generate());
                 dataObject.transform.SetParent(transform, false);
                 stateData = UdonSharpComponentExtensions.AddUdonSharpComponent(dataObject, dataType).GetComponent<LightSyncStateData>();
             }
@@ -76,7 +76,7 @@ namespace MMMaellon.LightSync
                 GameObject dataObject = stateData.gameObject;
                 if (!PrefabUtility.IsPartOfAnyPrefab(dataObject))
                 {
-                    if (sync.unparentInternalDataObject)
+                    if (sync.separateDataObject)
                     {
                         if (dataObject.transform.parent != null)
                         {

@@ -1,12 +1,8 @@
-# LightSync (WIP)
+# LightSync ( ⚠️ WIP ⚠️ )
 
-# Ask questions on my [Discord Server](https://discord.gg/S5sDC4PnFp)
+A set of scripts for syncing an object in VRChat with an emphasis on network efficiency, and overengineering every little thing so that it works in as many situations as possible.
 
-A set of scripts for syncing an object in VRChat with an emphasis on network efficiency and ease of use.
-
-To use it, just add the `LightSync` component onto an object. Out of the box it'll handle the most common use cases of syncing physics and pickup events, but you can add additional scripts to handle things like attaching an object to a player.
-
-
+Prefab is a work in progress so things might change drastically between updates and possibly break things. If you want a more stable alternative, check out [Smart Object Sync](https://github.com/MMMaellon/SmartObjectSync).
 
 # DOWNLOAD
 
@@ -14,7 +10,11 @@ Download and Install thru VCC: <https://mmmaellon.github.io/LightSync/>
 
 Download all my VCC packages here: <https://mmmaellon.github.io/MMMaellonVCCListing/>
 
+# USAGE
 
+To use it, just add the `LightSync` component onto an object. Out of the box it'll handle the most common use cases of syncing physics and pickup events, but you can add additional scripts to handle things like attaching an object to a player.
+
+# Ask questions on my [Discord Server](https://discord.gg/S5sDC4PnFp)
 
 # What is the difference between this and SmartObjectSync
 

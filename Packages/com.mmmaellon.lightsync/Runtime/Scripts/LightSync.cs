@@ -34,6 +34,9 @@ namespace MMMaellon.LightSync
         [System.NonSerialized]
         int networkDataOptimization;
 #endif
+        [HideInInspector]
+        public Singleton singleton;
+
         //Gets created in the editor, as an invisible child of this object. Because it's a separate object we can sync it's data separately from the others on this object
         [HideInInspector]
         public LightSyncData data;
@@ -47,6 +50,8 @@ namespace MMMaellon.LightSync
         public Rigidbody rigid;
         [HideInInspector]
         public VRC_Pickup pickup;
+        [HideInInspector]
+        public uint id = 1001;
 
         //Settings
         [Space]
@@ -447,6 +452,11 @@ namespace MMMaellon.LightSync
             {
                 TeleportToLocalSpace(spawnPos, spawnRot, sleepOnSpawn);
             }
+
+            if (enterFirstCustomStateOnStart && customStates.Length > 0)
+            {
+                customStates[0].EnterState();
+            }
         }
 
         public void TeleportToLocalSpace(Vector3 position, Quaternion rotation, bool shouldSleep)
@@ -676,12 +686,12 @@ namespace MMMaellon.LightSync
 
         public bool LooseLocalTransformDrifted()
         {
-            return Vector3.Distance(transform.localPosition, pos) > 0.25f || Quaternion.Angle(transform.localRotation, rot) < 3f;
+            return Vector3.Distance(transform.localPosition, pos) > 0.25f || Quaternion.Angle(transform.localRotation, rot) > 3f;
         }
 
         public bool LooseWorldTransformDrifted()
         {
-            return Vector3.Distance(rigid.position, pos) > 0.25f || Quaternion.Angle(rigid.rotation, rot) < 3f;
+            return Vector3.Distance(rigid.position, pos) > 0.25f || Quaternion.Angle(rigid.rotation, rot) > 3f;
         }
 
         public void TakeOwnership()
@@ -768,7 +778,7 @@ namespace MMMaellon.LightSync
 
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
-            if (Utilities.IsValid(player) && player.isLocal)
+            if (separateDataObject && Utilities.IsValid(player) && player.isLocal)
             {
                 TakeOwnershipIfNotOwner();
             }
@@ -833,7 +843,7 @@ namespace MMMaellon.LightSync
                                 lastPickupable = pickup.pickupable;
                                 pickup.pickupable = allowTheftFromSelf;
                                 lastKinematic = rigid.isKinematic;
-                                rigid.isKinematic = kinematicWhileHeld;
+                                rigid.isKinematic |= kinematicWhileHeld;
                             }
                             localTransformFlag = !useWorldSpaceTransformsWhenHeldOrAttachedToPlayer;
                             sleepFlag = rigid.IsSleeping();
@@ -870,7 +880,7 @@ namespace MMMaellon.LightSync
                             else
                             {
                                 lastKinematic = rigid.isKinematic;
-                                rigid.isKinematic = kinematicWhileAttachedToPlayer;
+                                rigid.isKinematic |= kinematicWhileAttachedToPlayer;
                             }
                             break;
                         }
@@ -890,7 +900,7 @@ namespace MMMaellon.LightSync
                             else
                             {
                                 lastKinematic = rigid.isKinematic;
-                                rigid.isKinematic = kinematicWhileAttachedToPlayer;
+                                rigid.isKinematic |= kinematicWhileAttachedToPlayer;
                             }
                             break;
                         }
@@ -921,7 +931,7 @@ namespace MMMaellon.LightSync
                             else
                             {
                                 lastKinematic = rigid.isKinematic;
-                                rigid.isKinematic = kinematicWhileHeld;
+                                rigid.isKinematic |= kinematicWhileHeld;
                             }
                             if (syncPickupable && pickup)
                             {
@@ -946,7 +956,7 @@ namespace MMMaellon.LightSync
                             else
                             {
                                 lastKinematic = rigid.isKinematic;
-                                rigid.isKinematic = kinematicWhileAttachedToPlayer;
+                                rigid.isKinematic |= kinematicWhileAttachedToPlayer;
                             }
 
                             if (syncPickupable && pickup)
@@ -973,7 +983,7 @@ namespace MMMaellon.LightSync
                             else
                             {
                                 lastKinematic = rigid.isKinematic;
-                                rigid.isKinematic = kinematicWhileAttachedToPlayer;
+                                rigid.isKinematic |= kinematicWhileAttachedToPlayer;
                             }
 
                             if (syncPickupable && pickup)
@@ -1019,7 +1029,7 @@ namespace MMMaellon.LightSync
                 {
                     rigid.isKinematic = kinematicFlag;
                 }
-                else
+                else if ((prevState == STATE_HELD && kinematicWhileHeld) || ((prevState == STATE_BONE || prevState == STATE_LOCAL_TO_OWNER) && kinematicWhileAttachedToPlayer))
                 {
                     rigid.isKinematic = lastKinematic;
                 }
@@ -1136,6 +1146,7 @@ namespace MMMaellon.LightSync
                 {
                     RecordWorldTransforms();
                 }
+                startVel = recordedVel;
             }
 
             if (IsOwner())
@@ -1554,12 +1565,12 @@ namespace MMMaellon.LightSync
 
         public bool LocalTransformDrifted()
         {
-            return transform.localPosition != pos || Quaternion.Angle(transform.localRotation, rot) < 0.1f;
+            return transform.localPosition != pos || Quaternion.Angle(transform.localRotation, rot) > 0.1f;
         }
 
         public bool WorldTransformDrifted()
         {
-            return rigid.position != pos || Quaternion.Angle(rigid.rotation, rot) < 0.1f;
+            return rigid.position != pos || Quaternion.Angle(rigid.rotation, rot) > 0.1f;
         }
 
         public bool RelativeTransformDrifted(Vector3 parentPos, Quaternion parentRot)
@@ -1592,19 +1603,30 @@ namespace MMMaellon.LightSync
         public bool showInternalObjects = false;
 
         [HideInInspector]
-        public bool unparentInternalDataObject = false;
+        public bool separateDataObject = false;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
 
 
         public void Reset()
         {
+            id = (uint)GameObject.FindObjectsOfType(typeof(LightSync)).Length;
             AutoSetup();
             respawnHeight = VRC_SceneDescriptor.Instance.RespawnHeightY;
         }
 
         public void OnValidate()
         {
-            // AutoSetupAsync();
+            if (showInternalObjects)
+            {
+                if (data == null || separateDataObject == (data.transform == transform))
+                {
+                    if (data)
+                    {
+                        data.DestroyAsync();
+                    }
+                    CreateDataObject();
+                }
+            }
             RefreshHideFlags();
             if (enterFirstCustomStateOnStart && customStates.Length > 0)
             {
@@ -1769,24 +1791,6 @@ namespace MMMaellon.LightSync
         {
             if (data != null)
             {
-                if (!PrefabUtility.IsPartOfAnyPrefab(data))
-                {
-                    if (unparentInternalDataObject)
-                    {
-                        if (data.transform.parent != null)
-                        {
-                            data.transform.SetParent(null, false);
-                        }
-                    }
-                    else if (data.transform.parent != gameObject)
-                    {
-                        data.transform.SetParent(transform, false);
-                    }
-                }
-                data.transform.localPosition = Vector3.zero;
-                data.transform.localRotation = Quaternion.identity;
-                data.transform.localScale = Vector3.one;
-
                 if (data.sync != this)
                 {
                     data.sync = this;
@@ -1794,66 +1798,113 @@ namespace MMMaellon.LightSync
 
                 data.RefreshHideFlags();
 
-                if (networkDataOptimization == NetworkDataOptimization.Ultra && data is LightSyncDataUltra)
+                var shouldDelete = false;
+                if (networkDataOptimization == NetworkDataOptimization.Ultra && data is not LightSyncDataUltra)
                 {
-                    return;
+                    shouldDelete = true;
                 }
-                else if (networkDataOptimization == NetworkDataOptimization.High && data is LightSyncDataHigh)
+                else if (networkDataOptimization == NetworkDataOptimization.High && data is not LightSyncDataHigh)
                 {
-                    return;
+                    shouldDelete = true;
                 }
-                else if (networkDataOptimization == NetworkDataOptimization.Low && data is LightSyncDataLow)
+                else if (networkDataOptimization == NetworkDataOptimization.Low && data is not LightSyncDataLow)
                 {
-                    return;
+                    shouldDelete = true;
                 }
-                else if (networkDataOptimization == NetworkDataOptimization.Unoptimized && data is LightSyncDataUnoptimized)
+                else if (networkDataOptimization == NetworkDataOptimization.Unoptimized && data is not LightSyncDataUnoptimized)
+                {
+                    shouldDelete = true;
+                }
+                else if (separateDataObject == (data.transform == transform))
+                {
+                    shouldDelete = true;
+                }
+
+                if (!shouldDelete)
                 {
                     return;
                 }
 
-                DestroyImmediate(data.gameObject);
+                data.Destroy();
             }
+            Debug.LogWarning("CREATING DATA OBJ");
             GameObject dataObject;
+            if (separateDataObject)
+            {
+                switch (networkDataOptimization)
+                {
+                    case NetworkDataOptimization.Ultra:
+                        {
+                            dataObject = new(name + "_dataUltra" + GUID.Generate());
+                            break;
+                        }
+                    case NetworkDataOptimization.High:
+                        {
+                            dataObject = new(name + "_dataHigh" + GUID.Generate());
+                            break;
+                        }
+                    case NetworkDataOptimization.Low:
+                        {
+                            dataObject = new(name + "_dataLow" + GUID.Generate());
+                            break;
+                        }
+                    case NetworkDataOptimization.Unoptimized:
+                        {
+                            dataObject = new(name + "_dataUnoptimized" + GUID.Generate());
+                            break;
+                        }
+                    default:
+                        {
+                            dataObject = new(name + "_dataDisabled " + GUID.Generate());
+                            break;
+                        }
+                }
+                dataObject.transform.SetParent(null, false);
+            }
+            else
+            {
+                dataObject = gameObject;
+                foreach (var udon in GetComponents<UdonBehaviour>())
+                {
+                    udon.SyncMethod = Networking.SyncType.Manual;
+                }
+                // dataObject.transform.SetParent(transform, false);
+            }
             switch (networkDataOptimization)
             {
                 case NetworkDataOptimization.Ultra:
                     {
-                        dataObject = new(name + "_dataUltra");
                         data = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncDataUltra>(dataObject);
                         break;
                     }
                 case NetworkDataOptimization.High:
                     {
-                        dataObject = new(name + "_dataHigh");
                         data = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncDataHigh>(dataObject);
                         break;
                     }
                 case NetworkDataOptimization.Low:
                     {
-                        dataObject = new(name + "_dataLow");
                         data = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncDataLow>(dataObject);
                         break;
                     }
                 case NetworkDataOptimization.Unoptimized:
                     {
-                        dataObject = new(name + "_dataUnoptimized");
                         data = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncDataUnoptimized>(dataObject);
                         break;
                     }
                 default:
                     {
-                        dataObject = new(name + "_dataDisabled ");
                         data = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncDataDisabled>(dataObject);
                         break;
                     }
             }
-            if (unparentInternalDataObject)
+            if (separateDataObject)
             {
-                dataObject.transform.SetParent(null, false);
+                data.hideFlags = HideFlags.None;
             }
             else
             {
-                dataObject.transform.SetParent(transform, false);
+                data.hideFlags = HideFlags.HideInInspector;
             }
             data.sync = this;
             data.RefreshHideFlags();
@@ -1889,7 +1940,7 @@ namespace MMMaellon.LightSync
             }
             else
             {
-                looperObject = new(name + "_looper");
+                looperObject = new(name + "_looper" + GUID.Generate());
                 looperObject.transform.SetParent(transform, false);
                 looper = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncLooperUpdate>(looperObject);
                 looper.sync = this;

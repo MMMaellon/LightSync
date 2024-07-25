@@ -167,33 +167,34 @@ namespace MMMaellon.LightSync
         }
 
         readonly string[] serializedPropertyNames = {
-        "debugLogs",
-        "showInternalObjects",
-        "enterFirstCustomStateOnStart",
-        "unparentInternalDataObject",
-        "kinematicWhileAttachedToPlayer",
-        "useWorldSpaceTransforms",
-        "useWorldSpaceTransformsWhenHeldOrAttachedToPlayer",
-        "syncCollisions",
-        "syncParticleCollisions",
-        "allowOutOfOrderData",
-        "takeOwnershipOfOtherObjectsOnCollision",
-        "allowOthersToTakeOwnershipOnCollision",
-        "positionDesyncThreshold",
-        "rotationDesyncThreshold",
-        "minimumSleepFrames",
+            "debugLogs",
+            "showInternalObjects",
+            "enterFirstCustomStateOnStart",
+            "separateDataObject",
+            "kinematicWhileAttachedToPlayer",
+            "useWorldSpaceTransforms",
+            "useWorldSpaceTransformsWhenHeldOrAttachedToPlayer",
+            "syncCollisions",
+            "syncParticleCollisions",
+            "allowOutOfOrderData",
+            "takeOwnershipOfOtherObjectsOnCollision",
+            "allowOthersToTakeOwnershipOnCollision",
+            "positionDesyncThreshold",
+            "rotationDesyncThreshold",
+            "minimumSleepFrames",
         };
 
         readonly string[] serializedInternalObjectNames = {
-        "data",
-        "looper",
-        "fixedLooper",
-        "lateLooper",
-        "rigid",
-        "pickup",
-        "customStates",
-        "_behaviourEventListeners",
-        "_classEventListeners",
+            "singleton",
+            "data",
+            "looper",
+            "fixedLooper",
+            "lateLooper",
+            "rigid",
+            "pickup",
+            "customStates",
+            "_behaviourEventListeners",
+            "_classEventListeners",
         };
 
         IEnumerable<SerializedProperty> serializedProperties;
@@ -207,6 +208,7 @@ namespace MMMaellon.LightSync
         {
             EditorGUI.indentLevel++;
             GUI.enabled = false;
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("id"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("_state"));
             GUI.enabled = true;
             foreach (var property in serializedProperties)
@@ -416,9 +418,45 @@ namespace MMMaellon.LightSync
             {
                 SetupLightSyncListener(listener);
             }
-            foreach (LightSync sync in GameObject.FindObjectsOfType<LightSync>(true))
+            var allLightSyncs = GameObject.FindObjectsByType<LightSync>(FindObjectsInactive.Include, FindObjectsSortMode.InstanceID);
+            var allCollectionItems = GameObject.FindObjectsByType<CollectionItem>(FindObjectsInactive.Include, FindObjectsSortMode.InstanceID);
+            var allCollections = GameObject.FindObjectsByType<Collection>(FindObjectsInactive.Include, FindObjectsSortMode.InstanceID);
+            if (allLightSyncs.Length > 0)
             {
-                SetupLightSync(sync);
+                var allSingletons = GameObject.FindObjectsOfType<Singleton>(true);
+                Singleton singleton;
+                if (allSingletons.Length >= 1)
+                {
+                    singleton = allSingletons[0];
+                    for (int i = 1; i < allSingletons.Length; i++)
+                    {
+                        GameObject.DestroyImmediate(allSingletons[i].gameObject);
+                    }
+                }
+                else
+                {
+                    GameObject singletonObject = new("LightSync Singleton");
+                    singleton = UdonSharpComponentExtensions.AddUdonSharpComponent<Singleton>(singletonObject);
+                }
+                singleton.lightSyncs = allLightSyncs;
+                singleton.collectionItems = allCollectionItems;
+                singleton.collections = allCollections;
+                singleton.gameObject.hideFlags = HideFlags.HideInHierarchy;
+                for (uint i = 0; i < singleton.collectionItems.Length; i++)
+                {
+                    singleton.collectionItems[i].itemId = i;
+                }
+                for (int i = 0; i < singleton.collections.Length; i++)
+                {
+                    singleton.collections[i].collectionId = i;
+                    singleton.collections[i].singleton = singleton;
+                }
+                for (uint i = 0; i < singleton.lightSyncs.Length; i++)
+                {
+                    singleton.lightSyncs[i].id = i;
+                    singleton.lightSyncs[i].singleton = singleton;
+                    SetupLightSync(singleton.lightSyncs[i]);
+                }
             }
             EditorSceneManager.SaveScene(SceneManager.GetActiveScene());
             return true;
@@ -435,7 +473,7 @@ namespace MMMaellon.LightSync
                 }
                 if (!data.sync || data.sync.data != data)
                 {
-                    GameObject.DestroyImmediate(data.gameObject);
+                    data.Destroy();
                 }
             }
             foreach (LightSyncLooper looper in GameObject.FindObjectsOfType<LightSyncLooperUpdate>(true))
@@ -457,7 +495,7 @@ namespace MMMaellon.LightSync
                 }
                 if (!data.enhancement || data.enhancement.enhancementData != data)
                 {
-                    GameObject.DestroyImmediate(data.gameObject);
+                    data.Destroy();
                 }
             }
             foreach (LightSyncStateData data in GameObject.FindObjectsOfType<LightSyncStateData>(true))
@@ -468,7 +506,7 @@ namespace MMMaellon.LightSync
                 }
                 if (!data.state || data.state.stateData != data)
                 {
-                    GameObject.DestroyImmediate(data.gameObject);
+                    data.Destroy();
                 }
             }
         }
@@ -481,6 +519,13 @@ namespace MMMaellon.LightSync
                 if (obj.hideFlags == HideFlags.HideInHierarchy)
                 {
                     obj.hideFlags = HideFlags.None;
+                }
+            }
+            foreach (LightSyncData data in GameObject.FindObjectsOfType<LightSyncData>(true))
+            {
+                if (data.hideFlags == HideFlags.HideInInspector)
+                {
+                    data.hideFlags = HideFlags.None;
                 }
             }
             return true;

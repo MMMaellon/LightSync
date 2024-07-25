@@ -72,7 +72,17 @@ namespace MMMaellon.LightSync
         public IEnumerator<WaitForSeconds> Destroy()
         {
             yield return new WaitForSeconds(0);
-            DestroyImmediate(gameObject);
+            var count = GetComponents(typeof(Component)).Length;
+            gameObject.hideFlags = HideFlags.None;
+            hideFlags = HideFlags.None;
+            if (count > 3)
+            {
+                DestroyImmediate(this);
+            }
+            else
+            {
+                DestroyImmediate(gameObject);
+            }
         }
 #endif
     }

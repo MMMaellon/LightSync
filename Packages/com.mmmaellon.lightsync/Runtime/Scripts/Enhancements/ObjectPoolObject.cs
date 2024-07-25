@@ -81,7 +81,7 @@ namespace MMMaellon.LightSync
         {
             data.Spawn(position, rotation);
             OnSpawnPoolObject();
-            if (sync.unparentInternalDataObject)
+            if (sync.separateDataObject)
             {
                 sync.TeleportToWorldSpace(position, rotation, sync.sleepOnSpawn);
             }
@@ -119,7 +119,7 @@ namespace MMMaellon.LightSync
             transform.position = data.GetSpawnPos();
             transform.rotation = data.GetSpawnRot();
             gameObject.SetActive(true);
-            if (!sync.unparentInternalDataObject)
+            if (!sync.separateDataObject)
             {
                 if (sync.IsOwner())
                 {
@@ -235,7 +235,7 @@ namespace MMMaellon.LightSync
         public override void Reset()
         {
             base.Reset();
-            sync.unparentInternalDataObject = true;
+            sync.separateDataObject = true;
         }
         public override void CreateDataObject()
         {
@@ -253,7 +253,7 @@ namespace MMMaellon.LightSync
                     Debug.LogWarning($"ERROR: {GetType().FullName} cannot be setup because {dataType.FullName} does not inherit from {typeof(LightSyncEnhancementData).FullName}");
                     return;
                 }
-                GameObject dataObject = new(name + "_enhancementData");
+                GameObject dataObject = new(name + "_enhancementData" + GUID.Generate());
                 if (enhancementData)
                 {
                     enhancementData.DestroyAsync();

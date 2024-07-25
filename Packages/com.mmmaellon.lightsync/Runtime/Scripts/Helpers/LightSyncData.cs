@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using UdonSharp;
+using UnityEditor;
 using UnityEngine;
 using VRC.SDKBase;
 
@@ -53,7 +55,7 @@ namespace MMMaellon.LightSync
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
             sync.Owner = player;
-            if (player.isLocal)
+            if (sync.separateDataObject && player.isLocal)
             {
                 BubbleUpOwnership();
             }
@@ -110,9 +112,13 @@ namespace MMMaellon.LightSync
                     {
                         gameObject.hideFlags = HideFlags.None;
                     }
-                    else
+                    else if (sync.separateDataObject)
                     {
                         gameObject.hideFlags = HideFlags.HideInHierarchy;
+                    }
+                    else
+                    {
+                        hideFlags = HideFlags.HideInInspector;
                     }
                     return;
                 }
@@ -137,7 +143,17 @@ namespace MMMaellon.LightSync
         public IEnumerator<WaitForSeconds> Destroy()
         {
             yield return new WaitForSeconds(0);
-            DestroyImmediate(gameObject);
+            var count = GetComponents(typeof(Component)).Length;
+            gameObject.hideFlags = HideFlags.None;
+            hideFlags = HideFlags.None;
+            if (count > 3)
+            {
+                DestroyImmediate(this);
+            }
+            else
+            {
+                DestroyImmediate(gameObject);
+            }
         }
 #endif
     }

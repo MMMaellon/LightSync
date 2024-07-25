@@ -38,6 +38,8 @@ namespace MMMaellon.LightSync
         {
             base.AutoSetup();
             CreateDataObject();
+            PrefabUtility.RecordPrefabInstancePropertyModifications(enhancementData);
+            PrefabUtility.RecordPrefabInstancePropertyModifications(this);
         }
 
         public virtual void RefreshFlags()
@@ -67,7 +69,7 @@ namespace MMMaellon.LightSync
                     Debug.LogWarning($"ERROR: {GetType().FullName} cannot be setup because {dataType.FullName} does not inherit from {typeof(LightSyncEnhancementData).FullName}");
                     return;
                 }
-                GameObject dataObject = new(name + "_enhancementData");
+                GameObject dataObject = new(name + "_enhancementData_" + GUID.Generate());
                 enhancementData = UdonSharpComponentExtensions.AddUdonSharpComponent(dataObject, dataType).GetComponent<LightSyncEnhancementData>();
             }
             if (enhancementData)
@@ -75,7 +77,7 @@ namespace MMMaellon.LightSync
                 GameObject dataObject = enhancementData.gameObject;
                 if (!PrefabUtility.IsPartOfAnyPrefab(dataObject))
                 {
-                    if (sync.unparentInternalDataObject)
+                    if (sync.separateDataObject)
                     {
                         if (dataObject.transform.parent != null)
                         {
