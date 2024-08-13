@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Linq;
 using UdonSharp;
-using UnityEditor;
 using UnityEngine;
 using VRC.SDKBase;
 
@@ -15,6 +13,7 @@ namespace MMMaellon.LightSync
         public LightSync sync;
         public override void OnPreSerialization()
         {
+            serializationRequested = false;
             SyncNewData();
             if (sync.debugLogs)
             {
@@ -52,6 +51,7 @@ namespace MMMaellon.LightSync
 
         public abstract void SyncNewData();
 
+
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
             sync.Owner = player;
@@ -71,8 +71,13 @@ namespace MMMaellon.LightSync
         }
 
         bool syncRequested = false;
+        bool serializationRequested = false;
         public virtual void RequestSync()
         {
+            if (serializationRequested)
+            {
+                return;
+            }
             if (!Networking.LocalPlayer.IsOwner(gameObject))
             {
                 syncRequested = false;
@@ -87,11 +92,16 @@ namespace MMMaellon.LightSync
                 }
                 return;
             }
+            serializationRequested = true;
             RequestSerialization();
         }
 
         public virtual void RequestSyncCallback()
         {
+            if (!syncRequested)
+            {
+                return;
+            }
             syncRequested = false;
             RequestSync();
         }

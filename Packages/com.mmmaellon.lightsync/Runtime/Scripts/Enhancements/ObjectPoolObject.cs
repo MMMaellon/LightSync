@@ -81,10 +81,7 @@ namespace MMMaellon.LightSync
         {
             data.Spawn(position, rotation);
             OnSpawnPoolObject();
-            if (sync.separateDataObject)
-            {
-                sync.TeleportToWorldSpace(position, rotation, sync.sleepOnSpawn);
-            }
+            sync.TeleportToWorldSpace(position, rotation, sync.sleepOnSpawn);
         }
 
         public virtual void DelayedDespawn(int delayFrames)

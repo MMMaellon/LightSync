@@ -1,8 +1,6 @@
 
-using System.Collections.Generic;
 using UdonSharp;
 using UnityEngine;
-using VRC.SDKBase;
 
 namespace MMMaellon.LightSync
 {
@@ -60,5 +58,6 @@ namespace MMMaellon.LightSync
         //     All players execute this command during the interpolation period. The interpolation period for owners is one frame
         //     the 'interpolation' parameter is a value between 0.0 and 1.0 representing how far along the interpolation period we are
         public abstract bool OnLerp(float elapsedTime, float autoSmoothedLerp);
+
     }
 }

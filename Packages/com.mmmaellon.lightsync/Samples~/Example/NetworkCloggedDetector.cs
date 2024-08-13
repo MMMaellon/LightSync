@@ -17,7 +17,6 @@ public class NetworkCloggedDetector : UdonSharpBehaviour
         {
             if (!Networking.IsClogged)
             {
-                Debug.LogWarning("!!!!!!!!!!!!!!!!!!! Network is now unclogged. Total clogged time: " + (Time.timeSinceLevelLoad - clogStart));
                 clogged = false;
                 if (text)
                 {
@@ -36,7 +35,6 @@ public class NetworkCloggedDetector : UdonSharpBehaviour
         {
             if (Networking.IsClogged)
             {
-                Debug.LogWarning("!!!!!!!!!!!!!!!!!!! Network is now clogged");
                 clogStart = Time.timeSinceLevelLoad;
                 clogged = true;
             }

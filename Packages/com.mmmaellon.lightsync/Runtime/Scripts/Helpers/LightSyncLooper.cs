@@ -16,6 +16,7 @@ namespace MMMaellon.LightSync
         [System.NonSerialized]
         public float firstLoopTime = 0;
 
+        bool shouldSync;
         public void Loop()
         {
             if (!enabled)
@@ -25,10 +26,10 @@ namespace MMMaellon.LightSync
             }
             if (firstLerp)
             {
+                shouldSync = true;
                 firstLerp = false;
                 firstLoopTime = Time.timeSinceLevelLoad;
                 elapsedTime = 0;
-                data.RequestSync();
             }
             else
             {
@@ -37,6 +38,11 @@ namespace MMMaellon.LightSync
             if (!sync.OnLerp(elapsedTime, GetAutoSmoothedInterpolation(Time.realtimeSinceStartup - startTime)))
             {
                 StopLoop();
+            }
+            if (shouldSync)
+            {
+                shouldSync = false;
+                data.RequestSync();
             }
         }
 
@@ -51,8 +57,8 @@ namespace MMMaellon.LightSync
             return lerpPeriod <= 0 ? 1 : realElapsedTime / lerpPeriod;
         }
 
-        protected bool firstLerp;
-        protected float lerpPeriod;
+        public bool firstLerp;
+        public float lerpPeriod;
         public void StartLoop()
         {
             firstLerp = true;

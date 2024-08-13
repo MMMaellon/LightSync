@@ -59,6 +59,7 @@ namespace MMMaellon.LightSync
         [Tooltip("Controls how long it takes for the object to smoothly move into the synced position. Set to 0 for VRChat's algorithm. Set negative for my autosmoothing algorithm. The more negative the smoother. Set to positive for a fixed smoothing time.")]
         public float smoothingTime = -0.25f;
         [Space]
+        public bool lightSyncControlsPickupable = true;
         public bool allowTheftFromSelf = true;
         public bool allowTheftWhenAttachedToPlayer = true;
         public bool kinematicWhileHeld = true;
@@ -634,7 +635,7 @@ namespace MMMaellon.LightSync
                 if (state == STATE_PHYSICS)
                 {
                     bounceFlag = true;
-                    sleepFlag = rigid.IsSleeping();
+                    sleepFlag = rigid.isKinematic || rigid.IsSleeping();
                     Sync();
                 }
             }
@@ -819,190 +820,8 @@ namespace MMMaellon.LightSync
                 customStates[state].OnEnterState();
                 return;
             }
-            if (IsOwner())
-            {
-                switch (state)
-                {
-                    case STATE_PHYSICS:
-                        {
-                            kinematicFlag = rigid.isKinematic;
-                            pickupableFlag = pickup && pickup.pickupable;
-                            localTransformFlag = !useWorldSpaceTransforms;
-                            sleepFlag = rigid.IsSleeping();
-                            leftHandFlag = false;
-                            bounceFlag = false;//determine if we need it later
-                            loopTimingFlag = LOOP_FIXEDUPDATE;
-                            break;
-                        }
-                    case STATE_HELD:
-                        {
-                            if (prevState != state)
-                            {
-                                kinematicFlag = rigid.isKinematic;
-                                pickupableFlag = pickup && pickup.pickupable;
-                                lastPickupable = pickup.pickupable;
-                                pickup.pickupable = allowTheftFromSelf;
-                                lastKinematic = rigid.isKinematic;
-                                rigid.isKinematic |= kinematicWhileHeld;
-                            }
-                            localTransformFlag = !useWorldSpaceTransformsWhenHeldOrAttachedToPlayer;
-                            sleepFlag = rigid.IsSleeping();
-                            leftHandFlag = pickup.currentHand == VRC_Pickup.PickupHand.Left;
-                            bounceFlag = true;
-                            loopTimingFlag = LOOP_POSTLATEUPDATE;
-
-                            if (leftHandFlag)
-                            {
-                                if (Owner.GetBonePosition(HumanBodyBones.LeftHand) == Vector3.zero)
-                                {
-                                    localTransformFlag = false;
-                                }
-                            }
-                            else if (Owner.GetBonePosition(HumanBodyBones.RightHand) == Vector3.zero)
-                            {
-                                localTransformFlag = false;
-                            }
-                            break;
-                        }
-                    case STATE_LOCAL_TO_OWNER:
-                        {
-                            localTransformFlag = !useWorldSpaceTransformsWhenHeldOrAttachedToPlayer;
-                            kinematicFlag = rigid.isKinematic;
-                            sleepFlag = rigid.IsSleeping();
-                            pickupableFlag = pickup && pickup.pickupable;
-                            leftHandFlag = false;
-                            bounceFlag = true;
-                            loopTimingFlag = LOOP_UPDATE;
-                            if (syncIsKinematic)
-                            {
-                                rigid.isKinematic = kinematicFlag || kinematicWhileAttachedToPlayer;
-                            }
-                            else
-                            {
-                                lastKinematic = rigid.isKinematic;
-                                rigid.isKinematic |= kinematicWhileAttachedToPlayer;
-                            }
-                            break;
-                        }
-                    default:
-                        {
-                            localTransformFlag = !useWorldSpaceTransformsWhenHeldOrAttachedToPlayer;
-                            kinematicFlag = rigid.isKinematic;
-                            sleepFlag = rigid.IsSleeping();
-                            pickupableFlag = pickup && pickup.pickupable;
-                            leftHandFlag = false;
-                            bounceFlag = true;
-                            loopTimingFlag = LOOP_UPDATE;
-                            if (syncIsKinematic)
-                            {
-                                rigid.isKinematic = kinematicFlag || kinematicWhileAttachedToPlayer;
-                            }
-                            else
-                            {
-                                lastKinematic = rigid.isKinematic;
-                                rigid.isKinematic |= kinematicWhileAttachedToPlayer;
-                            }
-                            break;
-                        }
-                }
-            }
-            else
-            {
-                switch (state)
-                {
-                    case STATE_PHYSICS:
-                        {
-                            if (syncIsKinematic)
-                            {
-                                rigid.isKinematic = kinematicFlag;
-                            }
-                            if (syncPickupable && pickup)
-                            {
-                                pickup.pickupable = pickupableFlag;
-                            }
-                            break;
-                        }
-                    case STATE_HELD:
-                        {
-                            if (syncIsKinematic)
-                            {
-                                rigid.isKinematic = kinematicFlag || kinematicWhileHeld;
-                            }
-                            else
-                            {
-                                lastKinematic = rigid.isKinematic;
-                                rigid.isKinematic |= kinematicWhileHeld;
-                            }
-                            if (syncPickupable && pickup)
-                            {
-                                if (syncPickupable)
-                                {
-                                    pickup.pickupable = pickupableFlag && !pickup.DisallowTheft;
-                                }
-                                else
-                                {
-                                    lastPickupable = pickup.pickupable;
-                                    pickup.pickupable = !pickup.DisallowTheft;
-                                }
-                            }
-                            break;
-                        }
-                    case STATE_LOCAL_TO_OWNER:
-                        {
-                            if (syncIsKinematic)
-                            {
-                                rigid.isKinematic = kinematicFlag || kinematicWhileAttachedToPlayer;
-                            }
-                            else
-                            {
-                                lastKinematic = rigid.isKinematic;
-                                rigid.isKinematic |= kinematicWhileAttachedToPlayer;
-                            }
-
-                            if (syncPickupable && pickup)
-                            {
-                                if (syncPickupable)
-                                {
-                                    pickup.pickupable = pickupableFlag && allowTheftWhenAttachedToPlayer;
-                                }
-                                else
-                                {
-                                    lastPickupable = pickup.pickupable;
-                                    pickup.pickupable = allowTheftWhenAttachedToPlayer;
-                                }
-                            }
-                            break;
-                        }
-
-                    default:
-                        {
-                            if (syncIsKinematic)
-                            {
-                                rigid.isKinematic = kinematicFlag || kinematicWhileAttachedToPlayer;
-                            }
-                            else
-                            {
-                                lastKinematic = rigid.isKinematic;
-                                rigid.isKinematic |= kinematicWhileAttachedToPlayer;
-                            }
-
-                            if (syncPickupable && pickup)
-                            {
-                                if (syncPickupable)
-                                {
-                                    pickup.pickupable = pickupableFlag && allowTheftWhenAttachedToPlayer;
-                                }
-                                else
-                                {
-                                    lastPickupable = pickup.pickupable;
-                                    pickup.pickupable = allowTheftWhenAttachedToPlayer;
-                                }
-                            }
-                            break;
-                        }
-                }
-
-            }
+            RecordFlags();
+            RecordTransforms();
             foreach (LightSyncListener listener in _classEventListeners)
             {
                 listener.OnChangeState(this, prevState, state);
@@ -1023,31 +842,217 @@ namespace MMMaellon.LightSync
                 customStates[prevState].OnExitState();
                 return;
             }
-            if (!IsOwner() || prevState < STATE_PHYSICS)
+            if (prevState != STATE_PHYSICS)
             {
-                if (syncIsKinematic)
+                ResetFlags();
+            }
+            if (pickup && prevState == STATE_HELD && !IsOwner())
+            {
+                pickup.Drop();
+            }
+            // if (!IsOwner() || prevState < STATE_PHYSICS)
+            // {
+            //     if (syncIsKinematic)
+            //     {
+            //         rigid.isKinematic = kinematicFlag;
+            //     }
+            //     else if ((prevState == STATE_HELD && kinematicWhileHeld) || ((prevState == STATE_BONE || prevState == STATE_LOCAL_TO_OWNER) && kinematicWhileAttachedToPlayer))
+            //     {
+            //         rigid.isKinematic = lastKinematic;
+            //     }
+            //     if (pickup)
+            //     {
+            //         if (state != STATE_HELD && state < 0)
+            //         {
+            //             pickup.Drop();
+            //         }
+            //         if (syncPickupable)
+            //         {
+            //             pickup.pickupable = pickupableFlag;
+            //         }
+            //         else
+            //         {
+            //             pickup.pickupable = lastPickupable;
+            //         }
+            //     }
+            // }
+        }
+
+        public void RecordFlags()
+        {
+            lastPickupable = pickup && pickup.pickupable;
+            lastKinematic = rigid.isKinematic;
+            if (IsOwner())
+            {
+                switch (state)
                 {
-                    rigid.isKinematic = kinematicFlag;
+                    case STATE_PHYSICS:
+                        {
+                            localTransformFlag = !useWorldSpaceTransforms;
+                            sleepFlag = rigid.isKinematic || rigid.IsSleeping();
+                            leftHandFlag = false;
+                            bounceFlag = false;//determine if we need it later
+                            loopTimingFlag = LOOP_FIXEDUPDATE;
+                            break;
+                        }
+                    case STATE_HELD:
+                        {
+                            if (lightSyncControlsPickupable)
+                            {
+                                pickup.pickupable = allowTheftFromSelf;
+                            }
+                            rigid.isKinematic |= kinematicWhileHeld;
+                            localTransformFlag = !useWorldSpaceTransformsWhenHeldOrAttachedToPlayer;
+                            sleepFlag = rigid.IsSleeping();
+                            leftHandFlag = pickup && (pickup.currentHand == VRC_Pickup.PickupHand.Left);
+                            bounceFlag = false;
+                            loopTimingFlag = LOOP_POSTLATEUPDATE;
+
+                            if (leftHandFlag)
+                            {
+                                if (Owner.GetBonePosition(HumanBodyBones.LeftHand) == Vector3.zero)
+                                {
+                                    localTransformFlag = false;
+                                }
+                            }
+                            else if (Owner.GetBonePosition(HumanBodyBones.RightHand) == Vector3.zero)
+                            {
+                                localTransformFlag = false;
+                            }
+                            break;
+                        }
+                    case STATE_LOCAL_TO_OWNER:
+                        {
+                            localTransformFlag = !useWorldSpaceTransformsWhenHeldOrAttachedToPlayer;
+                            sleepFlag = rigid.IsSleeping();
+                            leftHandFlag = false;
+                            bounceFlag = false;
+                            loopTimingFlag = LOOP_UPDATE;
+                            rigid.isKinematic |= kinematicWhileAttachedToPlayer;
+                            break;
+                        }
+                    default:
+                        {
+                            localTransformFlag = !useWorldSpaceTransformsWhenHeldOrAttachedToPlayer;
+                            sleepFlag = rigid.IsSleeping();
+                            leftHandFlag = false;
+                            bounceFlag = false;
+                            loopTimingFlag = LOOP_UPDATE;
+                            rigid.isKinematic |= kinematicWhileAttachedToPlayer;
+                            break;
+                        }
                 }
-                else if ((prevState == STATE_HELD && kinematicWhileHeld) || ((prevState == STATE_BONE || prevState == STATE_LOCAL_TO_OWNER) && kinematicWhileAttachedToPlayer))
+            }
+            else
+            {
+                ApplyFlags();
+                // switch (state)
+                // {
+                //     case STATE_PHYSICS:
+                //         {
+                //             if (syncIsKinematic)
+                //             {
+                //                 rigid.isKinematic = kinematicFlag;
+                //             }
+                //             if (syncPickupable && pickup)
+                //             {
+                //                 pickup.pickupable = pickupableFlag;
+                //             }
+                //             break;
+                //         }
+                //     case STATE_HELD:
+                //         {
+                //             if (syncIsKinematic)
+                //             {
+                //                 rigid.isKinematic = kinematicFlag || kinematicWhileHeld;
+                //             }
+                //             else
+                //             {
+                //                 lastKinematic = rigid.isKinematic;
+                //                 rigid.isKinematic |= kinematicWhileHeld;
+                //             }
+                //             if (syncPickupable && pickup)
+                //             {
+                //                 pickup.pickupable = pickupableFlag && !pickup.DisallowTheft;
+                //             }
+                //             break;
+                //         }
+                //     case STATE_LOCAL_TO_OWNER:
+                //         {
+                //             if (syncIsKinematic)
+                //             {
+                //                 rigid.isKinematic = kinematicFlag || kinematicWhileAttachedToPlayer;
+                //             }
+                //             else
+                //             {
+                //                 lastKinematic = rigid.isKinematic;
+                //                 rigid.isKinematic |= kinematicWhileAttachedToPlayer;
+                //             }
+                //
+                //             if (syncPickupable && pickup)
+                //             {
+                //                 pickup.pickupable = pickupableFlag && allowTheftWhenAttachedToPlayer;
+                //             }
+                //             break;
+                //         }
+                //
+                //     default:
+                //         {
+                //             if (syncIsKinematic)
+                //             {
+                //                 rigid.isKinematic = kinematicFlag || kinematicWhileAttachedToPlayer;
+                //             }
+                //             else
+                //             {
+                //                 lastKinematic = rigid.isKinematic;
+                //                 rigid.isKinematic |= kinematicWhileAttachedToPlayer;
+                //             }
+                //
+                //             if (syncPickupable && pickup)
+                //             {
+                //                 pickup.pickupable = pickupableFlag && allowTheftWhenAttachedToPlayer;
+                //             }
+                //             break;
+                //         }
+                // }
+            }
+        }
+
+        public void ResetFlags()
+        {
+            if (pickup && (!IsOwner() || lightSyncControlsPickupable))
+            {
+                if (syncPickupable)
                 {
-                    rigid.isKinematic = lastKinematic;
+                    pickup.pickupable = pickupableFlag;
                 }
-                if (pickup)
+                else
                 {
-                    if (state != STATE_HELD && state < 0)
-                    {
-                        pickup.Drop();
-                    }
-                    if (syncPickupable)
-                    {
-                        pickup.pickupable = pickupableFlag;
-                    }
-                    else
-                    {
-                        pickup.pickupable = lastPickupable;
-                    }
+
+                    pickup.pickupable = lastPickupable;
                 }
+            }
+
+            if (syncIsKinematic)
+            {
+                rigid.isKinematic = kinematicFlag;
+            }
+            else
+            {
+                rigid.isKinematic = lastKinematic;
+            }
+        }
+
+        public void ApplyFlags()
+        {
+            if (syncPickupable && pickup)
+            {
+                pickup.pickupable = pickupableFlag;
+            }
+
+            if (syncIsKinematic)
+            {
+                rigid.isKinematic = kinematicFlag;
             }
         }
 
@@ -1131,7 +1136,6 @@ namespace MMMaellon.LightSync
 
         bool shouldSync;
         Vector3 tempPos;
-        Vector3 startVel;
         Vector3 endVel;
         Quaternion tempRot;
         bool PhysicsLerp(float elapsedTime, float autoSmoothedLerp)
@@ -1146,7 +1150,6 @@ namespace MMMaellon.LightSync
                 {
                     RecordWorldTransforms();
                 }
-                startVel = recordedVel;
             }
 
             if (IsOwner())
@@ -1187,11 +1190,11 @@ namespace MMMaellon.LightSync
                 if (bounceFlag)
                 {
                     //don't smoothly lerp the velocity to simulate a bounce
-                    endVel = startVel;
+                    endVel = recordedVel;
                 }
                 else
                 {
-                    endVel = vel;
+                    endVel = recordedDestVel;
                 }
                 if (autoSmoothedLerp >= 1.0f)
                 {
@@ -1201,8 +1204,8 @@ namespace MMMaellon.LightSync
                 }
                 else
                 {
-                    tempPos = HermiteInterpolatePosition(recordedPos, startVel, pos, endVel, autoSmoothedLerp, autoSmoothingTime);
-                    tempRot = Quaternion.Slerp(recordedRot, rot, autoSmoothedLerp);
+                    tempPos = HermiteInterpolatePosition(recordedPos, recordedVel, recordedDestPos, endVel, autoSmoothedLerp, autoSmoothingTime);
+                    tempRot = Quaternion.Slerp(recordedRot, recordedDestRot, autoSmoothedLerp);
                     ApplyTransforms(tempPos, tempRot);
                     if (!rigid.isKinematic)
                     {
@@ -1251,8 +1254,8 @@ namespace MMMaellon.LightSync
             }
             else
             {
-                tempPos = HermiteInterpolatePosition(recordedPos, Vector3.zero, pos, Vector3.zero, autoSmoothedLerp, autoSmoothingTime);
-                tempRot = Quaternion.Slerp(recordedRot, rot, autoSmoothedLerp);
+                tempPos = HermiteInterpolatePosition(recordedPos, Vector3.zero, recordedDestPos, Vector3.zero, autoSmoothedLerp, autoSmoothingTime);
+                tempRot = Quaternion.Slerp(recordedRot, recordedDestRot, autoSmoothedLerp);
                 ApplyRelativeTransforms(parentPos, parentRot, tempPos, tempRot);
                 if (!rigid.isKinematic)
                 {
@@ -1281,8 +1284,8 @@ namespace MMMaellon.LightSync
             }
             else
             {
-                tempPos = HermiteInterpolatePosition(recordedPos, Vector3.zero, pos, Vector3.zero, autoSmoothedLerp, autoSmoothingTime);
-                tempRot = Quaternion.Slerp(recordedRot, rot, autoSmoothedLerp);
+                tempPos = HermiteInterpolatePosition(recordedPos, Vector3.zero, recordedDestPos, Vector3.zero, autoSmoothedLerp, autoSmoothingTime);
+                tempRot = Quaternion.Slerp(recordedRot, recordedDestRot, autoSmoothedLerp);
                 ApplyRelativeTransforms(parentPos, parentRot, tempPos, tempRot);
             }
             if (!rigid.isKinematic)
@@ -1320,8 +1323,8 @@ namespace MMMaellon.LightSync
             }
             else
             {
-                tempPos = HermiteInterpolatePosition(recordedPos, Vector3.zero, pos, Vector3.zero, autoSmoothedLerp, autoSmoothingTime);
-                tempRot = Quaternion.Slerp(recordedRot, rot, autoSmoothedLerp);
+                tempPos = HermiteInterpolatePosition(recordedPos, Vector3.zero, recordedDestPos, Vector3.zero, autoSmoothedLerp, autoSmoothingTime);
+                tempRot = Quaternion.Slerp(recordedRot, recordedDestRot, autoSmoothedLerp);
                 ApplyRelativeTransforms(parentPos, parentRot, tempPos, tempRot);
             }
             if (!rigid.isKinematic)
@@ -1337,75 +1340,79 @@ namespace MMMaellon.LightSync
         Quaternion recordedRot;
         Vector3 recordedVel;
         Vector3 recordedSpin;
-        // public void RecordTransforms()
-        // {
-        //     switch (state)
-        //     {
-        //         case STATE_PHYSICS:
-        //             {
-        //                 if (localTransformFlag)
-        //                 {
-        //                     RecordLocalTransforms();
-        //                 }
-        //                 else
-        //                 {
-        //                     RecordWorldTransforms();
-        //                 }
-        //                 break;
-        //             }
-        //         case STATE_HELD:
-        //             {
-        //                 Vector3 parentPos = Vector3.zero;
-        //                 Quaternion parentRot = Quaternion.identity;
-        //                 if (localTransformFlag)
-        //                 {
-        //                     if (leftHandFlag)
-        //                     {
-        //                         parentPos = Owner.GetBonePosition(HumanBodyBones.LeftHand);
-        //                         parentRot = Owner.GetBoneRotation(HumanBodyBones.LeftHand);
-        //                     }
-        //                     else
-        //                     {
-        //                         parentPos = Owner.GetBonePosition(HumanBodyBones.RightHand);
-        //                         parentRot = Owner.GetBoneRotation(HumanBodyBones.RightHand);
-        //                     }
-        //                 }
-        //
-        //                 if (!localTransformFlag || parentPos == Vector3.zero)
-        //                 {
-        //                     parentPos = Owner.GetPosition();
-        //                     parentRot = Owner.GetRotation();
-        //                 }
-        //                 RecordRelativeTransforms(parentPos, parentRot);
-        //                 break;
-        //             }
-        //         case STATE_LOCAL_TO_OWNER:
-        //             {
-        //                 Vector3 parentPos = Owner.GetPosition();
-        //                 Quaternion parentRot = Owner.GetRotation();
-        //                 RecordRelativeTransforms(parentPos, parentRot);
-        //                 break;
-        //             }
-        //         default:
-        //             {
-        //                 Vector3 parentPos;
-        //                 Quaternion parentRot;
-        //                 if (localTransformFlag && state <= STATE_BONE && state > STATE_BONE - ((sbyte)HumanBodyBones.LastBone))
-        //                 {
-        //                     HumanBodyBones parentBone = (HumanBodyBones)(STATE_BONE - state);
-        //                     parentPos = Owner.GetBonePosition(parentBone);
-        //                     parentRot = Owner.GetBoneRotation(parentBone);
-        //                 }
-        //                 else
-        //                 {
-        //                     parentPos = Owner.GetPosition();
-        //                     parentRot = Owner.GetRotation();
-        //                 }
-        //                 RecordRelativeTransforms(parentPos, parentRot);
-        //                 break;
-        //             }
-        //     }
-        // }
+        Vector3 recordedDestPos;
+        Quaternion recordedDestRot;
+        Vector3 recordedDestVel;
+        Vector3 recordedDestSpin;
+        public void RecordTransforms()
+        {
+            switch (state)
+            {
+                case STATE_PHYSICS:
+                    {
+                        if (localTransformFlag)
+                        {
+                            RecordLocalTransforms();
+                        }
+                        else
+                        {
+                            RecordWorldTransforms();
+                        }
+                        break;
+                    }
+                case STATE_HELD:
+                    {
+                        Vector3 parentPos = Vector3.zero;
+                        Quaternion parentRot = Quaternion.identity;
+                        if (localTransformFlag)
+                        {
+                            if (leftHandFlag)
+                            {
+                                parentPos = Owner.GetBonePosition(HumanBodyBones.LeftHand);
+                                parentRot = Owner.GetBoneRotation(HumanBodyBones.LeftHand);
+                            }
+                            else
+                            {
+                                parentPos = Owner.GetBonePosition(HumanBodyBones.RightHand);
+                                parentRot = Owner.GetBoneRotation(HumanBodyBones.RightHand);
+                            }
+                        }
+
+                        if (!localTransformFlag || parentPos == Vector3.zero)
+                        {
+                            parentPos = Owner.GetPosition();
+                            parentRot = Owner.GetRotation();
+                        }
+                        RecordRelativeTransforms(parentPos, parentRot);
+                        break;
+                    }
+                case STATE_LOCAL_TO_OWNER:
+                    {
+                        Vector3 parentPos = Owner.GetPosition();
+                        Quaternion parentRot = Owner.GetRotation();
+                        RecordRelativeTransforms(parentPos, parentRot);
+                        break;
+                    }
+                default:
+                    {
+                        Vector3 parentPos;
+                        Quaternion parentRot;
+                        if (localTransformFlag && state <= STATE_BONE && state > STATE_BONE - ((sbyte)HumanBodyBones.LastBone))
+                        {
+                            HumanBodyBones parentBone = (HumanBodyBones)(STATE_BONE - state);
+                            parentPos = Owner.GetBonePosition(parentBone);
+                            parentRot = Owner.GetBoneRotation(parentBone);
+                        }
+                        else
+                        {
+                            parentPos = Owner.GetPosition();
+                            parentRot = Owner.GetRotation();
+                        }
+                        RecordRelativeTransforms(parentPos, parentRot);
+                        break;
+                    }
+            }
+        }
 
         public void RecordWorldTransforms()
         {
@@ -1420,6 +1427,10 @@ namespace MMMaellon.LightSync
                 vel = recordedVel;
                 spin = recordedSpin;
             }
+            recordedDestPos = pos;
+            recordedDestRot = rot;
+            recordedDestVel = vel;
+            recordedDestSpin = spin;
         }
 
         public void RecordLocalTransforms()
@@ -1435,6 +1446,10 @@ namespace MMMaellon.LightSync
                 vel = recordedVel;
                 spin = recordedSpin;
             }
+            recordedDestPos = pos;
+            recordedDestRot = rot;
+            recordedDestVel = vel;
+            recordedDestSpin = spin;
         }
 
         public void RecordRelativeTransforms(Vector3 parentPos, Quaternion parentRot)
@@ -1451,6 +1466,10 @@ namespace MMMaellon.LightSync
                 vel = recordedVel;
                 spin = recordedSpin;
             }
+            recordedDestPos = pos;
+            recordedDestRot = rot;
+            recordedDestVel = vel;
+            recordedDestSpin = spin;
         }
 
         public void ApplyTransforms(Vector3 targetPos, Quaternion targetRot)
@@ -1578,7 +1597,7 @@ namespace MMMaellon.LightSync
             var invParentRot = Quaternion.Inverse(parentRot);
             var targetPos = invParentRot * (rigid.position - parentPos);
             var targetRot = invParentRot * rigid.rotation;
-            return Vector3.Distance(targetPos, pos) > positionDesyncThreshold || Quaternion.Angle(targetRot, rot) > rotationDesyncThreshold;
+            return (Vector3.Distance(targetPos, pos) > positionDesyncThreshold) || (Quaternion.Angle(targetRot, rot) > rotationDesyncThreshold);
         }
 
         Vector3 posControl1;
@@ -1827,7 +1846,6 @@ namespace MMMaellon.LightSync
 
                 data.Destroy();
             }
-            Debug.LogWarning("CREATING DATA OBJ");
             GameObject dataObject;
             if (separateDataObject)
             {
