@@ -334,6 +334,16 @@ namespace MMMaellon.LightSync
             }
         }
 
+        public void Detach()
+        {
+            if (sync.state == LightSync.STATE_BONE || sync.state == LightSync.STATE_LOCAL_TO_OWNER)
+            {
+                sync.TakeOwnershipIfNotOwner();
+                sync.state = LightSync.STATE_PHYSICS;
+                sync.Sync();
+            }
+        }
+
         VRCPlayerApi[] _allPlayers = new VRCPlayerApi[82];
         float _currentPlayerDistance;
         public void FindNearestPlayers(ref VRCPlayerApi[] players)
