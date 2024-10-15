@@ -116,7 +116,7 @@ namespace MMMaellon.LightSync
             transform.position = data.GetSpawnPos();
             transform.rotation = data.GetSpawnRot();
             gameObject.SetActive(true);
-            if (!sync.separateDataObject)
+            if (!sync.separateHelperObjects)
             {
                 if (sync.IsOwner())
                 {
@@ -232,7 +232,7 @@ namespace MMMaellon.LightSync
         public override void Reset()
         {
             base.Reset();
-            sync.separateDataObject = true;
+            sync.separateHelperObjects = true;
         }
         public override void CreateDataObject()
         {

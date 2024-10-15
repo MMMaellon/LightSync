@@ -13,5 +13,25 @@ namespace MMMaellon.LightSync
         {
             //necessary for enabled checkbox
         }
+
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+        public override void RefreshHideFlags()
+        {
+            if (!sync)
+            {
+                gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
+                hideFlags &= ~HideFlags.HideInInspector;
+            }
+            else if (sync.lateLooper != this)
+            {
+                sync = null;
+                DestroyAsync();
+            }
+            else
+            {
+                base.RefreshHideFlags();
+            }
+        }
+#endif 
     }
 }

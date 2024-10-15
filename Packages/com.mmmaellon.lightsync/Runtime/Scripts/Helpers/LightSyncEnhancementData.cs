@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UdonSharp;
+using UdonSharpEditor;
 using UnityEngine;
 using VRC.SDKBase;
 namespace MMMaellon.LightSync
@@ -46,18 +47,18 @@ namespace MMMaellon.LightSync
             {
                 if (enhancement.sync.showInternalObjects)
                 {
-                    gameObject.hideFlags = HideFlags.None;
+                    gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
                 }
                 else
                 {
-                    gameObject.hideFlags = HideFlags.HideInHierarchy;
+                    gameObject.hideFlags |= HideFlags.HideInHierarchy;
                 }
                 return;
             }
             else
             {
                 enhancement = null;
-                DestroyAsync();
+                DestroyAsync(); //destroying in onvalidate is causing problems...
             }
         }
 
@@ -73,16 +74,11 @@ namespace MMMaellon.LightSync
         {
             yield return new WaitForSeconds(0);
             var count = GetComponents(typeof(Component)).Length;
-            gameObject.hideFlags = HideFlags.None;
-            hideFlags = HideFlags.None;
-            if (count > 3)
-            {
-                DestroyImmediate(this);
-            }
-            else
-            {
-                DestroyImmediate(gameObject);
-            }
+            gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
+            hideFlags &= ~HideFlags.HideInInspector;
+            var obj = gameObject;
+            UdonSharpEditorUtility.DestroyImmediate(this);
+            Singleton.DestroyEmptyGameObject(obj);
         }
 #endif
     }

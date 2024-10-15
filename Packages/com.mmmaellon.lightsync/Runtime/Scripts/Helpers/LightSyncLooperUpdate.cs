@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MMMaellon.LightSync
 {
@@ -12,51 +11,22 @@ namespace MMMaellon.LightSync
         }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
-        //ONLY Update need this part because all the loopers are on the same object
-
-        public void OnValidate()
+        public override void RefreshHideFlags()
         {
-            RefreshHideFlags();
-        }
-
-        public void RefreshHideFlags()
-        {
-            if (sync != null)
+            if (!sync)
             {
-                if (sync.looper == this)
-                {
-                    if (sync.showInternalObjects)
-                    {
-                        gameObject.hideFlags = HideFlags.None;
-                    }
-                    else
-                    {
-                        gameObject.hideFlags = HideFlags.HideInHierarchy;
-                    }
-                    return;
-                }
-                else
-                {
-                    sync = null;
-                    DestroyAsync();//can't delete synchronously in OnValidate
-                }
+                gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
+                hideFlags &= ~HideFlags.HideInInspector;
             }
-
-            gameObject.hideFlags = HideFlags.None;
-        }
-
-        public void DestroyAsync()
-        {
-            if (gameObject.activeInHierarchy)//prevents log spam in play mode
+            else if (sync.looper != this)
             {
-                StartCoroutine(Destroy());
+                sync = null;
+                DestroyAsync();
             }
-        }
-
-        public IEnumerator<WaitForSeconds> Destroy()
-        {
-            yield return new WaitForSeconds(0);
-            DestroyImmediate(gameObject);
+            else
+            {
+                base.RefreshHideFlags();
+            }
         }
 #endif
     }

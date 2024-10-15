@@ -1,52 +1,90 @@
 ﻿
 using UdonSharp;
 using UnityEngine;
+using VRC.SDK3.Data;
 using VRC.SDKBase;
 using VRC.Udon;
-
-#if !COMPILER_UDONSHARP && UNITY_EDITOR
-using UdonSharpEditor;
-using UnityEditor;
-#endif
+using VRC.Udon.Serialization.OdinSerializer;
 
 namespace MMMaellon.LightSync
 {
-    public class CollectionItem : LightSyncEnhancementWithData
+    [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
+    public class CollectionItem : LightSyncEnhancement
     {
+        [HideInInspector]
+        public Singleton singleton;
         public uint itemId = 1001;
-        public CollectionItemData data;
-        [SerializeField]
-        Collection _collection = null;
-        public Collection collection
+
+        public Collection[] collectionsToStartIn = new Collection[0];
+
+        [OdinSerialize]
+        public DataList collections = new DataList();//a list of all collections that this item is a member of
+
+        public Collection[] GetCollectionsArray()
         {
-            get => _collection;
+            var arr = new Collection[collections.Count];
+            for (int i = 0; i < collections.Count; i++)
+            {
+                arr[i] = (Collection)collections[i].Reference;
+            }
+            return arr;
         }
 
-        public int _collectionId = -1001;
-        public int collectionId
+        [UdonSynced, FieldChangeCallback(nameof(setId))]
+        int _setId = -1001;
+        public int setId
         {
-            get => _collectionId;
+            get => _setId;
             set
             {
-                if (collection)
-                {
-                    collection.RemoveFromInternalList(itemId);
-                    collection.OnRemoved(this);
-                    OnRemoved(collection);
-                }
-                _collectionId = value;
-                if (_collectionId >= 0 && _collectionId < sync.singleton.collections.Length)
-                {
-                    _collection = sync.singleton.collections[_collectionId];
-                }
-                if (collection)
-                {
-                    collection.AddToInternalList(itemId);
-                    collection.OnAdded(this);
-                    OnAdded(collection);
-                }
+                _setId = value;
                 SyncIfOwner();
             }
+        }
+
+        public bool activeRequest;
+        public bool IsInCollection(Collection col)
+        {
+            if (activeRequest)
+            {
+                return col.lookupTable.ContainsKey(itemId);
+            }
+            else if (col)
+            {
+                return col.IsPartOfSet(setId);
+            }
+            return false;
+        }
+
+        public bool AddToCollection(Collection col)
+        {
+            if (IsInCollection(col))
+            {
+                return false;
+            }
+
+            collections.Add(col);
+            col.AddToInternalList(itemId);
+
+            return true;
+        }
+
+        public bool RemoveFromCollection(Collection col)
+        {
+            if (!IsInCollection(col))
+            {
+                return false;
+            }
+
+            collections.Remove(col);
+            col.RemoveFromInternalList(itemId);
+
+            return true;
+        }
+
+        public void Clear()
+        {
+            setId = 0;
         }
 
         public void SyncIfOwner()
@@ -57,83 +95,35 @@ namespace MMMaellon.LightSync
             }
         }
 
-        public override void OnOwnershipTransferred(VRCPlayerApi player)
+        string collectionString;
+        public string GetCollectionListString()
         {
-            if (gameObject != data.gameObject && Utilities.IsValid(player) && player.isLocal)
+            collectionString = "";
+            //assumes that collections is sorted and sanitized to provide consistent strings
+            foreach (Collection col in GetCollectionsArray())
             {
-                Networking.SetOwner(player, data.gameObject);
-            }
-        }
-
-        public virtual void OnAdded(Collection collection)
-        { }
-
-        public virtual void OnRemoved(Collection collection)
-        { }
-
-        public override void OnDataObjectCreation(LightSyncEnhancementData enhancementData)
-        {
-            data = (CollectionItemData)enhancementData;
-        }
-        public override void OnDataDeserialization()
-        {
-            collectionId = data.collectionId;
-        }
-
-        public override string GetDataTypeName()
-        {
-            return "MMMaellon.LightSync.CollectionItemData";
-        }
-
-#if !COMPILER_UDONSHARP && UNITY_EDITOR
-
-        public override void CreateDataObject()
-        {
-            //check if we should delete the existing one and start over
-            if (enhancementData)
-            {
-                var shouldDelete = false;
-                if (enhancementData.enhancement != this)
+                if (collectionString.Length == 0)
                 {
-                    shouldDelete = true;
+                    collectionString = $"{col.collectionId}";
                 }
-                else if (sync.separateDataObject == (enhancementData.gameObject != sync.data.gameObject))
+                else
                 {
-                    shouldDelete = true;
-                }
-
-                if (shouldDelete)
-                {
-                    enhancementData.Destroy();
+                    collectionString += $",{col.collectionId}";
                 }
             }
-
-            //create a new object
-            if (!enhancementData)
+            return collectionString;
+        }
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+        public void SetupStartingCollections()
+        {
+            Clear();
+            foreach (Collection col in collectionsToStartIn)
             {
-                System.Type dataType = System.Type.GetType(GetDataTypeName());
-                if (dataType == null || dataType.ToString() == "")
+                if (col)
                 {
-                    Debug.LogWarning($"ERROR: Invalid type name from GetDataTypeName() of {GetType().FullName}. Make sure to include the full namespace");
-                    return;
+                    AddToCollection(col);
                 }
-                if (!dataType.IsSubclassOf(typeof(LightSyncEnhancementData)))
-                {
-                    Debug.LogWarning($"ERROR: {GetType().FullName} cannot be setup because {dataType.FullName} does not inherit from {typeof(LightSyncEnhancementData).FullName}");
-                    return;
-                }
-                GameObject dataObject = sync.data.gameObject;
-                if (sync.separateDataObject)
-                {
-                    dataObject = new(name + "_collectionData_" + GUID.Generate().ToString());
-                }
-                enhancementData = UdonSharpComponentExtensions.AddUdonSharpComponent(dataObject, dataType).GetComponent<LightSyncEnhancementData>();
-                OnDataObjectCreation(enhancementData);
             }
-
-            //setup
-            enhancementData.enhancement = this;
-            enhancementData.RefreshHideFlags();
         }
 #endif
     }

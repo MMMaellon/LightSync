@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UdonSharp;
+using UdonSharpEditor;
+using UnityEditor;
 using UnityEngine;
 using VRC.SDKBase;
 
@@ -55,7 +57,7 @@ namespace MMMaellon.LightSync
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
             sync.Owner = player;
-            if (sync.separateDataObject && player.isLocal)
+            if (sync.separateHelperObjects && player.isLocal)
             {
                 BubbleUpOwnership();
             }
@@ -114,32 +116,72 @@ namespace MMMaellon.LightSync
 
         public void RefreshHideFlags()
         {
-            if (sync != null)
+            if (!sync)
             {
-                if (sync.data == this)
+                gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
+                hideFlags &= ~HideFlags.HideInInspector;
+            }
+            else if (sync.data != this)
+            {
+
+                sync = null;
+                DestroyAsync();
+            }
+            else
+            {
+                if (sync.showInternalObjects)
                 {
-                    if (sync.showInternalObjects)
-                    {
-                        gameObject.hideFlags = HideFlags.None;
-                    }
-                    else if (sync.separateDataObject)
-                    {
-                        gameObject.hideFlags = HideFlags.HideInHierarchy;
-                    }
-                    else
-                    {
-                        hideFlags = HideFlags.HideInInspector;
-                    }
-                    return;
+                    gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
+                    hideFlags &= ~HideFlags.HideInInspector;
+                }
+                else if (sync.separateHelperObjects)
+                {
+                    gameObject.hideFlags = HideFlags.HideInHierarchy;
                 }
                 else
                 {
-                    sync = null;
-                    DestroyAsync();
+                    hideFlags |= HideFlags.HideInInspector;
                 }
+                return;
             }
+        }
 
-            gameObject.hideFlags = HideFlags.None;
+        float asyncRefreshStart = -1001f;
+        public void RefreshHideFlagsAsync()
+        {
+            asyncRefreshStart = Time.realtimeSinceStartup;
+            StartCoroutine(RefreshHideFlagsEnum());
+        }
+
+        public IEnumerator<WaitUntil> RefreshHideFlagsEnum()
+        {
+            yield return new WaitUntil(ManualSet);
+            RefreshHideFlags();
+            EditorUtility.SetDirty(this);
+        }
+
+        public bool ManualSet()
+        {
+            if (Time.realtimeSinceStartup - asyncRefreshStart > 10f)
+            {
+                //more than 10 seconds passed and nothing happened? Unity is probably bugged out rn
+                //let's just bail
+                return true;
+            }
+            if (!sync)
+            {
+                return false;
+            }
+            if (sync.gameObject != gameObject)
+            {
+                return true;
+            }
+            var backing = UdonSharpEditorUtility.GetBackingUdonBehaviour(sync);
+            if (!backing)
+            {
+                return false;
+            }
+            return backing.SyncIsManual;
         }
 
         public void DestroyAsync()
@@ -154,16 +196,11 @@ namespace MMMaellon.LightSync
         {
             yield return new WaitForSeconds(0);
             var count = GetComponents(typeof(Component)).Length;
-            gameObject.hideFlags = HideFlags.None;
-            hideFlags = HideFlags.None;
-            if (count > 3)
-            {
-                DestroyImmediate(this);
-            }
-            else
-            {
-                DestroyImmediate(gameObject);
-            }
+            gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
+            hideFlags &= ~HideFlags.HideInInspector;
+            var obj = gameObject;
+            UdonSharpEditorUtility.DestroyImmediate(this);
+            Singleton.DestroyEmptyGameObject(obj);
         }
 #endif
     }

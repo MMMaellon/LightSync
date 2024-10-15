@@ -19,80 +19,49 @@ namespace MMMaellon.LightSync
 
         public CollectionItem[] startingItems;
 
-        //temp stuff
-        CollectionItem tempItem;
-        bool success;
-
-        public virtual bool Add(uint id)
+        public DataList setIds = new DataList();
+        public DataDictionary setIdLUT = new DataDictionary();
+        public void AddToSet(int newSetId)
         {
-            success = AddToInternalList(id);
-            if (success)
+            if (setIdLUT.ContainsKey(newSetId))
             {
-                tempItem = singleton.collectionItems[id];
-                tempItem._collectionId = collectionId;
-                tempItem.data.collectionId = collectionId;
-                tempItem.SyncIfOwner();
-                OnAdded(tempItem);
-                tempItem.OnAdded(this);
+                return;
             }
-            return success;
+            setIds.Add(newSetId);
+            setIdLUT.Add(newSetId, setIds.Count - 1);
         }
 
-        public virtual bool Add(CollectionItem item)
+        public bool IsPartOfSet(int setId)
         {
-            if (item == null)
+            return setIdLUT.ContainsKey(setId);
+        }
+
+        public bool Add(CollectionItem item)
+        {
+            item.AddToCollection(this);
+            return true;
+        }
+
+        public bool Remove(CollectionItem item)
+        {
+            item.RemoveFromCollection(this);
+            return true;
+        }
+
+        public bool Contains(CollectionItem item)
+        {
+            if (!item)
             {
                 return false;
             }
-            success = AddToInternalList(item.itemId);
-            if (success)
-            {
-                item._collectionId = collectionId;
-                item.data.collectionId = collectionId;
-                item.SyncIfOwner();
-                OnAdded(item);
-                item.OnAdded(this);
-            }
-            return success;
+            return item.IsInCollection(this);
         }
 
-        public virtual bool Remove(uint id)
-        {
-            success = RemoveFromInternalList(id);
-            if (success)
-            {
-                tempItem = singleton.collectionItems[id];
-                tempItem._collectionId = -1001;
-                tempItem.data.collectionId = -1001;
-                tempItem.SyncIfOwner();
-                OnRemoved(singleton.collectionItems[id]);
-                tempItem.OnRemoved(this);
-            }
-            return success;
-        }
 
-        public virtual bool Remove(CollectionItem item)
-        {
-            if (item == null)
-            {
-                return false;
-            }
-            success = RemoveFromInternalList(item.itemId);
-            if (success)
-            {
-                item._collectionId = -1001;
-                item.data.collectionId = -1001;
-                item.SyncIfOwner();
-                OnRemoved(item);
-                item.OnRemoved(this);
-            }
-            return success;
-        }
-
-        public virtual void OnAdded(CollectionItem sync)
+        public virtual void OnAdded(CollectionItem item)
         { }
 
-        public virtual void OnRemoved(CollectionItem sync)
+        public virtual void OnRemoved(CollectionItem item)
         { }
 
         public bool AddToInternalList(uint id)
@@ -133,11 +102,6 @@ namespace MMMaellon.LightSync
                 lookupTable.Remove(id);
             }
             return true;
-        }
-
-        public virtual bool Contains(uint id)
-        {
-            return lookupTable.ContainsKey(id);
         }
 
     }

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UdonSharp;
 using VRC.SDKBase;
+using UdonSharpEditor;
 namespace MMMaellon.LightSync
 {
     public abstract class LightSyncStateData : UdonSharpBehaviour
@@ -44,11 +45,11 @@ namespace MMMaellon.LightSync
             {
                 if (state.sync.showInternalObjects)
                 {
-                    gameObject.hideFlags = HideFlags.None;
+                    gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
                 }
                 else
                 {
-                    gameObject.hideFlags = HideFlags.HideInHierarchy;
+                    gameObject.hideFlags |= HideFlags.HideInHierarchy;
                 }
                 return;
             }
@@ -71,17 +72,14 @@ namespace MMMaellon.LightSync
         {
             yield return new WaitForSeconds(0);
             var count = GetComponents(typeof(Component)).Length;
-            gameObject.hideFlags = HideFlags.None;
-            hideFlags = HideFlags.None;
-            if (count > 3)
-            {
-                DestroyImmediate(this);
-            }
-            else
-            {
-                DestroyImmediate(gameObject);
-            }
+            gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
+            hideFlags &= ~HideFlags.HideInInspector;
+            var obj = gameObject;
+            UdonSharpEditorUtility.DestroyImmediate(this);
+            Singleton.DestroyEmptyGameObject(obj);
         }
+
+
 #endif
     }
 }

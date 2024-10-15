@@ -22,7 +22,7 @@
       "dependencies": {}
     },
     "com.mmmaellon.smartobjectsync": {
-      "version": "3.10.14",
+      "version": "3.10.15",
       "dependencies": {
         "com.vrchat.worlds": "^3.4.0"
       }

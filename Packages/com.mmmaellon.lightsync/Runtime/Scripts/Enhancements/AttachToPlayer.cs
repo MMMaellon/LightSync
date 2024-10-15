@@ -326,10 +326,16 @@ namespace MMMaellon.LightSync
             RecordPositions();
             if (data.playerId == localPlayer.playerId)
             {
+                sync.TakeOwnershipIfNotOwner();
                 PerformAttachment();
+                sync.Sync();
             }
             else
             {
+                //this is just so there's no delay for the person dropping it
+                sync.Owner = VRCPlayerApi.GetPlayerById(data.playerId);
+                // sync.Sync();
+                PerformAttachment();
                 data.RequestSync();
             }
         }
@@ -572,26 +578,26 @@ namespace MMMaellon.LightSync
 
         public override void OnDataDeserialization()
         {
-            PerformAttachment();
+            if (data.playerId == localPlayer.playerId)
+            {
+                sync.TakeOwnershipIfNotOwner();
+                PerformAttachment();
+                sync.Sync();
+            }
         }
 
         void PerformAttachment()
         {
-            if (data.playerId == localPlayer.playerId)
+            if (data.bone >= 0 && data.bone < (int)HumanBodyBones.LastBone)
             {
-                sync.TakeOwnershipIfNotOwner();
-                if (data.bone >= 0 && data.bone < (int)HumanBodyBones.LastBone)
-                {
-                    sync.state = (sbyte)(LightSync.STATE_BONE - data.bone);
-                }
-                else
-                {
-                    sync.state = LightSync.STATE_LOCAL_TO_OWNER;
-                }
-                sync.pos = data.position;
-                sync.rot = data.rotation;
-                sync.Sync();
+                sync.state = (sbyte)(LightSync.STATE_BONE - data.bone);
             }
+            else
+            {
+                sync.state = LightSync.STATE_LOCAL_TO_OWNER;
+            }
+            sync.pos = data.position;
+            sync.rot = data.rotation;
         }
 
         public override string GetDataTypeName()

@@ -170,7 +170,7 @@ namespace MMMaellon.LightSync
             "debugLogs",
             "showInternalObjects",
             "enterFirstCustomStateOnStart",
-            "separateDataObject",
+            "separateHelperObjects",
             "kinematicWhileAttachedToPlayer",
             "useWorldSpaceTransforms",
             "useWorldSpaceTransformsWhenHeldOrAttachedToPlayer",
@@ -302,7 +302,7 @@ namespace MMMaellon.LightSync
                     data.StartCoroutine(data.Destroy());
                 }
             }
-            foreach (var looper in FindObjectsOfType<LightSyncLooperUpdate>())
+            foreach (var looper in FindObjectsOfType<LightSyncLooper>())
             {
                 if (looper.sync == null || looper.sync.looper != looper)
                 {
@@ -441,22 +441,8 @@ namespace MMMaellon.LightSync
                 singleton.lightSyncs = allLightSyncs;
                 singleton.collectionItems = allCollectionItems;
                 singleton.collections = allCollections;
-                singleton.gameObject.hideFlags = HideFlags.HideInHierarchy;
-                for (uint i = 0; i < singleton.collectionItems.Length; i++)
-                {
-                    singleton.collectionItems[i].itemId = i;
-                }
-                for (int i = 0; i < singleton.collections.Length; i++)
-                {
-                    singleton.collections[i].collectionId = i;
-                    singleton.collections[i].singleton = singleton;
-                }
-                for (uint i = 0; i < singleton.lightSyncs.Length; i++)
-                {
-                    singleton.lightSyncs[i].id = i;
-                    singleton.lightSyncs[i].singleton = singleton;
-                    SetupLightSync(singleton.lightSyncs[i]);
-                }
+                singleton.gameObject.hideFlags |= HideFlags.HideInHierarchy;
+                singleton.AutoSetup();
             }
             EditorSceneManager.SaveScene(SceneManager.GetActiveScene());
             return true;
@@ -465,67 +451,83 @@ namespace MMMaellon.LightSync
         [MenuItem("MMMaellon/LightSync/Clear Orphaned Internal Objects")]
         public static void ClearOrphanedObjects()
         {
-            foreach (LightSyncData data in GameObject.FindObjectsOfType<LightSyncData>(true))
+            foreach (var obj in GameObject.FindObjectsOfType<GameObject>(true))
             {
-                if (!data)
+                Debug.LogWarning("Clearing object " + obj.name);
+                var data = obj.GetComponents<LightSyncData>();
+                var stateData = obj.GetComponents<LightSyncStateData>();
+                var EnhancementData = obj.GetComponents<LightSyncEnhancementData>();
+                var looper = obj.GetComponents<LightSyncLooper>();
+                var singleton = obj.GetComponents<Singleton>();
+                foreach (var d in data)
                 {
-                    continue;
+                    d.RefreshHideFlags();
+                    if (d.sync == null)
+                    {
+                        d.DestroyAsync();
+                    }
                 }
-                if (!data.sync || data.sync.data != data)
+                foreach (var d in stateData)
                 {
-                    data.Destroy();
+                    d.RefreshHideFlags();
+                    if (d.state == null)
+                    {
+                        d.DestroyAsync();
+                    }
                 }
-            }
-            foreach (LightSyncLooper looper in GameObject.FindObjectsOfType<LightSyncLooperUpdate>(true))
-            {
-                if (!looper)
+                foreach (var d in EnhancementData)
                 {
-                    continue;
+                    d.RefreshHideFlags();
+                    if (d.enhancement == null)
+                    {
+                        d.DestroyAsync();
+                    }
                 }
-                if (!looper.sync || looper.sync.looper != looper)
+                foreach (var l in looper)
                 {
-                    GameObject.DestroyImmediate(looper.gameObject);
-                }
-            }
-            foreach (LightSyncEnhancementData data in GameObject.FindObjectsOfType<LightSyncEnhancementData>(true))
-            {
-                if (!data)
-                {
-                    continue;
-                }
-                if (!data.enhancement || data.enhancement.enhancementData != data)
-                {
-                    data.Destroy();
-                }
-            }
-            foreach (LightSyncStateData data in GameObject.FindObjectsOfType<LightSyncStateData>(true))
-            {
-                if (!data)
-                {
-                    continue;
-                }
-                if (!data.state || data.state.stateData != data)
-                {
-                    data.Destroy();
+                    l.RefreshHideFlags();
+                    if (l.sync == null)
+                    {
+                        l.DestroyAsync();
+                    }
                 }
             }
         }
 
-        [MenuItem("MMMaellon/LightSync/Show all hidden gameobjects")]
+        [MenuItem("MMMaellon/LightSync/Show all helper objects")]
         public static bool ShowAllHiddenGameObjects()
         {
-            foreach (GameObject obj in GameObject.FindObjectsOfType<GameObject>(true))
+            foreach (var obj in GameObject.FindObjectsOfType<GameObject>(true))
             {
-                if (obj.hideFlags == HideFlags.HideInHierarchy)
+                var data = obj.GetComponents<LightSyncData>();
+                var stateData = obj.GetComponents<LightSyncStateData>();
+                var EnhancementData = obj.GetComponents<LightSyncEnhancementData>();
+                var looper = obj.GetComponents<LightSyncLooper>();
+                var singleton = obj.GetComponents<Singleton>();
+                foreach (var d in data)
                 {
-                    obj.hideFlags = HideFlags.None;
+                    d.gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
+                    d.hideFlags &= ~HideFlags.HideInInspector;
                 }
-            }
-            foreach (LightSyncData data in GameObject.FindObjectsOfType<LightSyncData>(true))
-            {
-                if (data.hideFlags == HideFlags.HideInInspector)
+                foreach (var d in stateData)
                 {
-                    data.hideFlags = HideFlags.None;
+                    d.gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
+                    d.hideFlags &= ~HideFlags.HideInInspector;
+                }
+                foreach (var d in EnhancementData)
+                {
+                    d.gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
+                    d.hideFlags &= ~HideFlags.HideInInspector;
+                }
+                foreach (var l in looper)
+                {
+                    l.gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
+                    l.hideFlags &= ~HideFlags.HideInInspector;
+                }
+                foreach (var s in singleton)
+                {
+                    s.gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
+                    s.hideFlags &= ~HideFlags.HideInInspector;
                 }
             }
             return true;
