@@ -1,11 +1,11 @@
-using System.Collections.Generic;
 using UdonSharp;
-using UdonSharpEditor;
 using UnityEngine;
 using VRC.SDKBase;
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEditor;
+using UdonSharpEditor;
 #endif
 
 
@@ -189,16 +189,11 @@ namespace MMMaellon.LightSync
 
         public void DestroyAsync()
         {
-            if (gameObject.activeInHierarchy)//prevents log spam in play mode
-            {
-                StartCoroutine(Destroy());
-            }
+            Invoke(nameof(Destroy), 0f);
         }
 
-        public IEnumerator<WaitForSeconds> Destroy()
+        public void Destroy()
         {
-            yield return new WaitForSeconds(0);
-            var count = GetComponents(typeof(Component)).Length;
             gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
             hideFlags &= ~HideFlags.HideInInspector;
             var obj = gameObject;

@@ -4,7 +4,9 @@ using UnityEngine;
 using VRC.SDK3.Data;
 using VRC.SDKBase;
 using VRC.Udon;
+#if !COMPILER_UDONSHARP && UNITY_EDITOR
 using UdonSharpEditor;
+#endif
 
 
 

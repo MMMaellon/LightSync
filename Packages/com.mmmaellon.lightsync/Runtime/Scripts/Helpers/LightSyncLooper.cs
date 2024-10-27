@@ -3,10 +3,11 @@ using UdonSharp;
 using UnityEngine;
 using VRC;
 using VRC.Udon;
+
+
+#if !COMPILER_UDONSHARP && UNITY_EDITOR
 using UdonSharpEditor;
-using UdonSharp.Internal;
-
-
+#endif
 
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
@@ -130,15 +131,11 @@ namespace MMMaellon.LightSync
 
         public void DestroyAsync()
         {
-            if (gameObject.activeInHierarchy)//prevents log spam in play mode
-            {
-                StartCoroutine(Destroy());
-            }
+            Invoke(nameof(Destroy), 0f);
         }
 
-        public IEnumerator<WaitForSeconds> Destroy()
+        public void Destroy()
         {
-            yield return new WaitForSeconds(0);
             gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
             hideFlags &= ~HideFlags.HideInInspector;
             var obj = gameObject; //gameobject becomes null after next line

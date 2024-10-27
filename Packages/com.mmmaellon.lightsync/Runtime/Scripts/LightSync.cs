@@ -771,9 +771,13 @@ namespace MMMaellon.LightSync
             {
                 Owner = Networking.GetOwner(data.gameObject);
             }
-            if (IsOwner() && (!Networking.LocalPlayer.IsOwner(gameObject)))
+            if (IsOwner())
             {
-                Networking.SetOwner(Owner, gameObject);
+                if (!Networking.LocalPlayer.IsOwner(gameObject))
+                {
+                    Networking.SetOwner(Owner, gameObject);
+                }
+                LocalDriftCheck();
             }
         }
 
@@ -1767,10 +1771,10 @@ namespace MMMaellon.LightSync
             PrefabUtility.RecordPrefabInstancePropertyModifications(looper);
             PrefabUtility.RecordPrefabInstancePropertyModifications(lateLooper);
             PrefabUtility.RecordPrefabInstancePropertyModifications(fixedLooper);
-            data.RefreshHideFlagsAsync();
-            looper.RefreshHideFlagsAsync();
-            fixedLooper.RefreshHideFlagsAsync();
-            lateLooper.RefreshHideFlagsAsync();
+            // data.RefreshHideFlags();
+            // looper.RefreshHideFlags();
+            // fixedLooper.RefreshHideFlags();
+            // lateLooper.RefreshHideFlags();
         }
 
         public void SetupStates()

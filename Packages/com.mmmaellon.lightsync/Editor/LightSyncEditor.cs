@@ -299,28 +299,28 @@ namespace MMMaellon.LightSync
             {
                 if (data.sync == null || data.sync.data != data)
                 {
-                    data.StartCoroutine(data.Destroy());
+                    data.DestroyAsync();
                 }
             }
             foreach (var looper in FindObjectsOfType<LightSyncLooper>())
             {
                 if (looper.sync == null || looper.sync.looper != looper)
                 {
-                    looper.StartCoroutine(looper.Destroy());
+                    looper.DestroyAsync();
                 }
             }
             foreach (var stateData in FindObjectsOfType<LightSyncStateData>())
             {
                 if (stateData.state == null || stateData.state.data != stateData)
                 {
-                    stateData.StartCoroutine(stateData.Destroy());
+                    stateData.DestroyAsync();
                 }
             }
             foreach (var enhancementData in FindObjectsOfType<LightSyncEnhancementData>())
             {
                 if (enhancementData.enhancement == null || enhancementData.enhancement.enhancementData != enhancementData)
                 {
-                    enhancementData.StartCoroutine(enhancementData.Destroy());
+                    enhancementData.DestroyAsync();
                 }
             }
         }
@@ -453,10 +453,9 @@ namespace MMMaellon.LightSync
         {
             foreach (var obj in GameObject.FindObjectsOfType<GameObject>(true))
             {
-                Debug.LogWarning("Clearing object " + obj.name);
                 var data = obj.GetComponents<LightSyncData>();
                 var stateData = obj.GetComponents<LightSyncStateData>();
-                var EnhancementData = obj.GetComponents<LightSyncEnhancementData>();
+                var enhancementData = obj.GetComponents<LightSyncEnhancementData>();
                 var looper = obj.GetComponents<LightSyncLooper>();
                 var singleton = obj.GetComponents<Singleton>();
                 foreach (var d in data)
@@ -475,7 +474,7 @@ namespace MMMaellon.LightSync
                         d.DestroyAsync();
                     }
                 }
-                foreach (var d in EnhancementData)
+                foreach (var d in enhancementData)
                 {
                     d.RefreshHideFlags();
                     if (d.enhancement == null)
