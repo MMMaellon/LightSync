@@ -1,9 +1,12 @@
 using System.Collections.Generic;
 using UdonSharp;
 using UdonSharpEditor;
-using UnityEditor;
 using UnityEngine;
 using VRC.SDKBase;
+
+#if !COMPILER_UDONSHARP && UNITY_EDITOR
+using UnityEditor;
+#endif
 
 
 namespace MMMaellon.LightSync
