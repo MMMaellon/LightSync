@@ -67,21 +67,18 @@ namespace MMMaellon.LightSync
             }
             else
             {
-                OnDespawn();
+                OnDespawnPoolObject();
             }
         }
 
         public virtual void Spawn()
         {
             data.Spawn();
-            OnSpawnPoolObject();
         }
 
         public virtual void Spawn(Vector3 position, Quaternion rotation)
         {
             data.Spawn(position, rotation);
-            OnSpawnPoolObject();
-            sync.TeleportToWorldSpace(position, rotation, sync.sleepOnSpawn);
         }
 
         public virtual void DelayedDespawn(int delayFrames)
@@ -104,7 +101,7 @@ namespace MMMaellon.LightSync
         public virtual void Despawn()
         {
             data.Despawn();
-            OnDespawn();
+            OnDespawnPoolObject();
         }
 
         DataToken tmpToken;
@@ -113,24 +110,24 @@ namespace MMMaellon.LightSync
         public virtual void OnSpawnPoolObject()
         {
             //move it first in case it's in a despawner
-            transform.position = data.GetSpawnPos();
-            transform.rotation = data.GetSpawnRot();
-            gameObject.SetActive(true);
-            if (!sync.separateHelperObjects)
-            {
-                if (sync.IsOwner())
-                {
-                    sync.TeleportToWorldSpace(data.GetSpawnPos(), data.GetSpawnRot(), sync.sleepOnSpawn);
-                    if (pool.ForceOwnershipTransfer)
-                    {
-                        data.RequestOwnershipSync();
-                    }
-                }
-            }
-            else if (sync.sleepOnSpawn)
-            {
-                sync.EnsureSleep();
-            }
+            // transform.position = data.GetSpawnPos();
+            // transform.rotation = data.GetSpawnRot();
+            // gameObject.SetActive(true);
+            // if (!sync.separateHelperObjects)
+            // {
+            //     if (sync.IsOwner())
+            //     {
+            //         sync.TeleportToWorldSpace(data.GetSpawnPos(), data.GetSpawnRot(), sync.sleepOnSpawn);
+            //         if (pool.ForceOwnershipTransfer)
+            //         {
+            //             data.RequestOwnershipSync();
+            //         }
+            //     }
+            // }
+            // else if (sync.sleepOnSpawn)
+            // {
+            //     sync.EnsureSleep();
+            // }
 
             // Debug.LogWarning("ON SHOW");
             // for (int i = 0; i < pool.hiddenPoolIndexes.Count; i++)
@@ -186,13 +183,13 @@ namespace MMMaellon.LightSync
             // }
         }
 
-        public virtual void OnDespawn()
+        public virtual void OnDespawnPoolObject()
         {
-            if (sync.pickup && sync.pickup.IsHeld)
-            {
-                sync.pickup.Drop();
-            }
-            gameObject.SetActive(false);
+            // if (sync.pickup && sync.pickup.IsHeld)
+            // {
+            //     sync.pickup.Drop();
+            // }
+            // gameObject.SetActive(false);
 
             // Debug.LogWarning("ON HIDE");
             // for (int i = 0; i < pool.hiddenPoolIndexes.Count; i++)
@@ -205,10 +202,10 @@ namespace MMMaellon.LightSync
             //     Debug.LogWarning(keys[i] + ":" + pool.lookupTable[keys[i]]);
             // }
 
-            if (sync.IsOwner())
-            {
-                sync.TeleportToWorldSpace(data.GetSpawnPos(), data.GetSpawnRot(), sync.sleepOnSpawn);
-            }
+            // if (sync.IsOwner())
+            // {
+            //     sync.TeleportToWorldSpace(data.GetSpawnPos(), data.GetSpawnRot(), sync.sleepOnSpawn);
+            // }
             if (pool.lookupTable.ContainsKey(id))
             {
                 return;

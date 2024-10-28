@@ -30,6 +30,18 @@ namespace MMMaellon.LightSync
         [HideInInspector]
         public DataDictionary lookupTable;
 
+        public void Start()
+        {
+            //enable everything at least once so that syncing actually works
+            bool wasEnabled;
+            foreach (var obj in objects)
+            {
+                wasEnabled = obj.gameObject.activeSelf;
+                obj.gameObject.SetActive(true);
+                obj.gameObject.SetActive(wasEnabled);
+            }
+        }
+
         public int HiddenCount()
         {
             return hiddenPoolIndexes.Count;

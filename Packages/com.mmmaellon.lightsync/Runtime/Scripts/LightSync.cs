@@ -163,6 +163,7 @@ namespace MMMaellon.LightSync
             {
                 if (value)
                 {
+                    lastTeleport = Time.frameCount;
                     if (IsOwner())
                     {
                         if (teleportCount == byte.MaxValue)
@@ -463,7 +464,6 @@ namespace MMMaellon.LightSync
         public void TeleportToLocalSpace(Vector3 position, Quaternion rotation, bool shouldSleep)
         {
             TakeOwnershipIfNotOwner();
-            lastTeleport = Time.frameCount;
             transform.localPosition = position;
             transform.localRotation = rotation;
             state = STATE_PHYSICS;
@@ -491,7 +491,6 @@ namespace MMMaellon.LightSync
         public void TeleportToWorldSpace(Vector3 position, Quaternion rotation, bool shouldSleep)
         {
             TakeOwnershipIfNotOwner();
-            lastTeleport = Time.frameCount;
             transform.position = position;
             transform.rotation = rotation;
             state = STATE_PHYSICS;
@@ -1116,10 +1115,10 @@ namespace MMMaellon.LightSync
                         }
                 }
             }
-            if (firstLoop && (!_continueBool || autoSmoothedLerp >= 1.0f))
+            firstLoop = false;
+            if (!_continueBool || autoSmoothedLerp >= 1.0f)
             {
                 OnLerpEnd();
-                firstLoop = false;
             }
             return _continueBool;
         }
@@ -1191,6 +1190,7 @@ namespace MMMaellon.LightSync
             }
             else
             {
+                Debug.LogWarning("Physics");
                 if (bounceFlag)
                 {
                     //don't smoothly lerp the velocity to simulate a bounce

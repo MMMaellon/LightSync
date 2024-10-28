@@ -10,18 +10,18 @@ namespace MMMaellon.LightSync
     public class ObjectPoolObjectDataWithPosition : ObjectPoolObjectData
     {
         [UdonSynced]
-        Vector3 spawnPos;
+        Vector3 syncedSpawnPos;
         [UdonSynced]
-        Quaternion spawnRot;
+        Quaternion syncedSpawnRot;
 
         public override Vector3 GetSpawnPos()
         {
-            return spawnPos;
+            return syncedSpawnPos;
         }
 
         public override Quaternion GetSpawnRot()
         {
-            return spawnRot;
+            return syncedSpawnRot;
         }
 
         public override void Spawn(Vector3 position, Quaternion rotation)
@@ -30,9 +30,9 @@ namespace MMMaellon.LightSync
             {
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
             }
+            syncedSpawnPos = position;
+            syncedSpawnRot = rotation;
             spawned = true;
-            spawnPos = position;
-            spawnRot = rotation;
             RequestSerialization();
         }
     }
