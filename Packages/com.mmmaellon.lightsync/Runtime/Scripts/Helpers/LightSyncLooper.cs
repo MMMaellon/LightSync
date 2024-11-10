@@ -7,11 +7,8 @@ using VRC.Udon;
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
 using UdonSharpEditor;
-#endif
-
-
-#if UNITY_EDITOR && !COMPILER_UDONSHARP
 using System.Collections.Generic;
+using UnityEditor;
 #endif
 
 namespace MMMaellon.LightSync
@@ -83,9 +80,16 @@ namespace MMMaellon.LightSync
             enabled = false;
         }
 
+        [System.NonSerialized]
+        public bool destroyCalled = false;
+
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         public void OnValidate()
         {
+            if (Application.isPlaying)
+            {
+                return;
+            }
             RefreshHideFlags();
         }
 
@@ -127,10 +131,27 @@ namespace MMMaellon.LightSync
                     hideFlags |= HideFlags.HideInInspector;
                 }
             }
+            EditorUtility.SetDirty(this);
         }
 
         public void DestroyAsync()
         {
+            destroyCalled = true;
+            if (sync)
+            {
+                if (sync.looper == this)
+                {
+                    sync.looper = null;
+                }
+                if (sync.lateLooper == this)
+                {
+                    sync.lateLooper = null;
+                }
+                if (sync.fixedLooper == this)
+                {
+                    sync.fixedLooper = null;
+                }
+            }
             Invoke(nameof(Destroy), 0f);
         }
 

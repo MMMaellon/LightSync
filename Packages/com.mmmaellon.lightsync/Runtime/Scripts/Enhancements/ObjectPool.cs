@@ -140,6 +140,10 @@ namespace MMMaellon.LightSync
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
         public void OnValidate()
         {
+            if (Application.isPlaying)
+            {
+                return;
+            }
             if (!AutoPopulateFromChildren)
             {
                 return;

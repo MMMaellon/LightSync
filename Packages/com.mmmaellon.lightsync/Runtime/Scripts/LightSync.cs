@@ -118,7 +118,7 @@ namespace MMMaellon.LightSync
 
         [System.NonSerialized]
         public sbyte prevState;
-        [SerializeField]
+        [SerializeField, HideInInspector]
         sbyte _state = STATE_PHYSICS;
         public sbyte state
         {
@@ -1190,7 +1190,6 @@ namespace MMMaellon.LightSync
             }
             else
             {
-                Debug.LogWarning("Physics");
                 if (bounceFlag)
                 {
                     //don't smoothly lerp the velocity to simulate a bounce
@@ -1620,7 +1619,7 @@ namespace MMMaellon.LightSync
         //IGNORE
         //These are here to prevent some weird unity editor errors from clogging the logs
         [HideInInspector]
-        public bool _showInternalObjects = false;
+        public bool _showInternalObjects = true;
 
         [HideInInspector]
         public bool showInternalObjects = false;
@@ -1639,28 +1638,25 @@ namespace MMMaellon.LightSync
 
         public void OnValidate()
         {
+            if (Application.isPlaying)
+            {
+                return;
+            }
             if (showInternalObjects)
             {
                 if (data == null || separateHelperObjects == (data.transform == transform))
                 {
-                    if (data)
-                    {
-                        data.DestroyAsync();
-                    }
                     CreateDataObject();
                 }
                 if (looper == null || separateHelperObjects == (looper.transform == transform))
                 {
-                    if (looper)
-                    {
-                        looper.DestroyAsync();
-                    }
                     CreateLooperObject();
                 }
             }
             if (_showInternalObjects != showInternalObjects)
             {
-                RefreshHideFlags();
+                // RefreshHideFlags();
+                Invoke(nameof(RefreshHideFlags), 0f);
             }
             if (enterFirstCustomStateOnStart && customStates.Length > 0)
             {
@@ -1698,8 +1694,7 @@ namespace MMMaellon.LightSync
         public void ForceSetup()
         {
             DestroyInternalObjectsAsync();
-            // AutoSetup();
-            // EditorUtility.SetDirty(this);
+            AutoSetup();
         }
 
         public void AutoSetup()
@@ -1719,7 +1714,7 @@ namespace MMMaellon.LightSync
             SetupStates();
             SetupEnhancements();
             Sortlisteners();
-            RefreshHideFlags();
+            // Invoke(nameof(RefreshHideFlags), 0f);
 
             // if (!separateHelperObjects)
             // {
@@ -1775,6 +1770,7 @@ namespace MMMaellon.LightSync
             // looper.RefreshHideFlags();
             // fixedLooper.RefreshHideFlags();
             // lateLooper.RefreshHideFlags();
+            EditorUtility.SetDirty(this);
         }
 
         public void SetupStates()
@@ -1844,8 +1840,6 @@ namespace MMMaellon.LightSync
                     data.sync = this;
                 }
 
-                // data.RefreshHideFlags();
-
                 var shouldDelete = false;
                 if (networkDataOptimization == NetworkDataOptimization.Ultra && data is not LightSyncDataUltra)
                 {
@@ -1873,7 +1867,7 @@ namespace MMMaellon.LightSync
                     return;
                 }
 
-                data.Destroy();
+                data.DestroyAsync();
             }
             GameObject dataObject;
             if (separateHelperObjects)
@@ -1911,10 +1905,7 @@ namespace MMMaellon.LightSync
             else
             {
                 dataObject = gameObject;
-                // foreach (var udon in GetComponents<UdonBehaviour>())
-                // {
-                //     udon.SyncMethod = Networking.SyncType.Manual;
-                // }
+                Invoke(nameof(ForceSyncMethod), 0f);
             }
             switch (networkDataOptimization)
             {
@@ -1953,42 +1944,45 @@ namespace MMMaellon.LightSync
                 data.hideFlags |= HideFlags.HideInInspector;
             }
             data.sync = this;
-            data.RefreshHideFlags();
+            // data.RefreshHideFlags();
+        }
+
+        public void ForceSyncMethod()
+        {
+            foreach (var udon in GetComponents<UdonBehaviour>())
+            {
+                udon.SyncMethod = Networking.SyncType.Manual;
+            }
         }
 
         public void CreateLooperObject()
         {
-            GameObject looperObject;
+            if (!data)
+            {
+                Debug.LogError("Can't create looper without data");
+                return;
+            }
+            GameObject looperObject = data.gameObject;
             if (looper != null)
             {
-                if ((separateHelperObjects && looper.gameObject == gameObject) || (!separateHelperObjects && looper.gameObject != gameObject))
+                if (looper.gameObject != data.gameObject)
                 {
+                    Debug.LogWarning("SHOULD BE DELETING");
                     looper.DestroyAsync();
                     if (fixedLooper)
                     {
+                        Debug.LogWarning("fixed delete");
                         fixedLooper.DestroyAsync();
                     }
                     if (lateLooper)
                     {
+                        Debug.LogWarning("late delete");
                         lateLooper.DestroyAsync();
                     }
                 }
             }
-            if (looper != null)
+            if (looper == null || looper.destroyCalled)
             {
-                looperObject = looper.gameObject;
-            }
-            else
-            {
-                if (separateHelperObjects)
-                {
-                    looperObject = new(name + "_looper" + GUID.Generate());
-                    looperObject.transform.SetParent(transform, false);
-                }
-                else
-                {
-                    looperObject = gameObject;
-                }
                 looper = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncLooperUpdate>(looperObject);
             }
             looper.sync = this;
@@ -1998,7 +1992,7 @@ namespace MMMaellon.LightSync
             if (fixedLooper == null)
             {
                 fixedLooper = looper.GetComponent<LightSyncLooperFixedUpdate>();
-                if (fixedLooper == null)
+                if (fixedLooper == null || fixedLooper.destroyCalled)
                 {
                     fixedLooper = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncLooperFixedUpdate>(looperObject);
                 }
@@ -2010,7 +2004,7 @@ namespace MMMaellon.LightSync
             if (lateLooper == null)
             {
                 lateLooper = looper.GetComponent<LightSyncLooperPostLateUpdate>();
-                if (lateLooper == null)
+                if (lateLooper == null || lateLooper.destroyCalled)
                 {
                     lateLooper = UdonSharpComponentExtensions.AddUdonSharpComponent<LightSyncLooperPostLateUpdate>(looperObject);
                 }

@@ -1,4 +1,7 @@
 ﻿using UnityEngine;
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+using UnityEditor;
+#endif
 namespace MMMaellon.LightSync
 {
     [AddComponentMenu("")]//prevents it from showing up in the add component menu

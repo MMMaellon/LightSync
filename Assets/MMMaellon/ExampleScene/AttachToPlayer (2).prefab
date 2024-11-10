@@ -2,7 +2,7 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!1 &1051147176167896513
 GameObject:
-  m_ObjectHideFlags: 1
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -24,7 +24,7 @@ GameObject:
   m_IsActive: 1
 --- !u!4 &4657996412442872137
 Transform:
-  m_ObjectHideFlags: 1
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -39,7 +39,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7313360576762981793
 MonoBehaviour:
-  m_ObjectHideFlags: 1
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -59,11 +59,13 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 4086398536521413199}
-  sync: {fileID: 7485947101891313200}
-  data: {fileID: 7957390739734072948}
+  sync: {fileID: 0}
+  firstLerp: 0
+  lerpPeriod: 0
+  destroyCalled: 0
 --- !u!114 &4086398536521413199
 MonoBehaviour:
-  m_ObjectHideFlags: 1
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -89,7 +91,7 @@ MonoBehaviour:
   publicVariablesSerializationDataFormat: 0
 --- !u!114 &7733912744877222084
 MonoBehaviour:
-  m_ObjectHideFlags: 1
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -109,11 +111,13 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 5478766492883973212}
-  sync: {fileID: 7485947101891313200}
-  data: {fileID: 7957390739734072948}
+  sync: {fileID: 0}
+  firstLerp: 0
+  lerpPeriod: 0
+  destroyCalled: 0
 --- !u!114 &5478766492883973212
 MonoBehaviour:
-  m_ObjectHideFlags: 1
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -139,7 +143,7 @@ MonoBehaviour:
   publicVariablesSerializationDataFormat: 0
 --- !u!114 &4553151538188961753
 MonoBehaviour:
-  m_ObjectHideFlags: 1
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -159,11 +163,13 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 4983676316250149977}
-  sync: {fileID: 7485947101891313200}
-  data: {fileID: 7957390739734072948}
+  sync: {fileID: 0}
+  firstLerp: 0
+  lerpPeriod: 0
+  destroyCalled: 0
 --- !u!114 &4983676316250149977
 MonoBehaviour:
-  m_ObjectHideFlags: 1
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -285,6 +291,7 @@ MonoBehaviour:
   id: 67
   respawnHeight: -100
   smoothingTime: 0.5
+  lightSyncControlsPickupable: 1
   allowTheftFromSelf: 1
   allowTheftWhenAttachedToPlayer: 1
   kinematicWhileHeld: 1
@@ -323,7 +330,7 @@ MonoBehaviour:
   lastPickupable: 0
   _showInternalObjects: 0
   showInternalObjects: 0
-  unparentInternalDataObject: 0
+  separateHelperObjects: 0
 --- !u!114 &4771462467896766835
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -374,6 +381,7 @@ MonoBehaviour:
   _udonSharpBackingUdonBehaviour: {fileID: 4864797102288493018}
   sync: {fileID: 7485947101891313200}
   lastDeserialization: 0
+  destroyCalled: 0
 --- !u!114 &4864797102288493018
 MonoBehaviour:
   m_ObjectHideFlags: 0

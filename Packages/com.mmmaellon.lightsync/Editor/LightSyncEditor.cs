@@ -23,6 +23,9 @@ namespace MMMaellon.LightSync
             {
                 return;
             }
+            if(Application.isPlaying){
+                return;
+            }
             int syncCount = 0;
             int pickupSetupCount = 0;
             int rigidSetupCount = 0;
@@ -351,7 +354,6 @@ namespace MMMaellon.LightSync
             {
                 return true;
             }
-            ClearOrphanedObjects();
             return AutoSetup();
         }
 
@@ -414,6 +416,7 @@ namespace MMMaellon.LightSync
         public static bool AutoSetup()
         {
             Debug.Log("Running LightSync AutoSetup");
+            ClearOrphanedObjects();
             foreach (LightSyncListener listener in GameObject.FindObjectsOfType<LightSyncListener>(true))
             {
                 SetupLightSyncListener(listener);

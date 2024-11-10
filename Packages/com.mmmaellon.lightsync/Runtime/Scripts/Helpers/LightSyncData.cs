@@ -111,9 +111,16 @@ namespace MMMaellon.LightSync
             RequestSync();
         }
 
+        [System.NonSerialized]
+        public bool destroyCalled = false;
+
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         public void OnValidate()
         {
+            if (Application.isPlaying)
+            {
+                return;
+            }
             RefreshHideFlags();
         }
 
@@ -149,46 +156,13 @@ namespace MMMaellon.LightSync
             }
         }
 
-        float asyncRefreshStart = -1001f;
-        public void RefreshHideFlagsAsync()
-        {
-            asyncRefreshStart = Time.realtimeSinceStartup;
-            StartCoroutine(RefreshHideFlagsEnum());
-        }
-
-        public IEnumerator<WaitUntil> RefreshHideFlagsEnum()
-        {
-            yield return new WaitUntil(ManualSet);
-            RefreshHideFlags();
-            EditorUtility.SetDirty(this);
-        }
-
-        public bool ManualSet()
-        {
-            if (Time.realtimeSinceStartup - asyncRefreshStart > 10f)
-            {
-                //more than 10 seconds passed and nothing happened? Unity is probably bugged out rn
-                //let's just bail
-                return true;
-            }
-            if (!sync)
-            {
-                return false;
-            }
-            if (sync.gameObject != gameObject)
-            {
-                return true;
-            }
-            var backing = UdonSharpEditorUtility.GetBackingUdonBehaviour(sync);
-            if (!backing)
-            {
-                return false;
-            }
-            return backing.SyncIsManual;
-        }
-
         public void DestroyAsync()
         {
+            destroyCalled = true;
+            if (sync && sync.data == this)
+            {
+                sync.data = null;
+            }
             Invoke(nameof(Destroy), 0f);
         }
 

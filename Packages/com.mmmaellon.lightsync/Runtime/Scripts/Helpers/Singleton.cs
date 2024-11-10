@@ -142,6 +142,10 @@ namespace MMMaellon.LightSync
         {
             for (int i = 0; i < collections.Length; i++)
             {
+                if (collections[i].collectionId == i && collections[i].singleton == this)
+                {
+                    continue;
+                }
                 collections[i].collectionId = i + 1;//1 indexed
                 collections[i].singleton = this;
                 new SerializedObject(collections[i]).Update();
@@ -149,6 +153,10 @@ namespace MMMaellon.LightSync
             }
             for (uint i = 0; i < collectionItems.Length; i++)
             {
+                if (collectionItems[i].itemId == i && collectionItems[i].singleton == this)
+                {
+                    continue;
+                }
                 collectionItems[i].itemId = i;
                 collectionItems[i].singleton = this;
                 collectionItems[i].SetupStartingCollections();
@@ -157,9 +165,15 @@ namespace MMMaellon.LightSync
             }
             for (uint i = 0; i < lightSyncs.Length; i++)
             {
+                if (lightSyncs[i].id == i && lightSyncs[i].singleton == this)
+                {
+                    continue;
+                }
                 lightSyncs[i].id = i;
                 lightSyncs[i].singleton = this;
-                lightSyncs[i].AutoSetup();
+                new SerializedObject(lightSyncs[i]).Update();
+                PrefabUtility.RecordPrefabInstancePropertyModifications(lightSyncs[i]);
+                // lightSyncs[i].AutoSetup();
             }
             PrefabUtility.RecordPrefabInstancePropertyModifications(this);
         }
