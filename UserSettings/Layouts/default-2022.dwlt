@@ -19,7 +19,7 @@ MonoBehaviour:
     width: 3840
     height: 2077
   m_ShowMode: 4
-  m_Title: Scene
+  m_Title: Project
   m_RootView: {fileID: 8}
   m_MinSize: {x: 875, y: 300}
   m_MaxSize: {x: 10000, y: 10000}
@@ -130,7 +130,7 @@ MonoBehaviour:
   - {fileID: 25}
   - {fileID: 14}
   m_Selected: 5
-  m_LastSelected: 0
+  m_LastSelected: 4
 --- !u!114 &6
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -167,7 +167,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 1
   m_Script: {fileID: 12006, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: ConsoleWindow
+  m_Name: ProjectBrowser
   m_EditorClassIdentifier: 
   m_Children: []
   m_Position:
@@ -176,15 +176,15 @@ MonoBehaviour:
     y: 1381
     width: 2428
     height: 646
-  m_MinSize: {x: 101, y: 121}
-  m_MaxSize: {x: 4001, y: 4021}
-  m_ActualView: {fileID: 26}
+  m_MinSize: {x: 231, y: 271}
+  m_MaxSize: {x: 10001, y: 10021}
+  m_ActualView: {fileID: 21}
   m_Panes:
   - {fileID: 21}
   - {fileID: 26}
   - {fileID: 17}
-  m_Selected: 1
-  m_LastSelected: 0
+  m_Selected: 0
+  m_LastSelected: 1
 --- !u!114 &8
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -497,7 +497,7 @@ MonoBehaviour:
     m_Tooltip: 
   m_Pos:
     serializedVersion: 2
-    x: 0
+    x: 3840
     y: 1454
     width: 2427
     height: 625
@@ -513,7 +513,7 @@ MonoBehaviour:
     m_OverlaysVisible: 1
   m_LockTracker:
     m_IsLocked: 0
-  m_LastSelectedObjectID: 753074
+  m_LastSelectedObjectID: 250430
 --- !u!114 &18
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -693,9 +693,9 @@ MonoBehaviour:
     m_IsLocked: 0
   m_FolderTreeState:
     scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: c2cb0000
-    m_LastClickedID: 52162
-    m_ExpandedIDs: 00000000b05d0000fa9e0000fc9e0000fe9e0000009f0000029f0000049f0000069f0000089f0000
+    m_SelectedIDs: e6a30000
+    m_LastClickedID: 41958
+    m_ExpandedIDs: 00000000b85d0000c6a30000c8a30000caa30000cca30000cea30000d0a30000d2a30000d4a3000000ca9a3b
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -723,7 +723,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000b05d0000fa9e0000fc9e0000fe9e0000009f0000029f0000049f0000069f0000089f0000
+    m_ExpandedIDs: 00000000b85d0000c6a30000c8a30000caa30000cca30000cea30000d0a30000d2a30000d4a30000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -748,8 +748,8 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_ListAreaState:
-    m_SelectedInstanceIDs: 187fffff
-    m_LastClickedInstanceID: -33000
+    m_SelectedInstanceIDs: 
+    m_LastClickedInstanceID: 0
     m_HadKeyboardFocusLastEvent: 1
     m_ExpandedInstanceIDs: c62300003266000016660000fe650000f48a0000946503006a66030056a60100bea60100002e0400c6a0030016bb040088e40400fa0d0500e69f0000a08701000a5400002a9d0000565d000000000000
     m_RenameOverlay:
@@ -865,7 +865,7 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: ccf4ffff
+      m_SelectedIDs: 9e600000
       m_LastClickedID: 0
       m_ExpandedIDs: d8faffff
       m_RenameOverlay:
@@ -1248,9 +1248,9 @@ MonoBehaviour:
   m_PlayAudio: 0
   m_AudioPlay: 0
   m_Position:
-    m_Target: {x: -4.242995, y: 0.97067046, z: 7.8802247}
+    m_Target: {x: -27.941317, y: 2.836724, z: -2.5882752}
     speed: 2
-    m_Value: {x: -4.242995, y: 0.97067046, z: 7.8802247}
+    m_Value: {x: -27.941317, y: 2.836724, z: -2.5882752}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -1296,13 +1296,13 @@ MonoBehaviour:
     m_GridAxis: 1
     m_gridOpacity: 0.5
   m_Rotation:
-    m_Target: {x: -0.073719636, y: -0.011960501, z: 0.0012340694, w: -0.99705255}
+    m_Target: {x: -0.09244347, y: -0.3919693, z: 0.039735038, w: -0.91429645}
     speed: 2
-    m_Value: {x: -0.0722368, y: -0.010468189, z: 0.0011079697, w: -0.9973319}
+    m_Value: {x: -0.092516735, y: -0.3906555, z: 0.039602216, w: -0.91501945}
   m_Size:
-    m_Target: 0.81540173
+    m_Target: 0.93050885
     speed: 2
-    m_Value: 0.81540173
+    m_Value: 0.93050885
   m_Ortho:
     m_Target: 0
     speed: 2

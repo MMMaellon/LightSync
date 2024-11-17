@@ -136,6 +136,7 @@ namespace MMMaellon.LightSync
 
         public void DestroyAsync()
         {
+            Debug.LogWarning("Destroy Async: " + name);
             destroyCalled = true;
             if (sync)
             {

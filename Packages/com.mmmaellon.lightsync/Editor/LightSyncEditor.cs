@@ -23,7 +23,8 @@ namespace MMMaellon.LightSync
             {
                 return;
             }
-            if(Application.isPlaying){
+            if (Application.isPlaying)
+            {
                 return;
             }
             int syncCount = 0;
@@ -175,6 +176,7 @@ namespace MMMaellon.LightSync
             "enterFirstCustomStateOnStart",
             "separateHelperObjects",
             "kinematicWhileAttachedToPlayer",
+            "controlPickupableState",
             "useWorldSpaceTransforms",
             "useWorldSpaceTransformsWhenHeldOrAttachedToPlayer",
             "syncCollisions",
@@ -413,7 +415,11 @@ namespace MMMaellon.LightSync
         }
 
         [MenuItem("MMMaellon/LightSync/Run setup")]
-        public static bool AutoSetup()
+        public static bool ForceAutoSetup()
+        {
+            return AutoSetup(false);
+        }
+        public static bool AutoSetup(bool skipAlreadySetup = true)
         {
             Debug.Log("Running LightSync AutoSetup");
             ClearOrphanedObjects();
@@ -445,7 +451,7 @@ namespace MMMaellon.LightSync
                 singleton.collectionItems = allCollectionItems;
                 singleton.collections = allCollections;
                 singleton.gameObject.hideFlags |= HideFlags.HideInHierarchy;
-                singleton.AutoSetup();
+                singleton.AutoSetup(skipAlreadySetup);
             }
             EditorSceneManager.SaveScene(SceneManager.GetActiveScene());
             return true;

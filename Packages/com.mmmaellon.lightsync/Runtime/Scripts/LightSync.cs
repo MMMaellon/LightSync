@@ -59,7 +59,6 @@ namespace MMMaellon.LightSync
         [Tooltip("Controls how long it takes for the object to smoothly move into the synced position. Set to 0 for VRChat's algorithm. Set negative for my autosmoothing algorithm. The more negative the smoother. Set to positive for a fixed smoothing time.")]
         public float smoothingTime = -0.25f;
         [Space]
-        public bool lightSyncControlsPickupable = true;
         public bool allowTheftFromSelf = true;
         public bool allowTheftWhenAttachedToPlayer = true;
         public bool kinematicWhileHeld = true;
@@ -88,6 +87,8 @@ namespace MMMaellon.LightSync
         public bool debugLogs = false;
         [HideInInspector]
         public bool kinematicWhileAttachedToPlayer = true;
+        [HideInInspector]
+        public bool controlPickupableState = true;
         [HideInInspector]
         public bool useWorldSpaceTransforms = false;
         [HideInInspector]
@@ -680,6 +681,7 @@ namespace MMMaellon.LightSync
                     return;
                 }
                 //replay the last message
+                Debug.LogWarning("localdriftcheck");
                 StartLoop();
             }
         }
@@ -766,6 +768,10 @@ namespace MMMaellon.LightSync
 
         public void OnEnable()
         {
+            if (!data)
+            {
+                //happens when there's a weird race condition thingy
+            }
             if (Owner != Networking.GetOwner(data.gameObject))
             {
                 Owner = Networking.GetOwner(data.gameObject);
@@ -823,7 +829,14 @@ namespace MMMaellon.LightSync
                 customStates[state].OnEnterState();
                 return;
             }
-            RecordFlags();
+            if (IsOwner())
+            {
+                RecordFlags();
+            }
+            else
+            {
+                ApplyFlags();
+            }
             RecordTransforms();
             foreach (LightSyncListener listener in _classEventListeners)
             {
@@ -883,155 +896,86 @@ namespace MMMaellon.LightSync
 
         public void RecordFlags()
         {
-            lastPickupable = pickup && pickup.pickupable;
-            lastKinematic = rigid.isKinematic;
-            if (IsOwner())
+            if (syncIsKinematic)
             {
-                switch (state)
-                {
-                    case STATE_PHYSICS:
-                        {
-                            localTransformFlag = !useWorldSpaceTransforms;
-                            sleepFlag = rigid.isKinematic || rigid.IsSleeping();
-                            leftHandFlag = false;
-                            bounceFlag = false;//determine if we need it later
-                            loopTimingFlag = LOOP_FIXEDUPDATE;
-                            break;
-                        }
-                    case STATE_HELD:
-                        {
-                            if (lightSyncControlsPickupable)
-                            {
-                                pickup.pickupable = allowTheftFromSelf;
-                            }
-                            rigid.isKinematic |= kinematicWhileHeld;
-                            localTransformFlag = !useWorldSpaceTransformsWhenHeldOrAttachedToPlayer;
-                            sleepFlag = rigid.IsSleeping();
-                            leftHandFlag = pickup && (pickup.currentHand == VRC_Pickup.PickupHand.Left);
-                            bounceFlag = false;
-                            loopTimingFlag = LOOP_POSTLATEUPDATE;
+                kinematicFlag = lastKinematic;
+            }
+            if (syncPickupable)
+            {
+                pickupableFlag = lastPickupable;
+            }
 
-                            if (leftHandFlag)
-                            {
-                                if (Owner.GetBonePosition(HumanBodyBones.LeftHand) == Vector3.zero)
-                                {
-                                    localTransformFlag = false;
-                                }
-                            }
-                            else if (Owner.GetBonePosition(HumanBodyBones.RightHand) == Vector3.zero)
+            switch (state)
+            {
+                case STATE_PHYSICS:
+                    {
+                        localTransformFlag = !useWorldSpaceTransforms;
+                        sleepFlag = rigid.isKinematic || rigid.IsSleeping();
+                        leftHandFlag = false;
+                        bounceFlag = false;//determine if we need it later
+                        loopTimingFlag = LOOP_FIXEDUPDATE;
+                        break;
+                    }
+                case STATE_HELD:
+                    {
+                        if (controlPickupableState)
+                        {
+                            pickup.pickupable = allowTheftFromSelf;
+                        }
+                        rigid.isKinematic |= kinematicWhileHeld;
+                        localTransformFlag = !useWorldSpaceTransformsWhenHeldOrAttachedToPlayer;
+                        sleepFlag = rigid.IsSleeping();
+                        leftHandFlag = pickup && (pickup.currentHand == VRC_Pickup.PickupHand.Left);
+                        bounceFlag = false;
+                        loopTimingFlag = LOOP_POSTLATEUPDATE;
+
+                        if (leftHandFlag)
+                        {
+                            if (Owner.GetBonePosition(HumanBodyBones.LeftHand) == Vector3.zero)
                             {
                                 localTransformFlag = false;
                             }
-                            break;
                         }
-                    case STATE_LOCAL_TO_OWNER:
+                        else if (Owner.GetBonePosition(HumanBodyBones.RightHand) == Vector3.zero)
                         {
-                            localTransformFlag = !useWorldSpaceTransformsWhenHeldOrAttachedToPlayer;
-                            sleepFlag = rigid.IsSleeping();
-                            leftHandFlag = false;
-                            bounceFlag = false;
-                            loopTimingFlag = LOOP_UPDATE;
-                            rigid.isKinematic |= kinematicWhileAttachedToPlayer;
-                            break;
+                            localTransformFlag = false;
                         }
-                    default:
-                        {
-                            localTransformFlag = !useWorldSpaceTransformsWhenHeldOrAttachedToPlayer;
-                            sleepFlag = rigid.IsSleeping();
-                            leftHandFlag = false;
-                            bounceFlag = false;
-                            loopTimingFlag = LOOP_UPDATE;
-                            rigid.isKinematic |= kinematicWhileAttachedToPlayer;
-                            break;
-                        }
-                }
-            }
-            else
-            {
-                ApplyFlags();
-                // switch (state)
-                // {
-                //     case STATE_PHYSICS:
-                //         {
-                //             if (syncIsKinematic)
-                //             {
-                //                 rigid.isKinematic = kinematicFlag;
-                //             }
-                //             if (syncPickupable && pickup)
-                //             {
-                //                 pickup.pickupable = pickupableFlag;
-                //             }
-                //             break;
-                //         }
-                //     case STATE_HELD:
-                //         {
-                //             if (syncIsKinematic)
-                //             {
-                //                 rigid.isKinematic = kinematicFlag || kinematicWhileHeld;
-                //             }
-                //             else
-                //             {
-                //                 lastKinematic = rigid.isKinematic;
-                //                 rigid.isKinematic |= kinematicWhileHeld;
-                //             }
-                //             if (syncPickupable && pickup)
-                //             {
-                //                 pickup.pickupable = pickupableFlag && !pickup.DisallowTheft;
-                //             }
-                //             break;
-                //         }
-                //     case STATE_LOCAL_TO_OWNER:
-                //         {
-                //             if (syncIsKinematic)
-                //             {
-                //                 rigid.isKinematic = kinematicFlag || kinematicWhileAttachedToPlayer;
-                //             }
-                //             else
-                //             {
-                //                 lastKinematic = rigid.isKinematic;
-                //                 rigid.isKinematic |= kinematicWhileAttachedToPlayer;
-                //             }
-                //
-                //             if (syncPickupable && pickup)
-                //             {
-                //                 pickup.pickupable = pickupableFlag && allowTheftWhenAttachedToPlayer;
-                //             }
-                //             break;
-                //         }
-                //
-                //     default:
-                //         {
-                //             if (syncIsKinematic)
-                //             {
-                //                 rigid.isKinematic = kinematicFlag || kinematicWhileAttachedToPlayer;
-                //             }
-                //             else
-                //             {
-                //                 lastKinematic = rigid.isKinematic;
-                //                 rigid.isKinematic |= kinematicWhileAttachedToPlayer;
-                //             }
-                //
-                //             if (syncPickupable && pickup)
-                //             {
-                //                 pickup.pickupable = pickupableFlag && allowTheftWhenAttachedToPlayer;
-                //             }
-                //             break;
-                //         }
-                // }
+                        break;
+                    }
+                case STATE_LOCAL_TO_OWNER:
+                    {
+                        localTransformFlag = !useWorldSpaceTransformsWhenHeldOrAttachedToPlayer;
+                        sleepFlag = rigid.IsSleeping();
+                        leftHandFlag = false;
+                        bounceFlag = false;
+                        loopTimingFlag = LOOP_UPDATE;
+                        rigid.isKinematic |= kinematicWhileAttachedToPlayer;
+                        break;
+                    }
+                default:
+                    {
+                        localTransformFlag = !useWorldSpaceTransformsWhenHeldOrAttachedToPlayer;
+                        sleepFlag = rigid.IsSleeping();
+                        leftHandFlag = false;
+                        bounceFlag = false;
+                        loopTimingFlag = LOOP_UPDATE;
+                        rigid.isKinematic |= kinematicWhileAttachedToPlayer;
+                        break;
+                    }
             }
         }
 
         public void ResetFlags()
         {
-            if (pickup && (!IsOwner() || lightSyncControlsPickupable))
+            if (pickup && controlPickupableState)
             {
                 if (syncPickupable)
                 {
                     pickup.pickupable = pickupableFlag;
+                    lastPickupable = pickupableFlag;
                 }
                 else
                 {
-
                     pickup.pickupable = lastPickupable;
                 }
             }
@@ -1039,6 +983,7 @@ namespace MMMaellon.LightSync
             if (syncIsKinematic)
             {
                 rigid.isKinematic = kinematicFlag;
+                lastKinematic = kinematicFlag;
             }
             else
             {
@@ -1048,9 +993,25 @@ namespace MMMaellon.LightSync
 
         public void ApplyFlags()
         {
-            if (syncPickupable && pickup)
+            if (pickup && controlPickupableState)
             {
-                pickup.pickupable = pickupableFlag;
+                if (syncPickupable)
+                {
+                    pickup.pickupable = pickupableFlag;
+                }
+                else
+                {
+                    pickup.pickupable = lastPickupable;
+                }
+
+                if (state == STATE_HELD)
+                {
+                    pickup.pickupable &= !pickup.DisallowTheft;
+                }
+                else if (IsAttachedToPlayer)
+                {
+                    pickup.pickupable &= allowTheftWhenAttachedToPlayer && lastPickupable;
+                }
             }
 
             if (syncIsKinematic)
@@ -1161,16 +1122,6 @@ namespace MMMaellon.LightSync
                 if (runEveryFrameOnOwner)
                 {
                     shouldSync = TransformDrifted();
-                }
-                if (syncIsKinematic && (kinematicFlag != rigid.isKinematic))
-                {
-                    kinematicFlag = rigid.isKinematic;
-                    shouldSync = true;
-                }
-                if (syncPickupable && pickup && (pickupableFlag != pickup.pickupable))
-                {
-                    pickupableFlag = pickup.pickupable;
-                    shouldSync = true;
                 }
                 if (!rigid.isKinematic && sleepFlag != rigid.IsSleeping() && (lastEnsureSleep < 0 || lastEnsureSleep < Time.frameCount - 1))
                 {
@@ -1691,6 +1642,18 @@ namespace MMMaellon.LightSync
             }
         }
 
+        public void HideUdonBehaviours()
+        {
+            var udons = GetComponents<UdonBehaviour>();
+            foreach (var udon in udons)
+            {
+                if (UdonSharpEditorUtility.IsUdonSharpBehaviour(udon))
+                {
+                    udon.hideFlags |= HideFlags.HideInInspector;
+                }
+            }
+        }
+
         public void ForceSetup()
         {
             DestroyInternalObjectsAsync();
@@ -1699,6 +1662,7 @@ namespace MMMaellon.LightSync
 
         public void AutoSetup()
         {
+            Debug.Log("LightSync Autosetup: " + name);
             if (!rigid || rigid.gameObject != gameObject)
             {
                 rigid = GetComponent<Rigidbody>();
@@ -1770,6 +1734,7 @@ namespace MMMaellon.LightSync
             // looper.RefreshHideFlags();
             // fixedLooper.RefreshHideFlags();
             // lateLooper.RefreshHideFlags();
+            HideUdonBehaviours();
             EditorUtility.SetDirty(this);
         }
 
@@ -1953,6 +1918,7 @@ namespace MMMaellon.LightSync
             {
                 udon.SyncMethod = Networking.SyncType.Manual;
             }
+            Invoke(nameof(HideUdonBehaviours), 0f);
         }
 
         public void CreateLooperObject()
@@ -1967,16 +1933,13 @@ namespace MMMaellon.LightSync
             {
                 if (looper.gameObject != data.gameObject)
                 {
-                    Debug.LogWarning("SHOULD BE DELETING");
                     looper.DestroyAsync();
                     if (fixedLooper)
                     {
-                        Debug.LogWarning("fixed delete");
                         fixedLooper.DestroyAsync();
                     }
                     if (lateLooper)
                     {
-                        Debug.LogWarning("late delete");
                         lateLooper.DestroyAsync();
                     }
                 }
@@ -2012,6 +1975,7 @@ namespace MMMaellon.LightSync
             lateLooper.sync = this;
             // lateLooper.RefreshHideFlags();
             lateLooper.StopLoop();
+            Invoke(nameof(HideUdonBehaviours), 0f);
         }
 
         public void OnDestroy()
@@ -2021,6 +1985,7 @@ namespace MMMaellon.LightSync
 
         public void DestroyInternalObjectsAsync()
         {
+            Debug.LogWarning("DESTROY INTERNAL OBJECTS: " + name);
             if (data)
             {
                 data.DestroyAsync();

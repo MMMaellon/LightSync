@@ -47,6 +47,7 @@ namespace MMMaellon.LightSync
                 sync._print("Receiving: " + sync.prettyPrint());
             }
 
+            Debug.LogWarning("On Deserialization");
             sync.StartLoop();
         }
 
