@@ -142,14 +142,17 @@ namespace MMMaellon.LightSync
             {
                 if (sync.looper == this)
                 {
+                    Debug.LogWarning("Destroying looper");
                     sync.looper = null;
                 }
                 if (sync.lateLooper == this)
                 {
+                    Debug.LogWarning("Destroying late looper");
                     sync.lateLooper = null;
                 }
                 if (sync.fixedLooper == this)
                 {
+                    Debug.LogWarning("Destroying fixed looper");
                     sync.fixedLooper = null;
                 }
             }
@@ -162,6 +165,10 @@ namespace MMMaellon.LightSync
             hideFlags &= ~HideFlags.HideInInspector;
             var obj = gameObject; //gameobject becomes null after next line
             UdonSharpEditorUtility.DestroyImmediate(this);
+            if (this)
+            {
+                DestroyImmediate(this, true);
+            }
             Singleton.DestroyEmptyGameObject(obj);
         }
 

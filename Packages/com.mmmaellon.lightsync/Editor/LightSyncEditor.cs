@@ -23,127 +23,126 @@ namespace MMMaellon.LightSync
             {
                 return;
             }
-            if (Application.isPlaying)
+            if (!Application.isPlaying)
             {
-                return;
-            }
-            int syncCount = 0;
-            int pickupSetupCount = 0;
-            int rigidSetupCount = 0;
-            int respawnYSetupCount = 0;
-            int stateSetupCount = 0;
-            foreach (var t in targets)
-            {
-                var sync = (LightSync)t;
-                if (!Utilities.IsValid(sync))
+                int syncCount = 0;
+                int pickupSetupCount = 0;
+                int rigidSetupCount = 0;
+                int respawnYSetupCount = 0;
+                int stateSetupCount = 0;
+                foreach (var t in targets)
                 {
-                    continue;
-                }
-                syncCount++;
-                if (sync.pickup != sync.GetComponent<VRC_Pickup>())
-                {
-                    pickupSetupCount++;
-                }
-                if (sync.rigid != sync.GetComponent<Rigidbody>())
-                {
-                    rigidSetupCount++;
-                }
-                if (Utilities.IsValid(VRC_SceneDescriptor.Instance) && !Mathf.Approximately(VRC_SceneDescriptor.Instance.RespawnHeightY, sync.respawnHeight))
-                {
-                    respawnYSetupCount++;
-                }
-                LightSyncState[] stateComponents = sync.GetComponents<LightSyncState>();
-                if (sync.customStates.Length != stateComponents.Length)
-                {
-                    stateSetupCount++;
-                }
-                else
-                {
-                    bool errorFound = false;
-                    foreach (LightSyncState state in sync.customStates)
+                    var sync = (LightSync)t;
+                    if (!Utilities.IsValid(sync))
                     {
-                        if (state == null || state.sync != sync || state.stateID < 0 || state.stateID >= sync.customStates.Length || sync.customStates[state.stateID] != state)
-                        {
-                            errorFound = true;
-                            break;
-                        }
+                        continue;
                     }
-                    if (!errorFound)
+                    syncCount++;
+                    if (sync.pickup != sync.GetComponent<VRC_Pickup>())
                     {
-                        if (sync.enterFirstCustomStateOnStart && stateComponents.Length > 0 && stateComponents[0].stateID != 0)
-                        {
-                            errorFound = true;
-                        }
-                        else
-                        {
-                            foreach (LightSyncState state in stateComponents)
-                            {
-                                if (state != null && (state.sync != sync || state.stateID < 0 || state.stateID >= sync.customStates.Length || sync.customStates[state.stateID] != state))
-                                {
-                                    errorFound = true;
-                                    break;
-                                }
-                            }
-                        }
+                        pickupSetupCount++;
                     }
-                    if (!errorFound)
+                    if (sync.rigid != sync.GetComponent<Rigidbody>())
                     {
-                        errorFound = sync.enterFirstCustomStateOnStart && sync.state < 0;
+                        rigidSetupCount++;
                     }
-                    if (!errorFound)
+                    if (Utilities.IsValid(VRC_SceneDescriptor.Instance) && !Mathf.Approximately(VRC_SceneDescriptor.Instance.RespawnHeightY, sync.respawnHeight))
                     {
-                        errorFound = !sync.enterFirstCustomStateOnStart && sync.state >= 0;
+                        respawnYSetupCount++;
                     }
-                    if (errorFound)
+                    LightSyncState[] stateComponents = sync.GetComponents<LightSyncState>();
+                    if (sync.customStates.Length != stateComponents.Length)
                     {
                         stateSetupCount++;
                     }
+                    else
+                    {
+                        bool errorFound = false;
+                        foreach (LightSyncState state in sync.customStates)
+                        {
+                            if (state == null || state.sync != sync || state.stateID < 0 || state.stateID >= sync.customStates.Length || sync.customStates[state.stateID] != state)
+                            {
+                                errorFound = true;
+                                break;
+                            }
+                        }
+                        if (!errorFound)
+                        {
+                            if (sync.enterFirstCustomStateOnStart && stateComponents.Length > 0 && stateComponents[0].stateID != 0)
+                            {
+                                errorFound = true;
+                            }
+                            else
+                            {
+                                foreach (LightSyncState state in stateComponents)
+                                {
+                                    if (state != null && (state.sync != sync || state.stateID < 0 || state.stateID >= sync.customStates.Length || sync.customStates[state.stateID] != state))
+                                    {
+                                        errorFound = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (!errorFound)
+                        {
+                            errorFound = sync.enterFirstCustomStateOnStart && sync.state < 0;
+                        }
+                        if (!errorFound)
+                        {
+                            errorFound = !sync.enterFirstCustomStateOnStart && sync.state >= 0;
+                        }
+                        if (errorFound)
+                        {
+                            stateSetupCount++;
+                        }
+                    }
                 }
-            }
-            if (pickupSetupCount > 0 || rigidSetupCount > 0 || stateSetupCount > 0)
-            {
-                if (pickupSetupCount == 1)
+                if (pickupSetupCount > 0 || rigidSetupCount > 0 || stateSetupCount > 0)
                 {
-                    EditorGUILayout.HelpBox(@"Object not set up for VRC_Pickup", MessageType.Warning);
+                    if (pickupSetupCount == 1)
+                    {
+                        EditorGUILayout.HelpBox(@"Object not set up for VRC_Pickup", MessageType.Warning);
+                    }
+                    else if (pickupSetupCount > 1)
+                    {
+                        EditorGUILayout.HelpBox(pickupSetupCount.ToString() + @" Objects not set up for VRC_Pickup", MessageType.Warning);
+                    }
+                    if (rigidSetupCount == 1)
+                    {
+                        EditorGUILayout.HelpBox(@"Object not set up for Rigidbody", MessageType.Warning);
+                    }
+                    else if (rigidSetupCount > 1)
+                    {
+                        EditorGUILayout.HelpBox(rigidSetupCount.ToString() + @" Objects not set up for Rigidbody", MessageType.Warning);
+                    }
+                    if (stateSetupCount == 1)
+                    {
+                        EditorGUILayout.HelpBox(@"States misconfigured", MessageType.Warning);
+                    }
+                    else if (stateSetupCount > 1)
+                    {
+                        EditorGUILayout.HelpBox(stateSetupCount.ToString() + @" LightSyncs with misconfigured States", MessageType.Warning);
+                    }
+                    if (GUILayout.Button(new GUIContent("Auto Setup")))
+                    {
+                        SetupLightSyncs(targets);
+                    }
                 }
-                else if (pickupSetupCount > 1)
+                if (respawnYSetupCount > 0)
                 {
-                    EditorGUILayout.HelpBox(pickupSetupCount.ToString() + @" Objects not set up for VRC_Pickup", MessageType.Warning);
-                }
-                if (rigidSetupCount == 1)
-                {
-                    EditorGUILayout.HelpBox(@"Object not set up for Rigidbody", MessageType.Warning);
-                }
-                else if (rigidSetupCount > 1)
-                {
-                    EditorGUILayout.HelpBox(rigidSetupCount.ToString() + @" Objects not set up for Rigidbody", MessageType.Warning);
-                }
-                if (stateSetupCount == 1)
-                {
-                    EditorGUILayout.HelpBox(@"States misconfigured", MessageType.Warning);
-                }
-                else if (stateSetupCount > 1)
-                {
-                    EditorGUILayout.HelpBox(stateSetupCount.ToString() + @" LightSyncs with misconfigured States", MessageType.Warning);
-                }
-                if (GUILayout.Button(new GUIContent("Auto Setup")))
-                {
-                    SetupLightSyncs(targets);
-                }
-            }
-            if (respawnYSetupCount > 0)
-            {
-                if (respawnYSetupCount == 1)
-                {
-                    EditorGUILayout.HelpBox(@"Respawn Height is different from the scene descriptor's: " + VRC_SceneDescriptor.Instance.RespawnHeightY, MessageType.Info);
-                }
-                else if (respawnYSetupCount > 1)
-                {
-                    EditorGUILayout.HelpBox(respawnYSetupCount.ToString() + @" Objects have a Respawn Height that is different from the scene descriptor's: " + VRC_SceneDescriptor.Instance.RespawnHeightY, MessageType.Info);
-                }
-                if (GUILayout.Button(new GUIContent("Match Scene Respawn Height")))
-                {
-                    MatchRespawnHeights(targets);
+                    if (respawnYSetupCount == 1)
+                    {
+                        EditorGUILayout.HelpBox(@"Respawn Height is different from the scene descriptor's: " + VRC_SceneDescriptor.Instance.RespawnHeightY, MessageType.Info);
+                    }
+                    else if (respawnYSetupCount > 1)
+                    {
+                        EditorGUILayout.HelpBox(respawnYSetupCount.ToString() + @" Objects have a Respawn Height that is different from the scene descriptor's: " + VRC_SceneDescriptor.Instance.RespawnHeightY, MessageType.Info);
+                    }
+                    if (GUILayout.Button(new GUIContent("Match Scene Respawn Height")))
+                    {
+                        MatchRespawnHeights(targets);
+                    }
                 }
             }
 
@@ -290,13 +289,13 @@ namespace MMMaellon.LightSync
                 Debug.LogWarningFormat("[LightSync] Auto Setup failed: No LightSync selected");
             }
         }
-        public void OnDestroy()
-        {
-            if (target == null)
-            {
-                CleanHelperObjects();
-            }
-        }
+        // public void OnDestroy()
+        // {
+        //     if (target == null && Application.isPlaying == false)
+        //     {
+        //         CleanHelperObjects();
+        //     }
+        // }
 
         public void CleanHelperObjects()
         {
@@ -344,6 +343,10 @@ namespace MMMaellon.LightSync
         public static void OnPlayModeStateChanged(PlayModeStateChange change)
         {
             if (change != PlayModeStateChange.ExitingEditMode)
+            {
+                return;
+            }
+            if (!EditorPrefs.GetBool(autoSetupKey, true))
             {
                 return;
             }
@@ -496,6 +499,7 @@ namespace MMMaellon.LightSync
                     l.RefreshHideFlags();
                     if (l.sync == null)
                     {
+                        Debug.LogWarning("2");
                         l.DestroyAsync();
                     }
                 }

@@ -6,7 +6,10 @@ using VRC.SDKBase;
 using VRC.Udon;
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
 using UdonSharpEditor;
+using System.Linq;
+
 #endif
+
 
 
 
@@ -18,9 +21,12 @@ namespace MMMaellon.LightSync
 {
     [AddComponentMenu("")]
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
+    [ExecuteAlways]
     public class Singleton : UdonSharpBehaviour
     {
         public LightSync[] lightSyncs;
+        [HideInInspector]
+        public bool collectionMembershipDirty = true;
         public CollectionItem[] collectionItems;
         public Collection[] collections;
 
@@ -138,6 +144,52 @@ namespace MMMaellon.LightSync
         }
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
+
+        public Collection[][] startingCollectionMatrix;
+        public void SetupCollectionMembership()
+        {
+            foreach (var collection in collections)
+            {
+                collection.items.Clear();
+                collection.lookupTable.Clear();
+            }
+            foreach (var item in collectionItems)
+            {
+                item.setId = 0;
+            }
+
+            foreach (var collection in collections)
+            {
+                foreach (var item in collection.startingItems)
+                {
+                    if (!item)
+                    {
+                        continue;
+                    }
+                    item.AddToCollection(collection);
+                }
+            }
+            foreach (var item in collectionItems)
+            {
+                foreach (var col in item.startingCollections)
+                {
+                    if (!col)
+                    {
+                        continue;
+                    }
+                    item.AddToCollection(col);
+                }
+                item.startingCollections = item.collections.Select(x => (Collection)x.Reference).ToArray();
+            }
+
+            foreach (var collection in collections)
+            {
+                collection.startingItems = collection.items.Select(x => (CollectionItem)x.Reference).ToArray();
+            }
+
+            collectionMembershipDirty = false;
+        }
+
         public void AutoSetup(bool skipAlreadySetup = true)
         {
             for (int i = 0; i < collections.Length; i++)
@@ -159,13 +211,12 @@ namespace MMMaellon.LightSync
                 }
                 collectionItems[i].itemId = i;
                 collectionItems[i].singleton = this;
-                collectionItems[i].SetupStartingCollections();
                 new SerializedObject(collectionItems[i]).Update();
                 PrefabUtility.RecordPrefabInstancePropertyModifications(collectionItems[i]);
             }
             for (uint i = 0; i < lightSyncs.Length; i++)
             {
-                if (lightSyncs[i].id == i && lightSyncs[i].singleton == this && skipAlreadySetup)
+                if (lightSyncs[i].id == i && lightSyncs[i].singleton == this && lightSyncs[i].AlreadySetup() && skipAlreadySetup)
                 {
                     continue;
                 }
@@ -174,6 +225,10 @@ namespace MMMaellon.LightSync
                 new SerializedObject(lightSyncs[i]).Update();
                 PrefabUtility.RecordPrefabInstancePropertyModifications(lightSyncs[i]);
                 lightSyncs[i].AutoSetup();
+            }
+            if (!skipAlreadySetup || collectionMembershipDirty)
+            {
+                SetupCollectionMembership();
             }
             PrefabUtility.RecordPrefabInstancePropertyModifications(this);
         }
@@ -211,10 +266,11 @@ namespace MMMaellon.LightSync
                     }
                     if (c.GetType() == typeof(UdonBehaviour))
                     {
-                        UdonSharpBehaviour udonSharpBehaviour = UdonSharpEditorUtility.GetProxyBehaviour((UdonBehaviour)c);
-                        if (udonSharpBehaviour == null && UdonSharpEditorUtility.IsUdonSharpBehaviour((UdonBehaviour)c))
+                        var udon = (UdonBehaviour)c;
+                        UdonSharpBehaviour udonSharpBehaviour = UdonSharpEditorUtility.GetProxyBehaviour(udon);
+                        if (udonSharpBehaviour == null && UdonSharpEditorUtility.IsUdonSharpBehaviour(udon))
                         {
-                            //udonbehaviour with no udonsharp.
+                            //udonbehaviour that is supposed to belong to an UdonSharpBehaviour, but the udonsharp doesn't exist.
                             continue;
                         }
                     }

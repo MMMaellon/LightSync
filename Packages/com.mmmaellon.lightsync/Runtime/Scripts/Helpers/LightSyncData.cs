@@ -173,6 +173,10 @@ namespace MMMaellon.LightSync
             hideFlags &= ~HideFlags.HideInInspector;
             var obj = gameObject;
             UdonSharpEditorUtility.DestroyImmediate(this);
+            if(this)
+            {
+                DestroyImmediate(this, true);
+            }
             Singleton.DestroyEmptyGameObject(obj);
         }
 #endif

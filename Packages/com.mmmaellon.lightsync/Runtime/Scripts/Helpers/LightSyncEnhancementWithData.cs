@@ -25,6 +25,14 @@ namespace MMMaellon.LightSync
             DestroyInternalObjectsAsync();
         }
 
+        public void DestroyInternalObjects()
+        {
+            if (enhancementData)
+            {
+                enhancementData.Destroy();
+                enhancementData = null;
+            }
+        }
         public void DestroyInternalObjectsAsync()
         {
             if (enhancementData)

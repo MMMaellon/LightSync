@@ -14,12 +14,28 @@ namespace MMMaellon.LightSync
         [HideInInspector]
         public int collectionId = 1001;
 
+        [HideInInspector]
         public DataList items = new DataList();
+        [HideInInspector]
         public DataDictionary lookupTable = new DataDictionary();
 
-        public CollectionItem[] startingItems;
+        public CollectionItem[] startingItems
+        {
+            get => _startingItems;
+            set
+            {
+                _startingItems = value;
+                if (singleton)
+                {
+                    singleton.collectionMembershipDirty = true;
+                }
+            }
+        }
+        public CollectionItem[] _startingItems;
 
+        [HideInInspector]
         public DataList setIds = new DataList();
+        [HideInInspector]
         public DataDictionary setIdLUT = new DataDictionary();
         public void AddToSet(int newSetId)
         {
@@ -103,6 +119,5 @@ namespace MMMaellon.LightSync
             }
             return true;
         }
-
     }
 }

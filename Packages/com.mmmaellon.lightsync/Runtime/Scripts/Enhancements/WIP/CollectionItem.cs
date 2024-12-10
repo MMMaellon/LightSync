@@ -3,7 +3,6 @@ using UdonSharp;
 using UnityEngine;
 using VRC.SDK3.Data;
 using VRC.SDKBase;
-using VRC.Udon;
 using VRC.Udon.Serialization.OdinSerializer;
 
 namespace MMMaellon.LightSync
@@ -15,9 +14,21 @@ namespace MMMaellon.LightSync
         public Singleton singleton;
         public uint itemId = 1001;
 
-        public Collection[] collectionsToStartIn = new Collection[0];
+        public Collection[] startingCollections
+        {
+            get => _startingCollections;
+            set
+            {
+                _startingCollections = value;
+                if (singleton)
+                {
+                    singleton.collectionMembershipDirty = true;
+                }
+            }
+        }
+        public Collection[] _startingCollections = new Collection[0];
 
-        [OdinSerialize]
+        [HideInInspector, OdinSerialize]
         public DataList collections = new DataList();//a list of all collections that this item is a member of
 
         public Collection[] GetCollectionsArray()
@@ -30,7 +41,7 @@ namespace MMMaellon.LightSync
             return arr;
         }
 
-        [UdonSynced, FieldChangeCallback(nameof(setId))]
+        [System.NonSerialized, UdonSynced, FieldChangeCallback(nameof(setId))]
         int _setId = -1001;
         public int setId
         {
@@ -42,6 +53,7 @@ namespace MMMaellon.LightSync
             }
         }
 
+        [System.NonSerialized]
         public bool activeRequest;
         public bool IsInCollection(Collection col)
         {
@@ -82,13 +94,12 @@ namespace MMMaellon.LightSync
             return true;
         }
 
-        public void Clear()
-        {
-            setId = 0;
-        }
-
         public void SyncIfOwner()
         {
+
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+            return;
+#endif
             if (Networking.LocalPlayer.IsOwner(gameObject))
             {
                 RequestSerialization();
@@ -113,18 +124,5 @@ namespace MMMaellon.LightSync
             }
             return collectionString;
         }
-#if UNITY_EDITOR && !COMPILER_UDONSHARP
-        public void SetupStartingCollections()
-        {
-            Clear();
-            foreach (Collection col in collectionsToStartIn)
-            {
-                if (col)
-                {
-                    AddToCollection(col);
-                }
-            }
-        }
-#endif
     }
 }

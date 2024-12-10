@@ -1,5 +1,7 @@
 # LightSync ( ⚠️ WIP ⚠️ )
 
+# Warning: currently going through a period of heavy instability. Please use SmartObjectSync which is linked below.
+
 A set of scripts for syncing an object in VRChat with an emphasis on network efficiency, and overengineering every little thing so that it works in as many situations as possible.
 
 Prefab is a work in progress so things might change drastically between updates and possibly break things. If you want a more stable alternative, check out [Smart Object Sync](https://github.com/MMMaellon/SmartObjectSync).

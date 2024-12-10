@@ -23,6 +23,7 @@ namespace MMMaellon.LightSync
             else if (sync.fixedLooper != this)
             {
                 sync = null;
+                Debug.LogWarning("3");
                 DestroyAsync();
             }
             else

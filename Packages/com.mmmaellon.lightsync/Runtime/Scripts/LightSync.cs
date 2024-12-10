@@ -1,11 +1,11 @@
-﻿using System.Collections;
-using UdonSharp;
+﻿using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
 using VRC.Udon.Common;
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
+using System.Collections;
 using System.Linq;
 using UdonSharpEditor;
 using UnityEditor;
@@ -15,6 +15,7 @@ namespace MMMaellon.LightSync
 {
     [AddComponentMenu("LightSync/LightSync")]
     [RequireComponent(typeof(Rigidbody))]
+    [ExecuteAlways, DisallowMultipleComponent]
     public class LightSync : UdonSharpBehaviour
     {
 
@@ -317,7 +318,7 @@ namespace MMMaellon.LightSync
         }
         public bool IsOwner()
         {
-#if !COMPILER_UDONSHARP && UNITY_EDITOR
+#if UNITY_EDITOR
             return true;
 #endif
             if (!Utilities.IsValid(Owner))
@@ -768,9 +769,10 @@ namespace MMMaellon.LightSync
 
         public void OnEnable()
         {
-            if (!data)
+            if (!data || Networking.LocalPlayer == null)
             {
                 //happens when there's a weird race condition thingy
+                return;
             }
             if (Owner != Networking.GetOwner(data.gameObject))
             {
@@ -1656,13 +1658,12 @@ namespace MMMaellon.LightSync
 
         public void ForceSetup()
         {
-            DestroyInternalObjectsAsync();
+            DestroyInternalObjects();
             AutoSetup();
         }
 
         public void AutoSetup()
         {
-            Debug.Log("LightSync Autosetup: " + name);
             if (!rigid || rigid.gameObject != gameObject)
             {
                 rigid = GetComponent<Rigidbody>();
@@ -1730,12 +1731,17 @@ namespace MMMaellon.LightSync
             PrefabUtility.RecordPrefabInstancePropertyModifications(looper);
             PrefabUtility.RecordPrefabInstancePropertyModifications(lateLooper);
             PrefabUtility.RecordPrefabInstancePropertyModifications(fixedLooper);
-            // data.RefreshHideFlags();
-            // looper.RefreshHideFlags();
-            // fixedLooper.RefreshHideFlags();
-            // lateLooper.RefreshHideFlags();
+            data.RefreshHideFlags();
+            looper.RefreshHideFlags();
+            fixedLooper.RefreshHideFlags();
+            lateLooper.RefreshHideFlags();
             HideUdonBehaviours();
             EditorUtility.SetDirty(this);
+        }
+
+        public bool AlreadySetup()
+        {
+            return data && looper && fixedLooper && lateLooper && data.sync == this && looper.sync == this && fixedLooper.sync == this && lateLooper.sync == this;
         }
 
         public void SetupStates()
@@ -1933,6 +1939,7 @@ namespace MMMaellon.LightSync
             {
                 if (looper.gameObject != data.gameObject)
                 {
+                    Debug.LogWarning("4");
                     looper.DestroyAsync();
                     if (fixedLooper)
                     {
@@ -1983,9 +1990,47 @@ namespace MMMaellon.LightSync
             DestroyInternalObjectsAsync();
         }
 
+        public void DestroyInternalObjects()
+        {
+            if (data)
+            {
+                data.Destroy();
+                data = null;
+            }
+            if (looper)
+            {
+                looper.Destroy();
+                looper = null;
+            }
+            if (fixedLooper)
+            {
+                fixedLooper.Destroy();
+                fixedLooper = null;
+            }
+            if (lateLooper)
+            {
+                lateLooper.Destroy();
+                lateLooper = null;
+            }
+            foreach (var state in customStates)
+            {
+                if (state is LightSyncStateWithData dataState)
+                {
+                    dataState.DestroyInternalObjects();
+                }
+            }
+
+            foreach (var enhancement in GetComponents<LightSyncEnhancementWithData>())
+            {
+                if (enhancement is LightSyncEnhancementWithData dataState)
+                {
+                    dataState.DestroyInternalObjects();
+                }
+            }
+        }
+
         public void DestroyInternalObjectsAsync()
         {
-            Debug.LogWarning("DESTROY INTERNAL OBJECTS: " + name);
             if (data)
             {
                 data.DestroyAsync();
