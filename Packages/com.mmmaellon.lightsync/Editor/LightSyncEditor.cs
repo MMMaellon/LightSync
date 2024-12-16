@@ -8,6 +8,8 @@ using UnityEngine;
 using VRC.SDKBase;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
+using UdonSharp.Internal;
+using VRC.Udon;
 
 namespace MMMaellon.LightSync
 {
@@ -431,10 +433,10 @@ namespace MMMaellon.LightSync
                 SetupLightSyncListener(listener);
             }
             var allLightSyncs = GameObject.FindObjectsByType<LightSync>(FindObjectsInactive.Include, FindObjectsSortMode.InstanceID);
-            var allCollectionItems = GameObject.FindObjectsByType<CollectionItem>(FindObjectsInactive.Include, FindObjectsSortMode.InstanceID);
-            var allCollections = GameObject.FindObjectsByType<Collection>(FindObjectsInactive.Include, FindObjectsSortMode.InstanceID);
             if (allLightSyncs.Length > 0)
             {
+                var allCollectionItems = GameObject.FindObjectsByType<CollectionItem>(FindObjectsInactive.Include, FindObjectsSortMode.InstanceID);
+                var allCollections = GameObject.FindObjectsByType<Collection>(FindObjectsInactive.Include, FindObjectsSortMode.InstanceID);
                 var allSingletons = GameObject.FindObjectsOfType<Singleton>(true);
                 Singleton singleton;
                 if (allSingletons.Length >= 1)
@@ -453,7 +455,7 @@ namespace MMMaellon.LightSync
                 singleton.lightSyncs = allLightSyncs;
                 singleton.collectionItems = allCollectionItems;
                 singleton.collections = allCollections;
-                singleton.gameObject.hideFlags |= HideFlags.HideInHierarchy;
+                // singleton.gameObject.hideFlags |= HideFlags.HideInHierarchy;
                 singleton.AutoSetup(skipAlreadySetup);
             }
             EditorSceneManager.SaveScene(SceneManager.GetActiveScene());
@@ -499,7 +501,6 @@ namespace MMMaellon.LightSync
                     l.RefreshHideFlags();
                     if (l.sync == null)
                     {
-                        Debug.LogWarning("2");
                         l.DestroyAsync();
                     }
                 }
@@ -541,6 +542,8 @@ namespace MMMaellon.LightSync
                     s.gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
                     s.hideFlags &= ~HideFlags.HideInInspector;
                 }
+                //uncomment to just show everything
+                // obj.hideFlags &= ~HideFlags.HideInHierarchy;
             }
             return true;
         }

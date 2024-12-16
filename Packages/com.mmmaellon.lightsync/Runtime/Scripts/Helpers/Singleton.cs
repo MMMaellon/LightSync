@@ -32,6 +32,7 @@ namespace MMMaellon.LightSync
 
         [UdonSynced]
         public string[] collectionSets = { };
+        [HideInInspector]
         public DataDictionary collectionSetLUT = new DataDictionary();//Maps entries in CollectionSets back to their ID
 
         public int AddSet(Collection[] set)
@@ -145,7 +146,6 @@ namespace MMMaellon.LightSync
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
 
-        public Collection[][] startingCollectionMatrix;
         public void SetupCollectionMembership()
         {
             foreach (var collection in collections)
@@ -200,11 +200,15 @@ namespace MMMaellon.LightSync
                 }
                 collections[i].collectionId = i + 1;//1 indexed
                 collections[i].singleton = this;
-                new SerializedObject(collections[i]).Update();
-                PrefabUtility.RecordPrefabInstancePropertyModifications(collections[i]);
+                // new SerializedObject(collections[i]).Update();
+                if (PrefabUtility.IsPartOfPrefabInstance(collections[i]))
+                {
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(collections[i]);
+                }
             }
             for (uint i = 0; i < collectionItems.Length; i++)
             {
+                continue;
                 if (collectionItems[i].itemId == i && collectionItems[i].singleton == this && skipAlreadySetup)
                 {
                     continue;
@@ -212,10 +216,14 @@ namespace MMMaellon.LightSync
                 collectionItems[i].itemId = i;
                 collectionItems[i].singleton = this;
                 new SerializedObject(collectionItems[i]).Update();
-                PrefabUtility.RecordPrefabInstancePropertyModifications(collectionItems[i]);
+                if (PrefabUtility.IsPartOfPrefabInstance(collectionItems[i]))
+                {
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(collectionItems[i]);
+                }
             }
             for (uint i = 0; i < lightSyncs.Length; i++)
             {
+                continue;
                 if (lightSyncs[i].id == i && lightSyncs[i].singleton == this && lightSyncs[i].AlreadySetup() && skipAlreadySetup)
                 {
                     continue;
@@ -223,14 +231,20 @@ namespace MMMaellon.LightSync
                 lightSyncs[i].id = i;
                 lightSyncs[i].singleton = this;
                 new SerializedObject(lightSyncs[i]).Update();
-                PrefabUtility.RecordPrefabInstancePropertyModifications(lightSyncs[i]);
+                if (PrefabUtility.IsPartOfPrefabInstance(lightSyncs[i]))
+                {
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(lightSyncs[i]);
+                }
                 lightSyncs[i].AutoSetup();
             }
             if (!skipAlreadySetup || collectionMembershipDirty)
             {
-                SetupCollectionMembership();
+                // SetupCollectionMembership();
             }
-            PrefabUtility.RecordPrefabInstancePropertyModifications(this);
+            if (PrefabUtility.IsPartOfPrefabInstance(this))
+            {
+                PrefabUtility.RecordPrefabInstancePropertyModifications(this);
+            }
         }
 
         // [MenuItem("MMMaellon/Test")]

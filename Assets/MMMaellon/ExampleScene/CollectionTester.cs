@@ -6,8 +6,9 @@ using VRC.Udon;
 
 public class CollectionTester : UdonSharpBehaviour
 {
-    void Start()
-    {
-        
+    public int number = 69;
+    public void Start(){
+
     }
+
 }
