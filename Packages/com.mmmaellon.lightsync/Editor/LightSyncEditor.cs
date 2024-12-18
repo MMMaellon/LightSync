@@ -291,13 +291,14 @@ namespace MMMaellon.LightSync
                 Debug.LogWarningFormat("[LightSync] Auto Setup failed: No LightSync selected");
             }
         }
-        // public void OnDestroy()
-        // {
-        //     if (target == null && Application.isPlaying == false)
-        //     {
-        //         CleanHelperObjects();
-        //     }
-        // }
+
+        public void OnDestroy()
+        {
+            if (target == null && Application.isPlaying == false)
+            {
+                CleanHelperObjects();
+            }
+        }
 
         public void CleanHelperObjects()
         {

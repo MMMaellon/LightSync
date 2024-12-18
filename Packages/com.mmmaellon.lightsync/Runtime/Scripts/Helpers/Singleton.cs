@@ -208,7 +208,6 @@ namespace MMMaellon.LightSync
             }
             for (uint i = 0; i < collectionItems.Length; i++)
             {
-                continue;
                 if (collectionItems[i].itemId == i && collectionItems[i].singleton == this && skipAlreadySetup)
                 {
                     continue;
@@ -223,7 +222,6 @@ namespace MMMaellon.LightSync
             }
             for (uint i = 0; i < lightSyncs.Length; i++)
             {
-                continue;
                 if (lightSyncs[i].id == i && lightSyncs[i].singleton == this && lightSyncs[i].AlreadySetup() && skipAlreadySetup)
                 {
                     continue;
@@ -239,7 +237,7 @@ namespace MMMaellon.LightSync
             }
             if (!skipAlreadySetup || collectionMembershipDirty)
             {
-                // SetupCollectionMembership();
+                SetupCollectionMembership();
             }
             if (PrefabUtility.IsPartOfPrefabInstance(this))
             {
