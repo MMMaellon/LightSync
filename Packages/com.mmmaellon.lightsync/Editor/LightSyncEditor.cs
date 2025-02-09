@@ -436,8 +436,6 @@ namespace MMMaellon.LightSync
             var allLightSyncs = GameObject.FindObjectsByType<LightSync>(FindObjectsInactive.Include, FindObjectsSortMode.InstanceID);
             if (allLightSyncs.Length > 0)
             {
-                var allCollectionItems = GameObject.FindObjectsByType<CollectionItem>(FindObjectsInactive.Include, FindObjectsSortMode.InstanceID);
-                var allCollections = GameObject.FindObjectsByType<Collection>(FindObjectsInactive.Include, FindObjectsSortMode.InstanceID);
                 var allSingletons = GameObject.FindObjectsOfType<Singleton>(true);
                 Singleton singleton;
                 if (allSingletons.Length >= 1)
@@ -454,8 +452,6 @@ namespace MMMaellon.LightSync
                     singleton = UdonSharpComponentExtensions.AddUdonSharpComponent<Singleton>(singletonObject);
                 }
                 singleton.lightSyncs = allLightSyncs;
-                singleton.collectionItems = allCollectionItems;
-                singleton.collections = allCollections;
                 // singleton.gameObject.hideFlags |= HideFlags.HideInHierarchy;
                 singleton.AutoSetup(skipAlreadySetup);
             }
