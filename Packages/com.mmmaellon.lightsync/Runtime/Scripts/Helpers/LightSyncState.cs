@@ -28,13 +28,13 @@ namespace MMMaellon.LightSync
 
         public virtual void EnterState()
         {
-            sync.TakeOwnershipIfNotOwner();
             sync.state = stateID;
+            sync.Sync();
         }
         public virtual void ExitState()
         {
-            sync.TakeOwnershipIfNotOwner();
             sync.state = LightSync.STATE_PHYSICS;
+            sync.Sync();
         }
 
         public bool IsActiveState()

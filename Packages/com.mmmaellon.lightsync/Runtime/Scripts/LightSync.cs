@@ -304,6 +304,7 @@ namespace MMMaellon.LightSync
                         if (state <= STATE_HELD && (pickup == null || !pickup.IsHeld))
                         {
                             state = STATE_PHYSICS;
+                            Sync();
                         }
                     }
                     else

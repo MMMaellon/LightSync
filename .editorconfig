@@ -1,0 +1,17 @@
+[*.cs]
+
+# IDE1006: Naming Styles
+dotnet_diagnostic.IDE1006.severity = silent
+[*.cs]
+
+# IDE1006: Naming Styles
+dotnet_diagnostic.IDE1006.severity = none
+[*.cs]
+
+# IDE1006: Naming Styles
+dotnet_diagnostic.IDE1006.severity = silent
+
+
+# IDE0130: Namespace does not match folder structure
+dotnet_style_namespace_match_folder = false
+
