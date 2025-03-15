@@ -158,7 +158,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &3399225
 MonoBehaviour:
-  m_ObjectHideFlags: 2
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -1788,7 +1788,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &244668312
 MonoBehaviour:
-  m_ObjectHideFlags: 2
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -5559,7 +5559,7 @@ GameObject:
   m_IsActive: 1
 --- !u!114 &499887739
 MonoBehaviour:
-  m_ObjectHideFlags: 2
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -11975,52 +11975,6 @@ MonoBehaviour:
   - {fileID: 1927621009}
   - {fileID: 1978241409}
   - {fileID: 2115349879}
-  collectionMembershipDirty: 0
-  collectionItems:
-  - {fileID: 4999942}
-  - {fileID: 96937618}
-  - {fileID: 105005755}
-  - {fileID: 307543929}
-  - {fileID: 382540525}
-  - {fileID: 400354906}
-  - {fileID: 442066726}
-  - {fileID: 476308987}
-  - {fileID: 477637785}
-  - {fileID: 493032404}
-  - {fileID: 506231244}
-  - {fileID: 638486519}
-  - {fileID: 789994361}
-  - {fileID: 790935509}
-  - {fileID: 847053117}
-  - {fileID: 877116629}
-  - {fileID: 955300139}
-  - {fileID: 995462065}
-  - {fileID: 1180074426}
-  - {fileID: 1192314620}
-  - {fileID: 1210992687}
-  - {fileID: 1215125675}
-  - {fileID: 1285113816}
-  - {fileID: 1300358129}
-  - {fileID: 1324856807}
-  - {fileID: 1342748685}
-  - {fileID: 1372154078}
-  - {fileID: 1470380715}
-  - {fileID: 1605518036}
-  - {fileID: 1916277230}
-  - {fileID: 1927620999}
-  - {fileID: 1978241399}
-  - {fileID: 2115349869}
-  collections:
-  - {fileID: 3399226}
-  - {fileID: 244668313}
-  - {fileID: 1215727450}
-  - {fileID: 1781728634}
-  - {fileID: 1875607239}
-  - {fileID: 2080619868}
-  - {fileID: 2097151430}
-  - {fileID: 2146318550}
-  _collectionSets: []
-  collectionSetMembership: []
 --- !u!4 &1014603283
 Transform:
   m_ObjectHideFlags: 0
@@ -14678,7 +14632,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1215727449
 MonoBehaviour:
-  m_ObjectHideFlags: 2
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -18364,7 +18318,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1781728633
 MonoBehaviour:
-  m_ObjectHideFlags: 2
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -18452,7 +18406,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1875607238
 MonoBehaviour:
-  m_ObjectHideFlags: 2
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -20082,7 +20036,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2080619867
 MonoBehaviour:
-  m_ObjectHideFlags: 2
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -20170,7 +20124,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2097151429
 MonoBehaviour:
-  m_ObjectHideFlags: 2
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -20864,7 +20818,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2146318549
 MonoBehaviour:
-  m_ObjectHideFlags: 2
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
