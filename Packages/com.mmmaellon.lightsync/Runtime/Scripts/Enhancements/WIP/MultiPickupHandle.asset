@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: MultiPickupHandle
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 9b805fc1ec916da4e96f4cba61d66513,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: c463238c5a045731498a5ec822e185d0,
     type: 2}
   udonAssembly: 
   assemblyError: 

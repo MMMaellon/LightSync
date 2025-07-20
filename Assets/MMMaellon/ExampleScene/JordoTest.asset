@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: JordoTest
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 04143c29c15c484419af4934e78b9f29,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: a4bc2554b05268e59b7d9aa4386999bd,
     type: 2}
   udonAssembly: 
   assemblyError: 

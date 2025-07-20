@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: LightSyncDataUnoptimized
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 6182d9a2fabd05d438b45f21b2c86aca,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 561013558e20bb89d80041716a45dd90,
     type: 2}
   udonAssembly: 
   assemblyError: 

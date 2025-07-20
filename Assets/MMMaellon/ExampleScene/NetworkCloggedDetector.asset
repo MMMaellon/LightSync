@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: NetworkCloggedDetector
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: cf97ddc9744c5f844b8f4e589c5b8dc8,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 1dadb79dc1929c74fa1dc1bba65d9cfb,
     type: 2}
   udonAssembly: 
   assemblyError: 
