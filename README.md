@@ -1,4 +1,6 @@
-# LightSync ( ⚠️ WIP ⚠️ )
+# LightSync ( ⚠️ WIP - Currently Broken as of 01/01/2026 ⚠️ )
+
+I think there was a VRChat update or something that broke something as I haven't touched this code in forever and it suddenly stopped working for me. I recommend using [Smart Object Sync](https://github.com/MMMaellon/SmartObjectSync) instead.
 
 # Warning: currently going through a period of heavy instability. Please use SmartObjectSync which is linked below.
 
