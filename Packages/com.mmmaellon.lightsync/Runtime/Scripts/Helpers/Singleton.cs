@@ -36,6 +36,7 @@ namespace MMMaellon.LightSync
             {
                 if (lightSyncs[i].id == i && lightSyncs[i].singleton == this && lightSyncs[i].AlreadySetup() && skipAlreadySetup)
                 {
+                    okay = okay && lightSyncs[i].IsSpawnAboveRespawnHeight();
                     continue;
                 }
                 lightSyncs[i].id = i;

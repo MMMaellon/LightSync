@@ -1,6 +1,8 @@
 ﻿using VRC.SDKBase;
 using VRC.Udon;
 using VRC.Udon.Common;
+using UnityEngine;
+using UdonSharp;
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
 using System.Collections;
@@ -1703,10 +1705,7 @@ namespace MMMaellon.LightSync
                 spawnPos = transform.localPosition;
                 spawnRot = transform.localRotation;
             }
-            if(respawnHeight > rigid.position.y){
-                Debug.LogError("LIGHTSYNC ERROR: Respawn height is above object's spawn point. This will lead to respawn loops.");
-                okay = false;
-            }
+            okay = okay && IsSpawnAboveRespawnHeight();
             kinematicFlag = rigid.isKinematic;
             bounceFlag = false;
             pickupableFlag = pickup && pickup.pickupable;
@@ -1742,6 +1741,14 @@ namespace MMMaellon.LightSync
             HideUdonBehaviours();
             EditorUtility.SetDirty(this);
             return okay;
+        }
+
+        public bool IsSpawnAboveRespawnHeight(){
+            if(respawnHeight > rigid.position.y){
+                Debug.LogErrorFormat(this, "<color=red>[LightSync AutoSetup]: ERROR</color>  LightSync object \'{0}\''s respawn height is set to {1} which is higher than its current Y position of {2}. This may lead to respawn loops", gameObject.name, respawnHeight, rigid.position.y);
+                return false;
+            }
+            return true;
         }
 
         public bool AlreadySetup()

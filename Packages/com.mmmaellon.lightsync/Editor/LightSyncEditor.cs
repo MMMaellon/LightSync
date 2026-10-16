@@ -363,8 +363,7 @@ namespace MMMaellon.LightSync
                 return true;
             }
             if(!AutoSetup()){
-                // return UnityEditor.UIMode.ShowMessageBox("LightSync ERROR", "", MessageType.Warning);
-                return false;
+                return EditorUtility.DisplayDialog("LightSync Error", "There has been an error during the autosetup of LightSync objects. Check the console for error details.", "Continue anyway", "Cancel Build");
             }
             return true;
         }

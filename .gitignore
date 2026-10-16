@@ -63,3 +63,6 @@ Assets/PackageMakerWindowData.asset*
 .idea
 .vscode
 Assets/SerializedUdonPrograms/*
+
+Assets/UdonSharp/PrefabBuild.meta
+Assets/UdonSharp/PrefabBuild/*
