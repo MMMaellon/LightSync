@@ -362,7 +362,11 @@ namespace MMMaellon.LightSync
             {
                 return true;
             }
-            return AutoSetup();
+            if(!AutoSetup()){
+                // return UnityEditor.UIMode.ShowMessageBox("LightSync ERROR", "", MessageType.Warning);
+                return false;
+            }
+            return true;
         }
 
         public static void SetupLightSyncListener(LightSyncListener listener)
@@ -428,6 +432,7 @@ namespace MMMaellon.LightSync
         public static bool AutoSetup(bool skipAlreadySetup = true)
         {
             Debug.Log("Running LightSync AutoSetup");
+            var okay = true;
             ClearOrphanedObjects();
             foreach (LightSyncListener listener in GameObject.FindObjectsOfType<LightSyncListener>(true))
             {
@@ -453,10 +458,10 @@ namespace MMMaellon.LightSync
                 }
                 singleton.lightSyncs = allLightSyncs;
                 // singleton.gameObject.hideFlags |= HideFlags.HideInHierarchy;
-                singleton.AutoSetup(skipAlreadySetup);
+                okay = singleton.AutoSetup(skipAlreadySetup);
             }
             EditorSceneManager.SaveScene(SceneManager.GetActiveScene());
-            return true;
+            return okay;
         }
 
         [MenuItem("MMMaellon/LightSync/Clear Orphaned Internal Objects")]

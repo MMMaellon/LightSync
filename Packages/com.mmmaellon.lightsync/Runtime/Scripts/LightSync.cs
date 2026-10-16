@@ -1,6 +1,4 @@
-﻿using UdonSharp;
-using UnityEngine;
-using VRC.SDKBase;
+﻿using VRC.SDKBase;
 using VRC.Udon;
 using VRC.Udon.Common;
 
@@ -1586,8 +1584,8 @@ namespace MMMaellon.LightSync
         public void Reset()
         {
             id = (uint)GameObject.FindObjectsOfType(typeof(LightSync)).Length;
-            AutoSetup();
             respawnHeight = VRC_SceneDescriptor.Instance.RespawnHeightY;
+            AutoSetup();
         }
 
         public void OnValidate()
@@ -1663,8 +1661,9 @@ namespace MMMaellon.LightSync
             AutoSetup();
         }
 
-        public void AutoSetup()
+        public bool AutoSetup()
         {
+            var okay = true;
             if (!rigid || rigid.gameObject != gameObject)
             {
                 rigid = GetComponent<Rigidbody>();
@@ -1704,6 +1703,10 @@ namespace MMMaellon.LightSync
                 spawnPos = transform.localPosition;
                 spawnRot = transform.localRotation;
             }
+            if(respawnHeight > rigid.position.y){
+                Debug.LogError("LIGHTSYNC ERROR: Respawn height is above object's spawn point. This will lead to respawn loops.");
+                okay = false;
+            }
             kinematicFlag = rigid.isKinematic;
             bounceFlag = false;
             pickupableFlag = pickup && pickup.pickupable;
@@ -1738,6 +1741,7 @@ namespace MMMaellon.LightSync
             lateLooper.RefreshHideFlags();
             HideUdonBehaviours();
             EditorUtility.SetDirty(this);
+            return okay;
         }
 
         public bool AlreadySetup()

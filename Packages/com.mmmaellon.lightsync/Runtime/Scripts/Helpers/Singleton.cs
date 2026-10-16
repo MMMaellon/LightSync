@@ -29,8 +29,9 @@ namespace MMMaellon.LightSync
 
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
 
-        public void AutoSetup(bool skipAlreadySetup = true)
+        public bool AutoSetup(bool skipAlreadySetup = true)
         {
+            var okay = true;
             for (uint i = 0; i < lightSyncs.Length; i++)
             {
                 if (lightSyncs[i].id == i && lightSyncs[i].singleton == this && lightSyncs[i].AlreadySetup() && skipAlreadySetup)
@@ -44,12 +45,13 @@ namespace MMMaellon.LightSync
                 {
                     PrefabUtility.RecordPrefabInstancePropertyModifications(lightSyncs[i]);
                 }
-                lightSyncs[i].AutoSetup();
+                okay = okay && lightSyncs[i].AutoSetup();
             }
             if (PrefabUtility.IsPartOfPrefabInstance(this))
             {
                 PrefabUtility.RecordPrefabInstancePropertyModifications(this);
             }
+            return okay;
         }
 
         // [MenuItem("MMMaellon/Test")]
